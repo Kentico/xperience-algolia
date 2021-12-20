@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <RootNamespace>Kentico.Xperience.AlgoliaSearch</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Algolia.Search" Version="6.11.0" />
+    <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
+  </ItemGroup>
+
+</Project>
