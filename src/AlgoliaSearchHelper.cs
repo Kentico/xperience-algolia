@@ -178,12 +178,20 @@ namespace Kentico.Xperience.AlgoliaSearch
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var path = includedPathAttribute.AliasPath;
-                var allowedPageTypes = includedPathAttribute.PageTypes;
+                var matchesPageType = (includedPathAttribute.PageTypes.Length == 0 || includedPathAttribute.PageTypes.Contains(node.ClassName));
+                var matchesCulture = (includedPathAttribute.Cultures.Length == 0 || includedPathAttribute.Cultures.Contains(node.DocumentCulture));
+
                 if (path.EndsWith("/%"))
                 {
                     path = path.TrimEnd('%', '/');
-                    if (node.NodeAliasPath.StartsWith(path) &&
-                        (allowedPageTypes.Length == 0 || allowedPageTypes.Contains(node.ClassName)))
+                    if (node.NodeAliasPath.StartsWith(path) && matchesPageType && matchesCulture)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (node.NodeAliasPath == path && matchesPageType && matchesCulture)
                     {
                         return true;
                     }

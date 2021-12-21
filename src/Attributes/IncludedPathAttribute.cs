@@ -32,16 +32,30 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
+        /// A list of the page culture versions to include in the index. If empty, all culture versions
+        /// are indexed.
+        /// </summary>
+        public string[] Cultures
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="path">The node alias pattern that will be used to match pages in the content tree
         /// for indexing.</param>
         /// <param name="pageTypes">A list of page types under the specified <see cref="AliasPath"/> that
         /// will be indexed. If not provided, all page types are indexed.</param>
-        public IncludedPathAttribute(string path, string[] pageTypes = null)
+        /// <param name="cultures">A list of the page culture versions to include in the index. If empty, all
+        /// culture versions are indexed.</param>
+        public IncludedPathAttribute(string path, string[] pageTypes = null, string[] cultures = null)
         {
             AliasPath = path;
             PageTypes = (pageTypes == null ? Array.Empty<string>() : pageTypes);
+            Cultures = (cultures == null ? Array.Empty<string>() : cultures);
         }
     }
 }

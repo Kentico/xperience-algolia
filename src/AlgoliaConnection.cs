@@ -81,10 +81,14 @@ namespace Kentico.Xperience.AlgoliaSearch
                     .PublishedVersion()
                     .WithCoupledColumns();
 
-                // If the length is zero, all page types are included. Otherwise, set the Types() parameter.
                 if (includedPathAttribute.PageTypes.Length > 0)
                 {
                     query.Types(includedPathAttribute.PageTypes);
+                }
+
+                if (includedPathAttribute.Cultures.Length > 0)
+                {
+                    query.Culture(includedPathAttribute.Cultures);
                 }
 
                 indexedNodes.AddRange(query.TypedResult);
@@ -112,6 +116,7 @@ namespace Kentico.Xperience.AlgoliaSearch
             foreach (var prop in properties)
             {
                 var nodeValue = node.GetValue(prop.Name);
+
                 if (nodeValue != null)
                 {
                     var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
