@@ -1,6 +1,6 @@
 ﻿using CMS.Core;
+using CMS.Tests;
 
-using Kentico.Xperience.AlgoliaSearch;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using NUnit.Framework;
@@ -12,11 +12,12 @@ using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class AlgoliaTest
+    internal class AlgoliaTest : UnitTests
     {
-        [SetUp]
-        public void RegisterAlgoliaIndexes()
+        [OneTimeSetUp]
+        public void OneTimeSetUp()
         {
+            // Register Algolia indexes
             var attributes = GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
             foreach (var attribute in attributes)
             {

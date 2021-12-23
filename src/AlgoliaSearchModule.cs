@@ -65,7 +65,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
-        private IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
+        public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
         {
             var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
 
