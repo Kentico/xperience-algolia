@@ -9,5 +9,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     [AttributeUsage(AttributeTargets.Property, AllowMultiple = true)]
     public class SearchableAttribute : Attribute
     {
+        public int Order
+        {
+            get;
+            set;
+        }
+
+
+        public bool Unordered
+        {
+            get;
+            set;
+        }
+
+        public SearchableAttribute(int order = -1, bool unordered = false)
+        {
+            Order = order;
+            Unordered = unordered;
+        }
     }
 }

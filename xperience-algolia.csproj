@@ -6,6 +6,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Algolia.Search" Version="6.11.0" />
     <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
   </ItemGroup>

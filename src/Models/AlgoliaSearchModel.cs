@@ -12,7 +12,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         /// The internal Algolia ID of this search record.
         /// </summary>
         [Retrievable]
-        [Searchable]
         public string ObjectID
         {
             get;
@@ -24,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         /// The name of the Xperience class to which the indexed data belongs.
         /// </summary>
         [Retrievable]
-        [Searchable]
+        [Facetable]
         public string ClassName
         {
             get;

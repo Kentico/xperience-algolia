@@ -1,4 +1,5 @@
 ﻿using Algolia.Search.Clients;
+using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Settings;
 
 using CMS.Base;
@@ -59,6 +60,28 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
+        /// Gets a <see cref="SearchClient"/> using the application ID and API key specified in
+        /// either the web.config or appsettings.json, depending on the application.
+        /// </summary>
+        /// <returns>A <see cref="SearchClient"/> for interfacing with Algolia.</returns>
+        public static SearchClient GetSearchClient()
+        {
+            AlgoliaOptions options = null;
+            if (SystemContext.IsCMSRunningAsMainApplication)
+            {
+                options = GetAlgoliaOptionsFramework();
+            }
+            else
+            {
+                options = GetAlgoliaOptionsCore();
+            }
+
+            //TODO: Validate options
+            return new SearchClient(options.ApplicationId, options.ApiKey);
+        }
+
+
+        /// <summary>
         /// Gets an instance of <see cref="SearchIndex"/> for the specified Algolia index.
         /// </summary>
         /// <param name="indexName">The Algolia index code name.</param>
@@ -66,22 +89,19 @@ namespace Kentico.Xperience.AlgoliaSearch
         public static SearchIndex GetSearchIndex(string indexName)
         {
             //TODO: Validate indexName
-            SearchClient client = null;
-            if (SystemContext.IsCMSRunningAsMainApplication)
-            {
-                client = GetSearchClientFramework();
-            }
-            else
-            {
-                client = GetSearchClientCore();
-            }
-            
-            if (client == null)
-            {
-                //TODO: Throw or log error
-            }
+            var client = GetSearchClient();
 
+            //TODO: Validate client
             return client.InitIndex(indexName);
+        }
+
+
+        public static List<IndicesResponse> GetStatistics()
+        {
+            var client = GetSearchClient();
+
+            //TODO: Validate client
+            return client.ListIndices().Items;
         }
 
 
@@ -93,36 +113,66 @@ namespace Kentico.Xperience.AlgoliaSearch
         public static IndexSettings GetIndexSettings(string indexName)
         {
             //TODO: Validate indexName
-            var modelType = GetModelByIndexName(indexName);
-            if (modelType == null)
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
             {
                 //TODO: Throw or log error
             }
 
-            var searchableAttributes = GetSearchModelAttributes(modelType, typeof(SearchableAttribute));
-            var retrievableAttributes = GetSearchModelAttributes(modelType, typeof(RetrievableAttribute));
-            var facetableAttributes = GetSearchModelAttributes(modelType, typeof(FacetableAttribute));
-
+            var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievablProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            ;
             return new IndexSettings()
             {
-                SearchableAttributes = searchableAttributes,
-                AttributesToRetrieve = retrievableAttributes,
-                AttributesForFaceting = facetableAttributes
+                SearchableAttributes = OrderSearchableProperties(searchableProperties),
+                AttributesToRetrieve = retrievablProperties.Select(p => ConvertToCamelCase(p.Name)).ToList(),
+                AttributesForFaceting = facetableProperties.Select(p => ConvertToCamelCase(p.Name)).ToList()
             };
         }
 
 
-        /// <summary>
-        /// Gets the properties of the specified <paramref name="searchModelType"/> which have the specified
-        /// <paramref name="attributeType"/> attribute applied.
-        /// </summary>
-        /// <param name="searchModelType">The search model class type to search.</param>
-        /// <param name="attributeType">The type of the attribute to search for.</param>
-        /// <returns>A list of property names converted to camel case.</returns>
-        public static List<string> GetSearchModelAttributes(Type searchModelType, Type attributeType)
+        private static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
         {
-            var propertiesWithAttribute = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, attributeType));
-            return propertiesWithAttribute.Select(prop => ConvertToCamelCase(prop.Name)).ToList();
+            var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
+            foreach (var prop in searchableProperties)
+            {
+                var attr = prop.GetCustomAttributes<SearchableAttribute>(false).FirstOrDefault();
+                propertiesWithAttribute.Add(prop.Name, attr);
+            }
+
+            // Remove properties without order, add to end of list later
+            var propertiesWithOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order >= 0);
+            var sortedByOrder = propertiesWithOrdering.OrderBy(prop => prop.Value.Order);
+            var groupedByOrder = sortedByOrder.GroupBy(prop => prop.Value.Order);
+            var searchableAttributes = groupedByOrder.Select(group =>
+                group.Select(prop =>
+                {
+                    var propName = ConvertToCamelCase(prop.Key);
+                    if (prop.Value.Unordered)
+                    {
+                        return $"unordered({propName})";
+                    }
+
+                    return propName;
+                }).Join(",")
+            ).ToList();
+
+            // Add properties without order as single items
+            var propertiesWithoutOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order == -1);
+            foreach (var prop in propertiesWithoutOrdering)
+            {
+                var propName = ConvertToCamelCase(prop.Key);
+                if (prop.Value.Unordered)
+                {
+                    searchableAttributes.Add($"unordered({propName})");
+                    continue;
+                }
+
+                searchableAttributes.Add(propName);
+            }
+
+            return searchableAttributes;
         }
 
 
@@ -236,24 +286,32 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
-        private static SearchClient GetSearchClientFramework()
+        /// <summary>
+        /// Gets the <see cref="AlgoliaOptions"/> from the web.config appSettings section.
+        /// </summary>
+        private static AlgoliaOptions GetAlgoliaOptionsFramework()
         {
             var appSettingService = Service.Resolve<IAppSettingsService>();
             var applicationId = ValidationHelper.GetString(appSettingService["AlgoliaApplicationId"], String.Empty);
             var apiKey = ValidationHelper.GetString(appSettingService["AlgoliaApiKey"], String.Empty);
 
-            //TODO: Validate options
-            return new SearchClient(applicationId, apiKey);
+            return new AlgoliaOptions()
+            {
+                ApiKey = apiKey,
+                ApplicationId = applicationId
+            };
         }
 
 
-        private static SearchClient GetSearchClientCore()
+        /// <summary>
+        /// Gets the <see cref="AlgoliaOptions"/> from the appSettings.json file.
+        /// </summary>
+        private static AlgoliaOptions GetAlgoliaOptionsCore()
         {
             var configuration = Service.Resolve<IConfiguration>();
             var options = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 
-            //TODO: Validate options
-            return new SearchClient(options.ApplicationId, options.ApiKey);
+            return options;
         }
     }
 }
