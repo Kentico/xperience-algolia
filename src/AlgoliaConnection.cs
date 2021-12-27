@@ -1,9 +1,10 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Settings;
-
+using CMS.DataEngine;
 using CMS.DocumentEngine;
-
+using CMS.FormEngine;
+using CMS.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -118,16 +119,63 @@ namespace Kentico.Xperience.AlgoliaSearch
             PropertyInfo[] properties = searchModel.GetType().GetProperties();
             foreach (var prop in properties)
             {
-                var nodeValue = node.GetValue(prop.Name);
-
-                if (nodeValue != null)
+                object nodeValue = null;
+                if (Attribute.IsDefined(prop, typeof(UrlAttribute)))
                 {
-                    var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
-                    data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
+                    nodeValue = GetAbsoluteUrlForProperty(node, prop);
                 }
+                else
+                {
+                    nodeValue = node.GetValue(prop.Name);
+                }
+                
+                if(nodeValue == null)
+                {
+                    continue;
+                }
+                
+                var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
+                data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
+                
             }
 
             data["objectID"] = node.DocumentID.ToString();
+        }
+
+
+        private string GetAbsoluteUrlForProperty(TreeNode node, PropertyInfo property)
+        {
+            var nodeValue = ValidationHelper.GetString(node.GetValue(property.Name), "");
+
+            if (String.IsNullOrEmpty(nodeValue))
+            {
+                return null;
+            }
+
+            if (!nodeValue.StartsWith("~"))
+            {
+                // Value is not a URL, get field data type and load URL
+                var dataClassInfo = DataClassInfoProvider.GetDataClassInfo(node.ClassName, false);
+                var formInfo = new FormInfo(dataClassInfo.ClassFormDefinition);
+                var field = formInfo.GetFormField(property.Name);
+
+                if (field == null)
+                {
+                    // TODO: Throw or log error
+                    return null;
+                }
+
+                switch (field.DataType)
+                {
+                    case FieldDataType.File: // Attachment
+                        var attachment = AttachmentInfo.Provider.Get(new Guid(nodeValue), node.NodeSiteID);
+                        nodeValue = AttachmentURLProvider.GetAttachmentUrl(attachment.AttachmentGUID, attachment.AttachmentName);
+                        break;
+                }
+            }
+
+            var liveSiteDomain = node.Site.SitePresentationURL;
+            return URLHelper.GetAbsoluteUrl(ValidationHelper.GetString(nodeValue, ""), null, liveSiteDomain, null);
         }
     }
 }
