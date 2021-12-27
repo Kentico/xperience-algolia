@@ -5,7 +5,7 @@ using Algolia.Search.Models.Settings;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using System;
@@ -111,6 +111,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         private void MapTreeNodeProperties(TreeNode node, JObject data)
         {
             //TODO: Validate searchModelType, node, data
+            var serializer = new JsonSerializer();
+            serializer.Converters.Add(new DecimalPrecisionConverter());
+
             var searchModel = Activator.CreateInstance(searchModelType);
             PropertyInfo[] properties = searchModel.GetType().GetProperties();
             foreach (var prop in properties)
@@ -120,7 +123,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 if (nodeValue != null)
                 {
                     var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
-                    data.Add(convertedName, JToken.FromObject(nodeValue));
+                    data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
                 }
             }
 

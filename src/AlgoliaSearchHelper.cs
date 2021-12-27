@@ -96,6 +96,10 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Gets the indices of the Algolia application with basic statistics.
+        /// </summary>
+        /// <remarks>See <see href="https://www.algolia.com/doc/api-reference/api-methods/list-indices/#response"/></remarks>
         public static List<IndicesResponse> GetStatistics()
         {
             var client = GetSearchClient();
