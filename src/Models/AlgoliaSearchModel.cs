@@ -29,5 +29,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
             get;
             set;
         }
+
+
+        /// <summary>
+        /// The absolute live site URL of the indexed page.
+        /// </summary>
+        [Retrievable]
+        public string Url
+        {
+            get;
+            set;
+        }
     }
 }

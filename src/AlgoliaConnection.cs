@@ -176,6 +176,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 
             }
 
+            data["url"] = DocumentURLProvider.GetAbsoluteUrl(node);
             data["objectID"] = node.DocumentID.ToString();
         }
 
