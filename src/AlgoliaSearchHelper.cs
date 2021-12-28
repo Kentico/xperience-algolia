@@ -121,6 +121,7 @@ namespace Kentico.Xperience.AlgoliaSearch
             if (searchModelType == null)
             {
                 //TODO: Throw or log error
+                return null;
             }
 
             var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
@@ -131,8 +132,30 @@ namespace Kentico.Xperience.AlgoliaSearch
             {
                 SearchableAttributes = OrderSearchableProperties(searchableProperties),
                 AttributesToRetrieve = retrievablProperties.Select(p => ConvertToCamelCase(p.Name)).ToList(),
-                AttributesForFaceting = facetableProperties.Select(p => ConvertToCamelCase(p.Name)).ToList()
+                AttributesForFaceting = facetableProperties.Select(GetFilterablePropertyName).ToList()
             };
+        }
+
+
+        private static string GetFilterablePropertyName(PropertyInfo property)
+        {
+            var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
+            if (attr.FilterOnly && attr.Searchable)
+            {
+                throw new InvalidOperationException("Facetable attributes cannot be both searchable and filterOnly.");
+            }
+
+            var name = ConvertToCamelCase(property.Name);
+            if (attr.FilterOnly)
+            {
+                return $"filterOnly({name})";
+            }
+            if (attr.Searchable)
+            {
+                return $"searchable({name})";
+            }
+
+            return name;
         }
 
 

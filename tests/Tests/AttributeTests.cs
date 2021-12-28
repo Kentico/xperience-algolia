@@ -1,5 +1,7 @@
 ﻿using NUnit.Framework;
 
+using System;
+
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
@@ -9,7 +11,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
     {
         [Test]
         [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "className" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "prop1", "prop2", "className" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "filterOnly(prop1)", "searchable(prop2)", "className" })]
         [TestCase(Model4.IndexName, ExpectedResult = new string[] { "className" })]
         public string[] FacetableAttributesConvertedToAlgoliaFormat(string indexName)
         {
@@ -18,9 +20,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "objectID", "className" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "objectID", "className" })]
-        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "prop1", "prop2", "objectID", "className" })]
+        public void MultipleFacetableOptionsThrows()
+        {
+            Assert.Throws<InvalidOperationException>(() => AlgoliaSearchHelper.GetIndexSettings(Model6.IndexName));
+        }
+
+
+        [Test]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "objectID", "className", "url" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "objectID", "className", "url" })]
+        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "prop1", "prop2", "objectID", "className", "url" })]
         public string[] RetrievableAttributesConvertedToAlgoliaFormat(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexSettings(indexName).AttributesToRetrieve.ToArray();

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Algolia.Search.Clients;
+
+using System;
 
 namespace Kentico.Xperience.AlgoliaSearch.Attributes
 {
@@ -9,5 +11,32 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     [AttributeUsage(AttributeTargets.Property)]
     public class FacetableAttribute : Attribute
     {
-    }
+        /// <summary>
+        /// Defines an attribute as filterable only and not facetable. If you only need the
+        /// filtering feature, you can take advantage of filterOnly which will reduce the index
+        /// size and improve the speed of the search.
+        /// </summary>
+        public bool FilterOnly
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
+        /// Defines an attribute as searchable. If you want to search for values of a given facet
+        /// (using <see cref="SearchIndex.SearchForFacetValue()"/>) you need to specify searchable.
+        /// </summary>
+        public bool Searchable
+        {
+            get;
+            set;
+        }
+
+        public FacetableAttribute(bool filterOnly = false, bool searchable = false)
+        {
+            FilterOnly = filterOnly;
+            Searchable = searchable;
+        }
+     }
 }

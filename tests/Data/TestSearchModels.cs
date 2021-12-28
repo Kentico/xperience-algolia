@@ -7,6 +7,7 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 [assembly: RegisterAlgoliaIndex(typeof(Model3), Model3.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model4), Model4.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model5), Model5.IndexName)]
+[assembly: RegisterAlgoliaIndex(typeof(Model6), Model6.IndexName)]
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     public class TestSearchModels
@@ -30,12 +31,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public const string IndexName = "Model2";
 
 
-            [Facetable]
+            [Facetable(filterOnly: true)]
             [Searchable]
             public string Prop1 { get; set; }
 
 
-            [Facetable]
+            [Facetable(searchable: true)]
             [Searchable]
             public string Prop2 { get; set; }
         }
@@ -100,6 +101,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
             [Searchable(3, true)]
             public string Prop4 { get; set; }
+        }
+
+
+        public class Model6 : AlgoliaSearchModel
+        {
+            public const string IndexName = "Model6";
+
+
+            [Facetable(true, true)]
+            [Searchable]
+            public string Prop1 { get; set; }
         }
     }
 }
