@@ -127,7 +127,8 @@ namespace Kentico.Xperience.AlgoliaSearch
             var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
             foreach (var source in sourceAttribute.Sources)
             {
-                if (node.TryGetValue(source, out nodeValue))
+                nodeValue = node.GetValue(source);
+                if (nodeValue != null)
                 {
                     usedColumn = source;
                     break;
