@@ -21,7 +21,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 p.DocumentName = Guid.NewGuid().ToString();
                 p.DocumentCulture = culture;
-                p.SetValue("ArticleText", Guid.NewGuid().ToString());
                 p.SetValue("NodeAliasPath", nodeAliasPath);
             });
 

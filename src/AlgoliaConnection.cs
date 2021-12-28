@@ -1,16 +1,20 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Settings;
+
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.FormEngine;
 using CMS.Helpers;
+
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch
@@ -104,6 +108,48 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
+        /// Gets the <paramref name="node"/> value using the <paramref name="property"/>
+        /// name, or the property's <see cref="SourceAttribute"/> if specified.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to load a value from.</param>
+        /// <param name="property">The Algolia search model property.</param>
+        /// <returns></returns>
+        private object GetNodeValue(TreeNode node, PropertyInfo property)
+        {
+            if (!Attribute.IsDefined(property, typeof(SourceAttribute)))
+            {
+                return node.GetValue(property.Name);
+            }
+
+            // Property uses SourceAttribute, loop through column names until a non-null value is found
+            object nodeValue = null;
+            string usedColumn = null;
+            var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
+            foreach (var source in sourceAttribute.Sources)
+            {
+                if (node.TryGetValue(source, out nodeValue))
+                {
+                    usedColumn = source;
+                    break;
+                }
+            }
+
+            if (nodeValue == null)
+            {
+                return null;
+            }
+
+            // Convert node value to URL by referencing the used source column
+            if (Attribute.IsDefined(property, typeof(UrlAttribute)))
+            {
+                nodeValue = GetAbsoluteUrlForColumn(node, nodeValue, usedColumn);
+            }
+
+            return nodeValue;
+        }
+
+
+        /// <summary>
         /// Locates the registered search model properties which match the property names of the passed
         /// <paramref name="node"/> and sets the <paramref name="data"/> values from the <paramref name="node"/>.
         /// </summary>
@@ -119,16 +165,7 @@ namespace Kentico.Xperience.AlgoliaSearch
             PropertyInfo[] properties = searchModel.GetType().GetProperties();
             foreach (var prop in properties)
             {
-                object nodeValue = null;
-                if (Attribute.IsDefined(prop, typeof(UrlAttribute)))
-                {
-                    nodeValue = GetAbsoluteUrlForProperty(node, prop);
-                }
-                else
-                {
-                    nodeValue = node.GetValue(prop.Name);
-                }
-                
+                object nodeValue = GetNodeValue(node, prop);
                 if(nodeValue == null)
                 {
                     continue;
@@ -143,21 +180,20 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
-        private string GetAbsoluteUrlForProperty(TreeNode node, PropertyInfo property)
+        private string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName)
         {
-            var nodeValue = ValidationHelper.GetString(node.GetValue(property.Name), "");
-
-            if (String.IsNullOrEmpty(nodeValue))
+            var strValue = ValidationHelper.GetString(nodeValue, "");
+            if (String.IsNullOrEmpty(strValue))
             {
                 return null;
             }
 
-            if (!nodeValue.StartsWith("~"))
+            if (!strValue.StartsWith("~"))
             {
                 // Value is not a URL, get field data type and load URL
                 var dataClassInfo = DataClassInfoProvider.GetDataClassInfo(node.ClassName, false);
                 var formInfo = new FormInfo(dataClassInfo.ClassFormDefinition);
-                var field = formInfo.GetFormField(property.Name);
+                var field = formInfo.GetFormField(columnName);
 
                 if (field == null)
                 {
@@ -168,7 +204,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 switch (field.DataType)
                 {
                     case FieldDataType.File: // Attachment
-                        var attachment = AttachmentInfo.Provider.Get(new Guid(nodeValue), node.NodeSiteID);
+                        var attachment = AttachmentInfo.Provider.Get(new Guid(strValue), node.NodeSiteID);
                         nodeValue = AttachmentURLProvider.GetAttachmentUrl(attachment.AttachmentGUID, attachment.AttachmentName);
                         break;
                 }
