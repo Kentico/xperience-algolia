@@ -1,5 +1,6 @@
 ﻿using CMS.Base;
 using CMS.Core;
+using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
 
@@ -55,7 +56,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                     return;
                 }
 
-                connection.UpsertTreeNode(queueItem.Node);
+                connection.UpsertTreeNodes(new TreeNode[] { queueItem.Node });
             }
             catch (InvalidOperationException ex)
             {

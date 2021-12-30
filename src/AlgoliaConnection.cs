@@ -82,27 +82,34 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
-        /// Updates the Algolia index with the <paramref name="node"/> property values that are
-        /// specified in the registered search model class. The internal Algolia object ID is set to
-        /// the passed <paramref name="node"/>'s <see cref="TreeNode.DocumentID"/>.
+        /// Updates the Algolia index with the property values that are specified in the
+        /// registered search model class for each <see cref="TreeNode"/> in the <paramref name="nodes"/>
+        /// collection. The internal Algolia object IDs are set to the <see cref="TreeNode.DocumentID"/>
+        /// of each <see cref="TreeNode"/>.
         /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> to load property values from.</param>
-        public void UpsertTreeNode(TreeNode node)
+        /// <param name="nodes">The <see cref="TreeNode"/>s to load property values from.</param>
+        public void UpsertTreeNodes(IEnumerable<TreeNode> nodes)
         {
-            if (node == null)
+            if (nodes == null || nodes.Count() == 0)
             {
                 return;
             }
 
             try
             {
-                var data = new JObject();
-                MapTreeNodeProperties(node, data);
-                searchIndex.SaveObject(data);
+                var dataObjects = new List<JObject>();
+                foreach (var node in nodes)
+                {
+                    var data = new JObject();
+                    MapTreeNodeProperties(node, data);
+                    dataObjects.Add(data);
+                }
+                
+                searchIndex.SaveObjects(dataObjects);
             }
             catch (InvalidOperationException ex)
             {
-                LogError(nameof(UpsertTreeNode), ex.Message);
+                LogError(nameof(UpsertTreeNodes), ex.Message);
             }
         }
 
@@ -145,11 +152,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 indexedNodes.AddRange(query.TypedResult);
             }
 
-            //TODO: Add batching for upserts
-            foreach (var node in indexedNodes)
-            {
-                UpsertTreeNode(node);
-            }
+            UpsertTreeNodes(indexedNodes);
         }
 
 
