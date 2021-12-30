@@ -4,8 +4,8 @@ using CMS.DocumentEngine;
 namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
-    /// Thread worker which enqueues recently updated nodes indexed by Algolia and updates
-    /// the Algolia indexes in the background thread.
+    /// Thread worker which enqueues recently created, updated, or deleted nodes
+    /// indexed by Algolia and updates the Algolia indexes in the background thread.
     /// </summary>
     public class AlgoliaNodeUpdateWorker : ThreadQueueWorker<TreeNode, AlgoliaNodeUpdateWorker>
     {
@@ -21,12 +21,16 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
-        /// Adds a <see cref="TreeNode"/> to the worker queue to be indexed.
+        /// Adds a <see cref="TreeNode"/> to the worker queue to be processed.
         /// </summary>
         /// <param name="updatedNode"></param>
         public static void EnqueueNodeUpdate(TreeNode updatedNode)
         {
-            //TODO: Validate updatedNode
+            if (updatedNode == null)
+            {
+                return;
+            }
+
             Current.Enqueue(updatedNode, false);
         }
 
@@ -38,7 +42,11 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         protected override void ProcessItem(TreeNode item)
         {
-            //TODO: Validate item
+            // Determine if node was deleted
+            // TODO: Consider removing DB query and use a flag to denote deleted nodes
+            var existingNode = new TreeProvider().SelectSingleNode(item.NodeID, item.DocumentCulture);
+            var doDelete = (existingNode == null);
+
             foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
             {
                 if (!AlgoliaSearchHelper.IsNodeIndexedByIndex(item, index.Key))
@@ -47,7 +55,14 @@ namespace Kentico.Xperience.AlgoliaSearch
                 }
 
                 var connection = new AlgoliaConnection(index.Key);
-                connection.UpsertTreeNode(item);
+                if (doDelete)
+                {
+                    connection.DeleteTreeNode(item);
+                }
+                else
+                {
+                    connection.UpsertTreeNode(item);
+                }
             }
         }
     }

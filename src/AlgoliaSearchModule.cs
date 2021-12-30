@@ -32,19 +32,39 @@ namespace Kentico.Xperience.AlgoliaSearch
             base.OnInit();
             RegisterAlgoliaIndexes();
             DocumentEvents.Update.After += LogTreeNodeUpdate;
+            DocumentEvents.Insert.After += LogTreeNodeUpdate;
+            DocumentEvents.Delete.After += LogTreeNodeDelete;
             RequestEvents.RunEndRequestTasks.Execute += (sender, eventArgs) => AlgoliaNodeUpdateWorker.Current.EnsureRunningThread();
+        }
+
+
+        private void LogTreeNodeDelete(object sender, DocumentEventArgs e)
+        {
+            if (EventShouldCancel(e.Node, true))
+            {
+                return;
+            }
+
+            AlgoliaNodeUpdateWorker.EnqueueNodeUpdate(e.Node);
         }
 
 
         private void LogTreeNodeUpdate(object sender, DocumentEventArgs e)
         {
-            if (!e.Node.IsPublished || !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(e.Node))
+            if (EventShouldCancel(e.Node, false))
             {
                 return;
             }
 
             //TODO: Check updated columns
             AlgoliaNodeUpdateWorker.EnqueueNodeUpdate(e.Node);
+        }
+
+
+        private bool EventShouldCancel(TreeNode node, bool wasDeleted)
+        {
+            return !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(node) ||
+                (!wasDeleted && !node.IsPublished);
         }
 
 

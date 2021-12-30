@@ -57,19 +57,41 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
+        /// Removes a record from the Algolia index. The <paramref name="node"/>'s
+        /// <see cref="TreeNode.DocumentID"/> is used to reference the internal Algolia object
+        /// ID to delete.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to delete.</param>
+        public void DeleteTreeNode(TreeNode node)
+        {
+            if (node == null)
+            {
+                return;
+            }
+
+            searchIndex.DeleteObject(node.DocumentID.ToString());
+            // TODO: Check response and handle errors
+        }
+
+
+        /// <summary>
         /// Updates the Algolia index with the <paramref name="node"/> property values that are
         /// specified in the registered search model class. The internal Algolia object ID is set to
         /// the passed <paramref name="node"/>'s <see cref="TreeNode.DocumentID"/>.
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load property values from.</param>
-        /// <returns>The response of the request from Algolia.</returns>
-        public BatchIndexingResponse UpsertTreeNode(TreeNode node)
+        public void UpsertTreeNode(TreeNode node)
         {
-            //TODO: Validate node
+            if (node == null)
+            {
+                return;
+            }
+
             var data = new JObject();
             MapTreeNodeProperties(node, data);
 
-            return searchIndex.SaveObject(data);
+            searchIndex.SaveObject(data);
+            // TODO: Check response and handle errors
         }
 
 
