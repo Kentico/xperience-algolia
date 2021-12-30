@@ -8,6 +8,7 @@ using CMS.FormEngine;
 using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -28,7 +29,7 @@ namespace Kentico.Xperience.AlgoliaSearch
     {
         private Type searchModelType;
         private SearchIndex searchIndex;
-        
+
 
         /// <summary>
         /// Constructor. Initializes the Algolia index and its <see cref="IndexSettings"/> by scanning
@@ -46,6 +47,11 @@ namespace Kentico.Xperience.AlgoliaSearch
             var indexSettings = AlgoliaSearchHelper.GetIndexSettings(indexName);
             searchIndex = AlgoliaSearchHelper.GetSearchIndex(indexName);
             searchModelType = AlgoliaSearchHelper.GetModelByIndexName(indexName);
+            if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
+            {
+                throw new InvalidOperationException("Algolia search models must extend the AlgoliaSearchModel class.");
+            }
+
             searchIndex.SetSettings(indexSettings);
         }
 
@@ -171,12 +177,12 @@ namespace Kentico.Xperience.AlgoliaSearch
                 {
                     continue;
                 }
-                
+
                 var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
                 data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
                 
             }
-
+            
             data["url"] = DocumentURLProvider.GetAbsoluteUrl(node);
             data["objectID"] = node.DocumentID.ToString();
         }

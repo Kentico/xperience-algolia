@@ -7,7 +7,7 @@ using CMS.Core;
 using CMS.DocumentEngine;
 using CMS.Helpers;
 
-using Kentico.Xperience.Algolia.Models;
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Configuration;
