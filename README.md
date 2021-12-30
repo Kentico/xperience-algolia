@@ -26,6 +26,8 @@ You can also check out the [Xperience Algolia Search Widgets](https://github.com
 <add key="AlgoliaApiKey" value="<your Admin API key>"/>
 ```
 
+5. (Optional) Import the [Xperience Algolia module](#xperience-algolia-module) in your Xperience website.
+
 ## How it works
 
 This integration uses a code-first approach to define Algolia indexes. A single class (created by your developers) contains the Algolia index fields, the individual field configurations, and automatically registers the Algolia index on application startup.
@@ -183,3 +185,21 @@ public string ArticleTeaser { get; set; }
 [Source(nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser))]
 public string Thumbnail { get; set; }
 ```
+
+## Xperience Algolia module
+
+While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest `Kentico.Xperience.AlgoliaSearch` ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
+
+![Algolia module grid](/img/index-grid.png)
+
+The newly-imported __Algolia search__ module will provide a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point- only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
+
+To view details about an index, click the eye icon:
+
+![Algolia index content](/img/index-content.png)
+
+Switch to the __Search preview__ tab to perform a basic Algolia query:
+
+![Algolia index preview](/img/index-preview.png)
+
+This view will display the `objectID` and `className` fields, plus any other searchable field which contained the matching search term.
