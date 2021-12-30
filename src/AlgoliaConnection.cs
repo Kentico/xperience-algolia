@@ -1,5 +1,4 @@
 ﻿using Algolia.Search.Clients;
-using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Settings;
 
 using CMS.DataEngine;
@@ -89,7 +88,6 @@ namespace Kentico.Xperience.AlgoliaSearch
 
             var data = new JObject();
             MapTreeNodeProperties(node, data);
-
             searchIndex.SaveObject(data);
             // TODO: Check response and handle errors
         }
@@ -204,8 +202,18 @@ namespace Kentico.Xperience.AlgoliaSearch
                 data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
                 
             }
-            
-            data["url"] = DocumentURLProvider.GetAbsoluteUrl(node);
+            try
+            {
+                data["url"] = DocumentURLProvider.GetAbsoluteUrl(node);
+            }
+            catch (Exception ex)
+            {
+                // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
+                // and the page was deleted before the update task has processed. In this case, upsert an
+                // empty URL
+                data["url"] = String.Empty;
+            }
+
             data["objectID"] = node.DocumentID.ToString();
         }
 

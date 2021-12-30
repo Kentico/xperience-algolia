@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\xperience-algolia.csproj" />
+    <ProjectReference Include="..\src\xperience-algolia.csproj" />
   </ItemGroup>
 
 </Project>

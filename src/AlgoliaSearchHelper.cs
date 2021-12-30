@@ -42,6 +42,41 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
+        /// Gets the indexed page columns specified by the the index's search model properties.
+        /// The names of properties with the <see cref="SourceAttribute"/> are ignored, and instead
+        /// the array of sources is added to the list of indexed columns.
+        /// </summary>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        /// <returns>The names of the database columns that are indexed.</returns>
+        public static string[] GetIndexedColumnNames(string indexName)
+        {
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
+            {
+                return new string[] { };
+            }
+
+            // Don't include properties with SourceAttribute at first, check the sources and add to list after
+            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public|BindingFlags.Instance|BindingFlags.DeclaredOnly)
+                .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
+            var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
+            foreach (var property in propertiesWithSourceAttribute)
+            {
+                var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
+                if (sourceAttribute == null)
+                {
+                    continue;
+                }
+
+                indexedColumnNames.AddRange(sourceAttribute.Sources);
+            }
+
+            return indexedColumnNames.ToArray();
+        }
+
+
+        /// <summary>
         /// Gets the registered search model class that is paired with the Algolia index.
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
@@ -134,72 +169,6 @@ namespace Kentico.Xperience.AlgoliaSearch
                 AttributesToRetrieve = retrievablProperties.Select(p => ConvertToCamelCase(p.Name)).ToList(),
                 AttributesForFaceting = facetableProperties.Select(GetFilterablePropertyName).ToList()
             };
-        }
-
-
-        private static string GetFilterablePropertyName(PropertyInfo property)
-        {
-            var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
-            if (attr.FilterOnly && attr.Searchable)
-            {
-                throw new InvalidOperationException("Facetable attributes cannot be both searchable and filterOnly.");
-            }
-
-            var name = ConvertToCamelCase(property.Name);
-            if (attr.FilterOnly)
-            {
-                return $"filterOnly({name})";
-            }
-            if (attr.Searchable)
-            {
-                return $"searchable({name})";
-            }
-
-            return name;
-        }
-
-
-        private static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
-        {
-            var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
-            foreach (var prop in searchableProperties)
-            {
-                var attr = prop.GetCustomAttributes<SearchableAttribute>(false).FirstOrDefault();
-                propertiesWithAttribute.Add(prop.Name, attr);
-            }
-
-            // Remove properties without order, add to end of list later
-            var propertiesWithOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order >= 0);
-            var sortedByOrder = propertiesWithOrdering.OrderBy(prop => prop.Value.Order);
-            var groupedByOrder = sortedByOrder.GroupBy(prop => prop.Value.Order);
-            var searchableAttributes = groupedByOrder.Select(group =>
-                group.Select(prop =>
-                {
-                    var propName = ConvertToCamelCase(prop.Key);
-                    if (prop.Value.Unordered)
-                    {
-                        return $"unordered({propName})";
-                    }
-
-                    return propName;
-                }).Join(",")
-            ).ToList();
-
-            // Add properties without order as single items
-            var propertiesWithoutOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order == -1);
-            foreach (var prop in propertiesWithoutOrdering)
-            {
-                var propName = ConvertToCamelCase(prop.Key);
-                if (prop.Value.Unordered)
-                {
-                    searchableAttributes.Add($"unordered({propName})");
-                    continue;
-                }
-
-                searchableAttributes.Add(propName);
-            }
-
-            return searchableAttributes;
         }
 
 
@@ -339,6 +308,72 @@ namespace Kentico.Xperience.AlgoliaSearch
             var options = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 
             return options;
+        }
+
+
+        private static string GetFilterablePropertyName(PropertyInfo property)
+        {
+            var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
+            if (attr.FilterOnly && attr.Searchable)
+            {
+                throw new InvalidOperationException("Facetable attributes cannot be both searchable and filterOnly.");
+            }
+
+            var name = ConvertToCamelCase(property.Name);
+            if (attr.FilterOnly)
+            {
+                return $"filterOnly({name})";
+            }
+            if (attr.Searchable)
+            {
+                return $"searchable({name})";
+            }
+
+            return name;
+        }
+
+
+        private static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
+        {
+            var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
+            foreach (var prop in searchableProperties)
+            {
+                var attr = prop.GetCustomAttributes<SearchableAttribute>(false).FirstOrDefault();
+                propertiesWithAttribute.Add(prop.Name, attr);
+            }
+
+            // Remove properties without order, add to end of list later
+            var propertiesWithOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order >= 0);
+            var sortedByOrder = propertiesWithOrdering.OrderBy(prop => prop.Value.Order);
+            var groupedByOrder = sortedByOrder.GroupBy(prop => prop.Value.Order);
+            var searchableAttributes = groupedByOrder.Select(group =>
+                group.Select(prop =>
+                {
+                    var propName = ConvertToCamelCase(prop.Key);
+                    if (prop.Value.Unordered)
+                    {
+                        return $"unordered({propName})";
+                    }
+
+                    return propName;
+                }).Join(",")
+            ).ToList();
+
+            // Add properties without order as single items
+            var propertiesWithoutOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order == -1);
+            foreach (var prop in propertiesWithoutOrdering)
+            {
+                var propName = ConvertToCamelCase(prop.Key);
+                if (prop.Value.Unordered)
+                {
+                    searchableAttributes.Add($"unordered({propName})");
+                    continue;
+                }
+
+                searchableAttributes.Add(propName);
+            }
+
+            return searchableAttributes;
         }
     }
 }

@@ -5,6 +5,7 @@ using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
 using System.Collections.Generic;
@@ -31,10 +32,10 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             base.OnInit();
             RegisterAlgoliaIndexes();
-            DocumentEvents.Update.After += LogTreeNodeUpdate;
-            DocumentEvents.Insert.After += LogTreeNodeUpdate;
+            DocumentEvents.Update.Before += LogTreeNodeUpdate;
+            DocumentEvents.Insert.After += LogTreeNodeInsert;
             DocumentEvents.Delete.After += LogTreeNodeDelete;
-            RequestEvents.RunEndRequestTasks.Execute += (sender, eventArgs) => AlgoliaNodeUpdateWorker.Current.EnsureRunningThread();
+            RequestEvents.RunEndRequestTasks.Execute += (sender, eventArgs) => AlgoliaQueueWorker.Current.EnsureRunningThread();
         }
 
 
@@ -45,7 +46,18 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            AlgoliaNodeUpdateWorker.EnqueueNodeUpdate(e.Node);
+            EnqueueAlgoliaItems(e.Node, true, false);
+        }
+
+
+        private void LogTreeNodeInsert(object sender, DocumentEventArgs e)
+        {
+            if (EventShouldCancel(e.Node, false))
+            {
+                return;
+            }
+
+            EnqueueAlgoliaItems(e.Node, false, true);
         }
 
 
@@ -56,8 +68,32 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            //TODO: Check updated columns
-            AlgoliaNodeUpdateWorker.EnqueueNodeUpdate(e.Node);
+            EnqueueAlgoliaItems(e.Node, false, false);
+        }
+
+
+        private void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
+        {
+            foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
+            {
+                if (!AlgoliaSearchHelper.IsNodeIndexedByIndex(node, index.Key))
+                {
+                    continue;
+                }
+
+                var indexedColumns = AlgoliaSearchHelper.GetIndexedColumnNames(index.Key);
+                if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
+                {
+                    continue;
+                }
+
+                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
+                {
+                    Node = node,
+                    Deleted = wasDeleted,
+                    IndexName = index.Key
+                });
+            }
         }
 
 
