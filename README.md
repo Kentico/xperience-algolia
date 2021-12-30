@@ -4,7 +4,7 @@
 
 This integration enables the creating of [Algolia](https://www.algolia.com/) search indexes and the indexing of Xperience content tree pages using a code-first approach. Developers can use the [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to provide a search interface on their live site.
 
-You can also check out the [Xperience Algolia Search Widgets](https://github.com/Kentico/xperience-algolia) repository for helpful Xperience page builder widgets.
+You can also check out the [Xperience Algolia Search Widgets](https://github.com/Kentico/xperience-algolia-widgets) repository for helpful Xperience page builder widgets.
 
 ## Installation
 
