@@ -1,10 +1,11 @@
 ﻿using CMS.Base;
 using CMS.Core;
-using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Kentico.Xperience.AlgoliaSearch
 {
@@ -14,6 +15,9 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaQueueWorker : ThreadQueueWorker<AlgoliaQueueItem, AlgoliaQueueWorker>
     {
+        private readonly IEventLogService mEventLogService;
+
+
         protected override int DefaultInterval => 10000;
 
 
@@ -22,6 +26,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         public AlgoliaQueueWorker()
         {
+            mEventLogService = Service.Resolve<IEventLogService>();
         }
 
 
@@ -42,36 +47,48 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         protected override void Finish()
         {
+            RunProcess();
         }
 
 
-        protected override void ProcessItem(AlgoliaQueueItem queueItem)
+        protected override int ProcessItems(IEnumerable<AlgoliaQueueItem> items)
         {
-            try
+            // Group queue items based on index name
+            var groups = items.ToList().GroupBy(item => item.IndexName);
+            foreach (var group in groups)
             {
-                var connection = new AlgoliaConnection(queueItem.IndexName);
-                if (queueItem.Deleted)
+                try
                 {
-                    connection.DeleteTreeNode(queueItem.Node);
-                    return;
-                }
+                    var connection = new AlgoliaConnection(group.Key);
+                    var deleteTasks = group.Where(queueItem => queueItem.Deleted);
+                    var updateTasks = group.Where(queueItem => !queueItem.Deleted);
 
-                connection.UpsertTreeNodes(new TreeNode[] { queueItem.Node });
+                    connection.UpsertTreeNodes(updateTasks.Select(queueItem => queueItem.Node));
+                    connection.DeleteTreeNodes(deleteTasks.Select(queueItem => queueItem.Node));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    LogError(ex.Message, nameof(ProcessItems));
+                }
+                catch (ArgumentNullException ex)
+                {
+                    LogError(ex.Message, nameof(ProcessItems));
+                }
             }
-            catch (InvalidOperationException ex)
-            {
-                LogError(ex.Message, nameof(ProcessItem));
-            }
-            catch (ArgumentNullException ex)
-            {
-                LogError(ex.Message, nameof(ProcessItem));
-            }
+
+            return items.Count();
+        }
+
+
+        protected override void ProcessItem(AlgoliaQueueItem item)
+        {
+            ProcessItems(new AlgoliaQueueItem[] { item });
         }
 
 
         private void LogError(string message, string code)
         {
-            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaQueueWorker), code, message);
+            mEventLogService.LogError(nameof(AlgoliaQueueWorker), code, message);
         }
     }
 }

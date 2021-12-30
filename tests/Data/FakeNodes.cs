@@ -32,5 +32,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         {
             return nodes[nodeAliasPath];
         }
+
+
+        public static void ClearNodes()
+        {
+            nodes.Clear();
+        }
     }
 }
