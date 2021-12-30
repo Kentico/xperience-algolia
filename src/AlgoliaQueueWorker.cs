@@ -1,4 +1,5 @@
 ﻿using CMS.Base;
+using CMS.Core;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
 
@@ -45,14 +46,31 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         protected override void ProcessItem(AlgoliaQueueItem queueItem)
         {
-            var connection = new AlgoliaConnection(queueItem.IndexName);
-            if (queueItem.Deleted)
+            try
             {
-                connection.DeleteTreeNode(queueItem.Node);
-                return;
-            }
+                var connection = new AlgoliaConnection(queueItem.IndexName);
+                if (queueItem.Deleted)
+                {
+                    connection.DeleteTreeNode(queueItem.Node);
+                    return;
+                }
 
-            connection.UpsertTreeNode(queueItem.Node);
+                connection.UpsertTreeNode(queueItem.Node);
+            }
+            catch (InvalidOperationException ex)
+            {
+                LogError(ex.Message, nameof(ProcessItem));
+            }
+            catch (ArgumentNullException ex)
+            {
+                LogError(ex.Message, nameof(ProcessItem));
+            }
+        }
+
+
+        private void LogError(string message, string code)
+        {
+            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaQueueWorker), code, message);
         }
     }
 }

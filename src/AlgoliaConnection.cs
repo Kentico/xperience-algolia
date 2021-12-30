@@ -1,6 +1,7 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Settings;
 
+using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.FormEngine;
@@ -35,15 +36,23 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// the registered search model class for custom attributes.
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index to manage.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="indexName"/> is empty
+        /// or null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the search model is configured
+        /// incorrectly or index settings cannot be loaded.</exception>
         public AlgoliaConnection(string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
-                //TODO: Throw exception or log message
-                return;
+                throw new ArgumentNullException(indexName);
             }
 
             var indexSettings = AlgoliaSearchHelper.GetIndexSettings(indexName);
+            if (indexSettings == null)
+            {
+                throw new InvalidOperationException("Unable to load search index settings.");
+            }
+
             searchIndex = AlgoliaSearchHelper.GetSearchIndex(indexName);
             searchModelType = AlgoliaSearchHelper.GetModelByIndexName(indexName);
             if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
@@ -69,7 +78,6 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
 
             searchIndex.DeleteObject(node.DocumentID.ToString());
-            // TODO: Check response and handle errors
         }
 
 
@@ -86,10 +94,16 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            var data = new JObject();
-            MapTreeNodeProperties(node, data);
-            searchIndex.SaveObject(data);
-            // TODO: Check response and handle errors
+            try
+            {
+                var data = new JObject();
+                MapTreeNodeProperties(node, data);
+                searchIndex.SaveObject(data);
+            }
+            catch (InvalidOperationException ex)
+            {
+                LogError(nameof(UpsertTreeNode), ex.Message);
+            }
         }
 
 
@@ -97,11 +111,17 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// Rebuilds the Algolia index by removing existing data from Algolia and indexing all
         /// pages in the content tree included in the index.
         /// </summary>
+        /// <exception cref="InvalidOperationException">Thrown if a search model class is not
+        /// found for the index.</exception>
         public void Rebuild()
         {
+            if (searchModelType == null)
+            {
+                throw new InvalidOperationException("No registered search model class found for index.");
+            }
+
             searchIndex.ClearObjects();
 
-            //TODO: Validate searchModelType
             var indexedNodes = new List<TreeNode>();
             var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var includedPathAttribute in includedPathAttributes)
@@ -182,9 +202,15 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
         /// <param name="data">The dynamic data that will be passed to Algolia.</param>
+        /// <exception cref="InvalidOperationException">Thrown if a search model class is not
+        /// found for the index.</exception>
         private void MapTreeNodeProperties(TreeNode node, JObject data)
         {
-            //TODO: Validate searchModelType, node, data
+            if (searchModelType == null)
+            {
+                throw new InvalidOperationException("No registered search model class found for index.");
+            }
+
             var serializer = new JsonSerializer();
             serializer.Converters.Add(new DecimalPrecisionConverter());
 
@@ -235,7 +261,7 @@ namespace Kentico.Xperience.AlgoliaSearch
 
                 if (field == null)
                 {
-                    // TODO: Throw or log error
+                    LogError(nameof(GetAbsoluteUrlForColumn), $"Unable to load field definition for page type '{node.ClassName}' column name '{columnName}.'");
                     return null;
                 }
 
@@ -250,6 +276,12 @@ namespace Kentico.Xperience.AlgoliaSearch
 
             var liveSiteDomain = node.Site.SitePresentationURL;
             return URLHelper.GetAbsoluteUrl(ValidationHelper.GetString(nodeValue, ""), null, liveSiteDomain, null);
+        }
+
+
+        private void LogError(string code, string message)
+        {
+            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaConnection), code, message);
         }
     }
 }

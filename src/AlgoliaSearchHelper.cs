@@ -83,7 +83,6 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <returns>The search model class type, or null if not found.</returns>
         public static Type GetModelByIndexName(string indexName)
         {
-            //TODO: Validate indexName
             var records = mRegisteredIndexes.Where(i => i.Key == indexName);
             if (records.Count() == 0)
             {
@@ -98,7 +97,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// Gets a <see cref="SearchClient"/> using the application ID and API key specified in
         /// either the web.config or appsettings.json, depending on the application.
         /// </summary>
-        /// <returns>A <see cref="SearchClient"/> for interfacing with Algolia.</returns>
+        /// <returns>A <see cref="SearchClient"/> for interfacing with Algolia, or null if there
+        /// was an error creating it.</returns>
         public static SearchClient GetSearchClient()
         {
             AlgoliaOptions options = null;
@@ -111,7 +111,12 @@ namespace Kentico.Xperience.AlgoliaSearch
                 options = GetAlgoliaOptionsCore();
             }
 
-            //TODO: Validate options
+            if (options == null || String.IsNullOrEmpty(options.ApplicationId) || String.IsNullOrEmpty(options.ApiKey))
+            {
+                LogError(nameof(GetSearchClient), "Unable to load Algolia configuration keys.");
+                return null;
+            }
+
             return new SearchClient(options.ApplicationId, options.ApiKey);
         }
 
@@ -121,12 +126,20 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <returns>A <see cref="SearchIndex"/> to search with, or null if not found.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static SearchIndex GetSearchIndex(string indexName)
         {
-            //TODO: Validate indexName
-            var client = GetSearchClient();
+            if (String.IsNullOrEmpty(indexName))
+            {
+                throw new ArgumentNullException(nameof(indexName));
+            }
 
-            //TODO: Validate client
+            var client = GetSearchClient();
+            if (client == null)
+            {
+                return null;
+            }
+
             return client.InitIndex(indexName);
         }
 
@@ -138,8 +151,11 @@ namespace Kentico.Xperience.AlgoliaSearch
         public static List<IndicesResponse> GetStatistics()
         {
             var client = GetSearchClient();
+            if (client == null)
+            {
+                return Enumerable.Empty<IndicesResponse>().ToList();
+            }
 
-            //TODO: Validate client
             return client.ListIndices().Items;
         }
 
@@ -148,14 +164,19 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// Gets the <see cref="IndexSettings"/> of the Algolia index.
         /// </summary>
         /// <param name="indexName">The Algolia index code name.</param>
-        /// <returns>The index settings.</returns>
+        /// <returns>The index settings, or null if not found.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static IndexSettings GetIndexSettings(string indexName)
         {
-            //TODO: Validate indexName
+            if (String.IsNullOrEmpty(indexName))
+            {
+                throw new ArgumentNullException(nameof(indexName));
+            }
+
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                //TODO: Throw or log error
+                LogError(nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
                 return null;
             }
 
@@ -179,12 +200,12 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         /// <param name="node"></param>
         /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool IsNodeAlgoliaIndexed(TreeNode node)
         {
             if (node == null)
             {
-                //TODO: Throw or log error
-                return false;
+                throw new ArgumentNullException(nameof(node));
             }
 
             foreach (var index in mRegisteredIndexes)
@@ -205,19 +226,23 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         /// <param name="node">The node to check for indexing.</param>
         /// <param name="indexName">The Algolia index code name.</param>
+        /// <exception cref="ArgumentNullException"></exception>
         public static bool IsNodeIndexedByIndex(TreeNode node, string indexName)
         {
-            //TODO: Validate indexName
+            if (String.IsNullOrEmpty(indexName))
+            {
+                throw new ArgumentNullException(nameof(indexName));
+            }
             if (node == null)
             {
-                //TODO: Throw or log error
-                return false;
+                throw new ArgumentNullException(nameof(node));
             }
 
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                //TODO: Throw or log error
+                LogError(nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                return false;
             }
 
             var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
@@ -255,15 +280,25 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <param name="searchModelType">The search model type.</param>
         public static void RegisterIndex(string indexName, Type searchModelType)
         {
-            //TODO: Validate indexName
+            if (String.IsNullOrEmpty(indexName))
+            {
+                LogError(nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
+                return;
+            }
+
+            if (searchModelType == null)
+            {
+                LogError(nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
+                return;
+            }
+
             if (mRegisteredIndexes.ContainsKey(indexName))
             {
-                //TODO: Log a warning when trying to register an index multiple times
+                LogError(nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
+                return;
             }
-            else
-            {
-                mRegisteredIndexes.Add(indexName, searchModelType);
-            }
+            
+            mRegisteredIndexes.Add(indexName, searchModelType);
         }
 
 
@@ -274,7 +309,11 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <returns>The original <paramref name="input"/> converted to camel case.</returns>
         public static string ConvertToCamelCase(string input)
         {
-            //TODO: Validate input
+            if (String.IsNullOrEmpty(input))
+            {
+                return String.Empty;
+            }
+
             return Regex.Replace(input, @"([A-Z])([A-Z]+|[a-z0-9_]+)($|[A-Z]\w*)", m =>
             {
                 return m.Groups[1].Value.ToLower() + m.Groups[2].Value.ToLower() + m.Groups[3].Value;
@@ -330,6 +369,12 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
 
             return name;
+        }
+
+
+        private static void LogError(string code, string message)
+        {
+            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaSearchHelper), code, message);
         }
 
 
