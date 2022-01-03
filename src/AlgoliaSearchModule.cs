@@ -28,6 +28,10 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Registers all Algolia indexes, initializes page event handlers, and ensures the thread
+        /// queue worker for processing Algolia tasks.
+        /// </summary>
         protected override void OnInit()
         {
             base.OnInit();
@@ -39,6 +43,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Called after a page is deleted. Logs an Algolia task to be processed later.
+        /// </summary>
         private void LogTreeNodeDelete(object sender, DocumentEventArgs e)
         {
             if (EventShouldCancel(e.Node, true))
@@ -50,6 +57,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Called after a page is created. Logs an Algolia task to be processed later.
+        /// </summary>
         private void LogTreeNodeInsert(object sender, DocumentEventArgs e)
         {
             if (EventShouldCancel(e.Node, false))
@@ -61,6 +71,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Called before a page is updated. Logs an Algolia task to be processed later.
+        /// </summary>
         private void LogTreeNodeUpdate(object sender, DocumentEventArgs e)
         {
             if (EventShouldCancel(e.Node, false))
@@ -72,6 +85,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Loops through all registered Algolia indexes and logs a task if the passed
+        /// <paramref name="node"/> is indexed. For updated pages, a task is only logged
+        /// if one of the indexed columns has been modified.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
+        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
+        /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
         private void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
         {
             foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
@@ -97,6 +118,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Returns true if the page event event handler should stop processing. Checks
+        /// if the page is indexed by any Algolia index, and for new/updated pages, the
+        /// page must be published.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
+        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
+        /// <returns></returns>
         private bool EventShouldCancel(TreeNode node, bool wasDeleted)
         {
             return !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(node) ||

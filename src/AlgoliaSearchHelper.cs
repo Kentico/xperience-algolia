@@ -350,6 +350,15 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Converts a property name with a <see cref="FacetableAttribute"/> into the correct Algolia
+        /// format, based on the configured options of the <see cref="FacetableAttribute"/>.
+        /// </summary>
+        /// <param name="property">The search model property to get the name of.</param>
+        /// <returns>A camel-cased property name.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the <see cref="FacetableAttribute"/>
+        /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
+        /// set to true.</exception>
         private static string GetFilterablePropertyName(PropertyInfo property)
         {
             var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
@@ -378,6 +387,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Returns a list of searchable properties ordered by <see cref="SearchableAttribute.Order"/>,
+        /// with properties having the same <see cref="SearchableAttribute.Order"/> in a single string
+        /// separated by commas.
+        /// </summary>
+        /// <param name="searchableProperties">The properties of the search model to be ordered.</param>
+        /// <returns>A list of strings appropriate for setting Algolia searchable attributes (see
+        /// <see href="https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/"/>).</returns>
         private static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
         {
             var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();

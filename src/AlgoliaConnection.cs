@@ -248,6 +248,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Converts the value from the <paramref name="node"/>'s column from a relative URL
+        /// (e.g. ~/getmedia) or an attachment reference into an absolute live-site URL.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> the value was loaded from.</param>
+        /// <param name="nodeValue">The original value of the column.</param>
+        /// <param name="columnName">The name of the column the value was loaded from.</param>
+        /// <returns>An absolute URL, or null if it couldn't be converted.</returns>
         private string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName)
         {
             var strValue = ValidationHelper.GetString(nodeValue, "");

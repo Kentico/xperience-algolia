@@ -186,6 +186,87 @@ public string ArticleTeaser { get; set; }
 public string Thumbnail { get; set; }
 ```
 
+## Searching the index
+
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET, you can use [`AlgoliaSearchHelper.GetSearchIndex()`](https://github.com/Kentico/xperience-algolia/blob/master/src/AlgoliaSearchHelper.cs#L130) to get the [`SearchIndex`](algolia.com/doc/api-reference/api-methods/search/?client=csharp) object based on your index's code name:
+
+```cs
+public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
+{
+    page = Math.Max(page, DEFAULT_PAGE_NUMBER);
+
+    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    var query = new Query(searchText)
+    {
+        Page = page,
+        HitsPerPage = PAGE_SIZE
+    };
+
+    var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+    ...
+```
+
+The `Hits` object of the [search response](https://www.algolia.com/doc/api-reference/api-methods/search/?client=csharp#response) will be a list of the strongly typed objects defined by your search model (`AlgoliaSiteSearchModel` in the above example). Other helpful properties of the results are `NbPages` and `NbHits`.
+
+The properties of each hit will be populated from the Algolia index, but be sure to check for `null` values! For example, a property that does _not_ have the [`Retrievable`](#retrievable-attribute) attribute will not be returned, and custom page type fields will only be present for results of that type. That is, a property named "ArticleText" will most likely be `null` for products on your site. You can reference the [`AlgoliaSearchModel.ClassName`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs#L27) property present on all indexes to check the type of the returned hit.
+
+Once the search is performed, pass the `Hits` and paging information to your view:
+
+```cs
+return View(new SearchResultsModel()
+{
+    Items = results.Hits,
+    Query = searchText,
+    CurrentPage = page,
+    NumberOfPages = results.NbPages
+});
+```
+
+In the view, loop through the `Hits` and display the results using a [display template](https://docs.microsoft.com/en-us/dotnet/api/system.web.mvc.html.displayextensions.displayfor?view=aspnet-mvc-5.2#System_Web_Mvc_Html_DisplayExtensions_DisplayFor__2_System_Web_Mvc_HtmlHelper___0__System_Linq_Expressions_Expression_System_Func___0___1___System_String_System_String_). You can define separate display templates for products or each page type if you'd like:
+
+```cs
+foreach (var item in Model.Items)
+{
+    if (item.SKUPrice != null)
+    {
+        @Html.DisplayFor(m => item, "SiteSearchProductResult")
+    }
+    else if (item.ClassName == Article.CLASS_NAME)
+    {
+        @Html.DisplayFor(m => item, "SiteSearchArticleResult")
+    }
+    else
+    {
+        @Html.DisplayFor(m => item, "SiteSearchResult")
+    }
+}
+```
+
+In the display template, reference your search model's properties to display the result:
+
+```cs
+@model DancingGoat.AlgoliaSiteSearchModel
+
+<div class="row search-tile">
+    <div class="col-md-4 col-lg-3">
+        @if (!string.IsNullOrEmpty(Model.Thumbnail))
+        {
+            <a href="@Model.Url" title="@Model.DocumentName">
+                <img src="@Model.Thumbnail" alt="@Model.DocumentName" title="@Model.DocumentName" class="img-responsive" />
+            </a>
+        }
+    </div>
+    <div class="col-md-8 col-lg-9 search-tile-content">
+        <h3 class="h4 search-tile-title">
+            <a href="@Model.Url">@Model.DocumentName</a>
+        </h3>
+        <div class="search-tile-badge">@Model.ClassName</div>
+        <div class="search-tile-subtitle">@Model.DocumentCreatedWhen.ToShortDateString()</div>
+        <div>@Html.Raw(Model.ShortDescription)</div>
+    </div>
+</div>
+```
+
 ## Xperience Algolia module
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).

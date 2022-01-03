@@ -51,6 +51,13 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Processes multiple queue items from all Algolia indexes in batches. Algolia
+        /// automatically applies batching in multiples of 1,000 when using their API,
+        /// so all queue items are forwarded to the API.
+        /// </summary>
+        /// <param name="items">The items to process.</param>
+        /// <returns>The number of processed items.</returns>
         protected override int ProcessItems(IEnumerable<AlgoliaQueueItem> items)
         {
             // Group queue items based on index name
