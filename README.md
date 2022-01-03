@@ -267,6 +267,125 @@ In the display template, reference your search model's properties to display the
 </div>
 ```
 
+### Creating an autocomplete search box
+
+Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/what-is-autocomplete/) functionality via javascript which you can [install](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#installation) and set up any way you'd like. Below is an example of how we added autocomplete functionality to the Dancing Goat demo site's main search box in the top-right of every page.
+
+1. In the `_Layout.cshtml` view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
+
+```html
+<script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
+<script src="//cdn.jsdelivr.net/autocomplete.js/0/autocomplete.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@algolia/autocomplete-theme-classic"/>
+```
+
+2. Remove the existing search form and add a container for the autocomplete search box:
+
+```html
+<li class="search-menu-item">
+    <div class="searchBox">
+        <input id="search-input" placeholder="Search">
+    </div>
+</li>
+```
+
+3. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
+4. Still in `_Layout.cshtml`, add javascript to the `<head>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+
+```html
+<script type="text/javascript">
+    var client = algoliasearch('<your Application ID>', '<your Search API Key>');
+    var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
+</script>
+```
+
+> :bulb: You can also load the Application ID and Search API Key from the `appsettings.json` file by injecting `IConfiguration` into your view.
+
+5. Initialize the autocomplete search box, then create a handler for when users click on autocomplete suggestions, and when the _Enter_ button is pushed:
+
+```js
+var autocompleteBox = autocomplete('#search-input', {hint: false}, [
+{
+    source: autocomplete.sources.hits(index, {hitsPerPage: 5}),
+    displayKey: 'documentName' // The Algolia field used to display the title of a suggestion
+}
+]).on('autocomplete:selected', function(event, suggestion, dataset) {
+	window.location = suggestion.url; // Navigate to the clicked suggestion
+});
+
+document.querySelector("#search-input").addEventListener("keyup", (e) => {
+	if (e.key === 'Enter') {
+        // Navigate to search results page when Enter is pressed
+        var searchText = document.querySelector("#search-input").value;
+        window.location = '@(Url.Action("Index", "Search"))?searchtext=' + searchText;
+    }
+});
+```
+
+When you run the Dancing Goat website and start typing into the search box, records from the Algolia index will be suggested:
+
+![Autocomplete default theme](/img/autocomplete-default-theme.png)
+
+### Customizing the autocomplete search box
+
+In our sample implementation of the Algolia autocomplete search box we used the standard [Autocomplete classic theme](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#install-the-autocomplete-classic-theme) for basic styling of the search box and the autocomplete suggestion layout. You can reference the theme's [CSS classes and variables](https://www.algolia.com/doc/ui-libraries/autocomplete/api-reference/autocomplete-theme-classic/) to customize the appearance of the search box to match the design of your website.
+
+In the Dancing Goat website, we added the following to the CSS which styles the search box and suggestions to match the Dancing Goat theme:
+
+```css
+/*# Algolia search box #*/
+.searchBox .aa-dropdown-menu {
+    background-color: #fff;
+    padding: 5px;
+    top: 120% !important;
+    width: 100%;
+    box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.2), 0 2px 3px 0 rgba(0, 0, 0, 0.1);
+}
+.searchBox .algolia-autocomplete {
+    width: 100%;
+}
+
+.searchBox .aa-input {
+    width: 100%;
+    background-color: transparent;
+    padding-left: 10px;
+    padding-top: 5px;
+}
+
+.searchBox .aa-suggestion {
+    padding: 5px 5px 0;
+}
+
+.searchBox .aa-suggestion em {
+    color: #4098ce;
+}
+
+.searchBox .aa-suggestion.aa-cursor {
+    background: #eee;
+    cursor: pointer;
+}
+```
+
+The layout of each individual suggestion can be customized by providing a [custom template](https://www.algolia.com/doc/ui-libraries/autocomplete/core-concepts/templates/) in the `autocomplete()` function. In the Dancing Goat website, we can add an image to each suggestion and highlight the matching search term by adding the following to our javascript:
+
+
+```js
+var autocompleteBox = autocomplete('#search-input', {hint: false}, [
+{
+    source: autocomplete.sources.hits(index, {hitsPerPage: 5}),
+    templates: {
+        suggestion: (item) =>
+            `<img style='width:40px;margin-right:10px' src='${item.thumbnail}'/><span>${item._highlightResult.documentName.value}</span>`
+    }
+}
+```
+
+> :warning: The fields `documentName` and `thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using fields present in your index. See the [Source attribute](#source-attribute) to find out how the `thumbnail` field was defined.
+
+This is the final result of adding our custom CSS and template:
+
+![Autocomplete custom template](/img/autocomplete-custom-template.png)
+
 ## Xperience Algolia module
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
