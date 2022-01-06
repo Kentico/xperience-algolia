@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Kentico.Xperience.AlgoliaSearch</RootNamespace>
+	  <LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,6 +15,7 @@
   <ItemGroup>
     <PackageReference Include="Algolia.Search" Version="6.11.0" />
     <PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Localization.Abstractions" Version="6.0.1" />
   </ItemGroup>
 
 </Project>

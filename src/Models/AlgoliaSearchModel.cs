@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         /// The name of the Xperience class to which the indexed data belongs.
         /// </summary>
         [Retrievable]
-        [Facetable]
+        [Facetable(searchable: true)]
         public string ClassName
         {
             get;

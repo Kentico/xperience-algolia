@@ -1,5 +1,6 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Common;
+using Algolia.Search.Models.Search;
 using Algolia.Search.Models.Settings;
 
 using CMS.Base;
@@ -8,6 +9,7 @@ using CMS.DocumentEngine;
 using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Configuration;
@@ -157,6 +159,46 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
 
             return client.ListIndices().Items;
+        }
+
+
+        /// <summary>
+        /// Gets a list of faceted Algolia attributes from a search response. If a <paramref name="filter"/> is
+        /// provided, the <see cref="AlgoliaFacet.IsChecked"/> property is set based on the state of the filter.
+        /// </summary>
+        /// <param name="facetsFromResponse">The <see cref="SearchResponse{T}.Facets"/> returned from an Algolia search.</param>
+        /// <param name="filter">The <see cref="IAlgoliaFacetFilter"/> used in previous Algolia searches, containing
+        /// the facets that were present and their <see cref="AlgoliaFacet.IsChecked"/> states.</param>
+        /// <returns>A new list of <see cref="AlgoliaFacetedAttribute"/>s that are available to filter search
+        /// results.</returns>
+        public static AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null)
+        {
+            // Get facets in filter that are checked to persist checked state when replacing facets from search response
+            var checkedFacetValues = new List<string>();
+            if (filter != null)
+            {
+                foreach (var facetedAttribute in filter.FacetedAttributes)
+                {
+                    checkedFacetValues.AddRange(facetedAttribute.Facets.Where(facet => facet.IsChecked).Select(facet => facet.Value));
+                }
+            }
+
+            return facetsFromResponse.Select(dict =>
+                new AlgoliaFacetedAttribute
+                {
+                    Attribute = dict.Key,
+                    DisplayName = dict.Key,
+                    Facets = dict.Value.Select(facet =>
+                        new AlgoliaFacet
+                        {
+                            Attribute = dict.Key,
+                            Value = facet.Key,
+                            Count = facet.Value,
+                            IsChecked = checkedFacetValues.Contains(facet.Key)
+                        }
+                    ).ToArray()
+                }
+            ).ToArray();
         }
 
 
@@ -381,12 +423,6 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
-        private static void LogError(string code, string message)
-        {
-            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaSearchHelper), code, message);
-        }
-
-
         /// <summary>
         /// Returns a list of searchable properties ordered by <see cref="SearchableAttribute.Order"/>,
         /// with properties having the same <see cref="SearchableAttribute.Order"/> in a single string
@@ -436,6 +472,12 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
 
             return searchableAttributes;
+        }
+
+
+        private static void LogError(string code, string message)
+        {
+            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaSearchHelper), code, message);
         }
     }
 }

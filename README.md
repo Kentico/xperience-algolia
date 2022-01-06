@@ -73,28 +73,45 @@ While the above sample code will create an Algolia index, pages in the content t
 Below is an example of an Algolia index which includes multiple paths and page types:
 
 ```cs
-using CMS.DocumentEngine.Types.DancingGoatCore;
-using DancingGoat;
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
-using System
-
 [assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName)]
 namespace DancingGoat
 {
     [IncludedPath("/Articles/%", new string[] { Article.CLASS_NAME })]
-    [IncludedPath("/Store/%", new string[] { Brewer.CLASS_NAME, Coffee.CLASS_NAME })]
+    [IncludedPath("/Store/%", new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
     {
-        public const string IndexName = "AlgoliaSiteIndex";
+        public const string IndexName = nameof(AlgoliaSiteSearchModel);
 
+        [Searchable, Retrievable]
         public string DocumentName { get; set; }
 
+        [Url, Retrievable]
+        [Source(nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser))]
+        public string Thumbnail { get; set; }
+
+        [Searchable]
+        [Source(nameof(SKUTreeNode.DocumentSKUDescription), nameof(Article.ArticleText))]
+        public string Content { get; set; }
+
+        [Searchable, Retrievable]
+        [Source(nameof(SKUTreeNode.DocumentSKUShortDescription), nameof(Article.ArticleSummary))]
+        public string ShortDescription { get; set; }
+
+        [Facetable, Retrievable]
         public decimal? SKUPrice { get; set; }
 
-        public string ArticleText { get; set; }
+        [Retrievable]
+        public int SKUPublicStatusID { get; set; }
+
+        [Retrievable]
+        public DateTime DocumentCreatedWhen { get; set; }
+
+        [Facetable]
+        public string CoffeeProcessing { get; set; }
+
+        [Facetable]
+        public bool CoffeeIsDecaf { get; set; }
     }
-}
 ```
 
 ## :memo: Configuring fields with attributes
@@ -387,6 +404,269 @@ var autocompleteBox = autocomplete('#search-input', {hint: false}, [
 This is the final result of adding our custom CSS and template:
 
 ![Autocomplete custom template](/img/autocomplete-custom-template.png)
+
+## :ballot_box_with_check: Faceted search
+
+As the search interface can be designed in multiple languages using Algolia's APIs, your developers can implement [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) in any way they'd like. However, this repository contains some helpful classes to develop faceted search using C#. The following is an example of creating a faceted search interface within the Dancing Goat sample site's store.
+
+### Setting up basic search
+
+The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](determining-the-pages-to-index).
+
+1. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
+
+```cs
+private SearchResponse<AlgoliaSiteSearchModel> Search()
+{
+    var classNameAttribute = AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.ClassName));
+    var facetsToRetrieve = new string[] {
+        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf)),
+        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeProcessing))
+    };
+
+    var query = new Query()
+    {
+        Filters = $"{classNameAttribute}:{new Coffee().ClassName}",
+        Facets = facetsToRetrieve
+    };
+
+    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    return searchIndex.Search<AlgoliaSiteSearchModel>(query);
+}
+```
+
+2. Create __AlgoliaStoreModel.cs__ which will represent a single product in the store listing:
+
+```cs
+using CMS.Core;
+using CMS.DocumentEngine;
+using CMS.Ecommerce;
+using CMS.Helpers;
+using DancingGoat.Services;
+
+namespace DancingGoat.Models.Store
+{
+    public class AlgoliaStoreModel
+    {
+        public AlgoliaSiteSearchModel Hit { get; set; }
+
+        public ProductCatalogPrices PriceDetail { get; }
+
+        public int SelectedVariantID { get; set; }
+
+        public string PublicStatusName { get; set; }
+
+        public bool IsInStock { get; }
+
+        public bool AllowSale { get; }
+
+        public bool Available
+        {
+            get
+            {
+                return IsInStock && AllowSale;
+            }
+        }
+
+        public AlgoliaStoreModel(AlgoliaSiteSearchModel hit)
+        {
+            Hit = hit;
+
+            var documentId = ValidationHelper.GetInteger(hit.ObjectID, 0);
+            var page = DocumentHelper.GetDocument(documentId, new TreeProvider());
+            var sku = SKUInfo.Provider.Get(page.NodeSKUID);
+            
+            if (hit.SKUPublicStatusID > 0)
+            {
+                PublicStatusName = PublicStatusInfo.Provider.Get(hit.SKUPublicStatusID).PublicStatusDisplayName;
+            }
+
+            var calc = Service.Resolve<ICalculationService>();
+            PriceDetail = calc.CalculatePrice(sku);
+
+            IsInStock = sku.SKUTrackInventory == TrackInventoryTypeEnum.Disabled ||
+                        sku.SKUAvailableItems > 0;
+            AllowSale = IsInStock || !sku.SKUSellOnlyAvailable;
+        }
+    }
+}
+
+```
+
+3. In __ProductListViewModel.cs__, change the `Items` property to be a list of our new `AlgoliaStoreModel` items:
+
+```cs
+public IEnumerable<AlgoliaStoreModel> Items { get; set; }
+```
+
+4. Modify the `Index()` method to perform the search and provide the list of hits converted into `AlgoliaStoreModel` objects:
+
+```cs
+[HttpGet]
+[HttpPost]
+public ActionResult Index()
+{
+    var searchResponse = Search();
+    var items = searchResponse.Hits.Select(
+        hit => new AlgoliaStoreModel(hit)
+    );
+
+    var model = new ProductListViewModel
+    {
+        Items = items
+    };
+
+    return View(model);
+}
+```
+
+5. Modify the views _Index.cshtml_,_CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
+
+### Filtering your search with facets
+
+In the `Search()` method, we retrieved the _coffeeIsDecaf_ and _coffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
+
+This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "coffeeIsDecaf"), localized display name (e.g. "Caffeine"), and a list of `AlgoliaFacet`s.
+
+Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "coffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
+
+1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter` and adds a filter to `Query.FacetFilters` if facets are selected:
+
+```cs
+private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter = null)
+{
+    var classNameAttribute = AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.ClassName));
+    var facetsToRetrieve = new string[] {
+        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf)),
+        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeProcessing))
+    };
+
+    var query = new Query()
+    {
+        Filters = $"{classNameAttribute}:{new Coffee().ClassName}",
+        Facets = facetsToRetrieve
+    };
+
+    if (filter != null)
+    {
+        query.FacetFilters = filter.GetFilters();
+    }
+
+    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    return searchIndex.Search<AlgoliaSiteSearchModel>(query);
+}
+```
+
+The `GetFilters()` method will return a facet filter for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" processing type, the filter will look like this:
+
+```js
+[
+    [ "coffeeIsDecaf:true" ],
+    [ "coffeeProcessing:washed" ]
+]
+```
+
+2. In `ProductListViewModel.cs`, add another property which will contain our facet filter:
+
+```cs
+public IAlgoliaFacetFilter AlgoliaFacetFilter { get; set; }
+```
+
+3. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel`, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
+
+```cs
+[HttpGet]
+[HttpPost]
+public ActionResult Index(AlgoliaFacetFilterViewModel filter)
+{
+    ModelState.Clear();
+
+    var searchResponse = Search(filter);
+    var items = searchResponse.Hits.Select(
+        hit => new AlgoliaStoreModel(hit)
+    );
+
+    var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+    var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
+
+    var model = new ProductListViewModel
+    {
+        Items = items,
+        AlgoliaFacetFilter = filterViewModel
+    };
+
+    return View(model);
+}
+```
+
+Here, the `GetFacetedAttributes()` method accepts the facets returned from Algolia, but also the current `IAlgoliaFacetFilter`. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "coffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
+
+4. (Optional) Without localization, your view will display your facet attribute names (e.g. "coffeeIsDecaf") instead of a human-readable header like "Caffeinated." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+
+    - Inject `IStringLocalizer<SharedResources>` into the controller.
+    - Call `filterViewModel.Localize(localizer)` in the `Index()` method after constructing the facet filter view model.
+    - The `Localize()` method searches for matching facets in the format _algolia.facet.[attributeName]_. In __SharedResources.resx__, add the keys "algolia.facet.coffeeIsDecaf" and "algolia.facet.coffeeProcessing" with your translations.
+    - The `DisplayName` of each `AlgoliaFacetedAttribute` in the filter is now localized.
+
+### Displaying the facets
+
+If you've been following each section of this guide, the Dancing Goat store listing now uses Algolia search, and we have a filter which contains our Algolia facets and properly filters the search results. The final step is to display the facets in the store listing and handle user interaction with the facets.
+
+1. In _Index.cshtml_, replace the existing filter with our own custom view and set the form action to "Index" as we will be reloading the entire layout:
+
+```html
+<aside class="col-md-4 col-lg-3 product-filter">
+    <form asp-controller="Coffees" asp-action="Index">
+        <partial name="~/Views/Shared/Algolia/_AlgoliaFacetFilter.cshtml" model="Model.AlgoliaFacetFilter" />
+    </form>
+</aside>
+```
+
+2. In the `Scripts` section of the view, remove the existing javascript and add a script that will post the form when a checkbox is toggled:
+
+```html
+<script>
+    $(function () {
+        $('.js-postback input:checkbox').change(function () {
+            $(this).parents('form').submit();
+        });
+    });
+</script>
+```
+
+3. Create the _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and should loop through each `AlogliaFacetedAttribute` it contains:
+
+```html
+@using Kentico.Xperience.AlgoliaSearch.Models.Facets
+@model AlgoliaFacetFilterViewModel
+
+@for (var i=0; i<Model.FacetedAttributes.Count(); i++)
+{
+    @Html.EditorFor(model => Model.FacetedAttributes[i], "~/Views/Shared/Algolia/EditorTemplates/_AlgoliaFacetedAttribute.cshtml")
+}
+```
+
+4. For each `AlgoliaFacetedAttribute` we now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create the _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
+
+```html
+@using Kentico.Xperience.AlgoliaSearch.Models.Facets
+@model AlgoliaFacetedAttribute
+
+<h4>@Model.DisplayName</h4>
+@for (var i = 0; i < Model.Facets.Count(); i++)
+{
+    @Html.HiddenFor(m => Model.Facets[i].Value)
+    @Html.HiddenFor(m => Model.Facets[i].Attribute)
+    <span class="checkbox js-postback">
+        <input asp-for="@Model.Facets[i].IsChecked" />
+        <label asp-for="@Model.Facets[i].IsChecked">@Model.Facets[i].Value (@Model.Facets[i].Count)</label>
+    </span>
+}
+```
+
+We're done! Now, when you check one of the facets our javascript will cause the form to post back to the `Index()` action. The `filter` parameter will contain the facets that were displayed on the page, with the `IsChecked` property of each facet set accordingly. The filter is passed to our `Search()` method which uses `GetFilter()` to filter the search results, and a new `AlgoliaFacetFilterViewModel` is created with the results of the query.
+
+![Dancing goat facet example](/img/dg-facets.png)
 
 ## :chart_with_upwards_trend: Xperience Algolia module
 
