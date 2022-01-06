@@ -243,7 +243,7 @@ return View(new SearchResultsModel()
 
 In the view, loop through the `Hits` and display the results using a [display template](https://docs.microsoft.com/en-us/dotnet/api/system.web.mvc.html.displayextensions.displayfor?view=aspnet-mvc-5.2#System_Web_Mvc_Html_DisplayExtensions_DisplayFor__2_System_Web_Mvc_HtmlHelper___0__System_Linq_Expressions_Expression_System_Func___0___1___System_String_System_String_). You can define separate display templates for products or each page type if you'd like:
 
-```cs
+```cshtml
 foreach (var item in Model.Items)
 {
     if (item.SKUPrice != null)
@@ -263,7 +263,7 @@ foreach (var item in Model.Items)
 
 In the display template, reference your search model's properties to display the result:
 
-```cs
+```cshtml
 @model DancingGoat.AlgoliaSiteSearchModel
 
 <div class="row search-tile">
@@ -292,7 +292,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 
 1. In the `_Layout.cshtml` view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
 
-```html
+```cshtml
 <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
 <script src="//cdn.jsdelivr.net/autocomplete.js/0/autocomplete.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@@algolia/autocomplete-theme-classic"/>
@@ -311,7 +311,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 3. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
 4. Still in `_Layout.cshtml`, add javascript to the `<head>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
 
-```html
+```js
 <script type="text/javascript">
     var client = algoliasearch('<your Application ID>', '<your Search API Key>');
     var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
@@ -636,7 +636,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 
 3. Create the _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and should loop through each `AlogliaFacetedAttribute` it contains:
 
-```html
+```cshtml
 @using Kentico.Xperience.AlgoliaSearch.Models.Facets
 @model AlgoliaFacetFilterViewModel
 
@@ -648,7 +648,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 
 4. For each `AlgoliaFacetedAttribute` we now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create the _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
 
-```html
+```cshtml
 @using Kentico.Xperience.AlgoliaSearch.Models.Facets
 @model AlgoliaFacetedAttribute
 
