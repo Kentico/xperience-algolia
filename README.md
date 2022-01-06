@@ -411,7 +411,7 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 ### Setting up basic search
 
-The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](determining-the-pages-to-index).
+The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
 
 1. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
