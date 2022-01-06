@@ -520,7 +520,7 @@ public ActionResult Index()
 }
 ```
 
-5. Modify the views _Index.cshtml_,_CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
+5. Modify the views _Index.cshtml_, _CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
 
 ### Filtering your search with facets
 
