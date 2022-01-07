@@ -207,14 +207,31 @@ public string Thumbnail { get; set; }
 
 ## :mag_right: Searching the index
 
-You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET, you can use [`AlgoliaSearchHelper.GetSearchIndex()`](https://github.com/Kentico/xperience-algolia/blob/master/src/AlgoliaSearchHelper.cs#L130) to get the [`SearchIndex`](algolia.com/doc/api-reference/api-methods/search/?client=csharp) object based on your index's code name:
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET Core, we recommend intializing the `SearchClient` [during startup](https://www.algolia.com/doc/api-client/getting-started/tutorials/asp.net/csharp/#inject-a-reusable-client) and injecting it into your Controllers/Views:
 
 ```cs
+// Startup.cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddSingleton<ISearchClient>(AlgoliaSearchHelper.GetSearchClient(Configuration));
+}
+```
+
+In your Controllers, you can get a `SearchIndex` object by calling `InitIndex` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index:
+
+```cs
+private readonly ISearchClient _searchClient;
+
+public SearchController(ISearchClient searchClient)
+{
+    _searchClient = searchClient;
+}
+
 public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 {
     page = Math.Max(page, DEFAULT_PAGE_NUMBER);
 
-    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
     var query = new Query(searchText)
     {
         Page = page,
@@ -399,7 +416,7 @@ var autocompleteBox = autocomplete('#search-input', {hint: false}, [
 }
 ```
 
-> :warning: The fields `documentName` and `thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using fields present in your index. See the [Source attribute](#source-attribute) to find out how the `thumbnail` field was defined.
+> :warning: The fields `documentName` and `thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using fields present in your index. See the [sample search model](#determining-the-pages-to-index) to find out how these fields were defined.
 
 This is the final result of adding our custom CSS and template:
 
@@ -413,7 +430,9 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
 
-1. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
+1. Inject an instance of `SearchClient` into the `CoffeesController` as described in [this section](#searching-the-index).
+
+2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
 ```cs
 private SearchResponse<AlgoliaSiteSearchModel> Search()
@@ -430,12 +449,12 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
 
-2. Create __AlgoliaStoreModel.cs__ which will represent a single product in the store listing:
+3. Create __AlgoliaStoreModel.cs__ which will represent a single product in the store listing:
 
 ```cs
 using CMS.Core;
@@ -493,13 +512,13 @@ namespace DancingGoat.Models.Store
 
 ```
 
-3. In __ProductListViewModel.cs__, change the `Items` property to be a list of our new `AlgoliaStoreModel` items:
+4. In __ProductListViewModel.cs__, change the `Items` property to be a list of our new `AlgoliaStoreModel` items:
 
 ```cs
 public IEnumerable<AlgoliaStoreModel> Items { get; set; }
 ```
 
-4. Modify the `Index()` method to perform the search and provide the list of hits converted into `AlgoliaStoreModel` objects:
+5. Modify the `Index()` method to perform the search and provide the list of hits converted into `AlgoliaStoreModel` objects:
 
 ```cs
 [HttpGet]
@@ -520,7 +539,7 @@ public ActionResult Index()
 }
 ```
 
-5. Modify the views _Index.cshtml_, _CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
+6. Modify the views _Index.cshtml_, _CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
 
 ### Filtering your search with facets
 
@@ -552,7 +571,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         query.FacetFilters = filter.GetFilters();
     }
 
-    var searchIndex = AlgoliaSearchHelper.GetSearchIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
@@ -604,7 +623,7 @@ Here, the `GetFacetedAttributes()` method accepts the facets returned from Algol
 4. (Optional) Without localization, your view will display your facet attribute names (e.g. "coffeeIsDecaf") instead of a human-readable header like "Caffeinated." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
 
     - Inject `IStringLocalizer<SharedResources>` into the controller.
-    - Call `filterViewModel.Localize(localizer)` in the `Index()` method after constructing the facet filter view model.
+    - Call `filterViewModel.Localize(_localizer)` in the `Index()` method after constructing the facet filter view model.
     - The `Localize()` method searches for matching facets in the format _algolia.facet.[attributeName]_. In __SharedResources.resx__, add the keys "algolia.facet.coffeeIsDecaf" and "algolia.facet.coffeeProcessing" with your translations.
     - The `DisplayName` of each `AlgoliaFacetedAttribute` in the filter is now localized.
 

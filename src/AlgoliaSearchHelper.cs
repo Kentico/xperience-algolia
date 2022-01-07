@@ -28,6 +28,21 @@ namespace Kentico.Xperience.AlgoliaSearch
     public class AlgoliaSearchHelper
     {
         private static Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
+        private static IEventLogService mEventLogService;
+
+
+        private static IEventLogService LogService
+        {
+            get
+            {
+                if (mEventLogService == null)
+                {
+                    mEventLogService = Service.Resolve<IEventLogService>();
+                }
+
+                return mEventLogService;
+            }
+        }
 
 
         /// <summary>
@@ -40,6 +55,23 @@ namespace Kentico.Xperience.AlgoliaSearch
             {
                 return mRegisteredIndexes;
             }
+        }
+
+
+        /// <summary>
+        /// Gets an <see cref="AlgoliaOptions"/> object with the Algolia settings specified in
+        /// either the web.config or appsettings.json, depending on the application.
+        /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
+        /// application, or null if running from the Xperience application.</param>
+        /// </summary>
+        public static AlgoliaOptions GetAlgoliaOptions(IConfiguration configuration = null)
+        {
+            if (SystemContext.IsCMSRunningAsMainApplication)
+            {
+                return GetAlgoliaOptionsFramework();
+            }
+
+            return GetAlgoliaOptionsCore(configuration);
         }
 
 
@@ -96,53 +128,22 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
-        /// Gets a <see cref="SearchClient"/> using the application ID and API key specified in
-        /// either the web.config or appsettings.json, depending on the application.
+        /// Gets a <see cref="SearchClient"/> for performing Algolia search methods.
         /// </summary>
-        /// <returns>A <see cref="SearchClient"/> for interfacing with Algolia, or null if there
-        /// was an error creating it.</returns>
-        public static SearchClient GetSearchClient()
+        /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
+        /// application, or null if running from the Xperience application.</param>
+        /// <returns>An Algolia <see cref="SearchClient"/>, or null if there was an error
+        /// creating it.</returns>
+        public static SearchClient GetSearchClient(IConfiguration configuration = null)
         {
-            AlgoliaOptions options = null;
-            if (SystemContext.IsCMSRunningAsMainApplication)
-            {
-                options = GetAlgoliaOptionsFramework();
-            }
-            else
-            {
-                options = GetAlgoliaOptionsCore();
-            }
-
+            var options = GetAlgoliaOptions(configuration);
             if (options == null || String.IsNullOrEmpty(options.ApplicationId) || String.IsNullOrEmpty(options.ApiKey))
             {
-                LogError(nameof(GetSearchClient), "Unable to load Algolia configuration keys.");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(GetSearchClient), "Unable to load Algolia configuration keys.");
                 return null;
             }
 
             return new SearchClient(options.ApplicationId, options.ApiKey);
-        }
-
-
-        /// <summary>
-        /// Gets an instance of <see cref="SearchIndex"/> for the specified Algolia index.
-        /// </summary>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <returns>A <see cref="SearchIndex"/> to search with, or null if not found.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static SearchIndex GetSearchIndex(string indexName)
-        {
-            if (String.IsNullOrEmpty(indexName))
-            {
-                throw new ArgumentNullException(nameof(indexName));
-            }
-
-            var client = GetSearchClient();
-            if (client == null)
-            {
-                return null;
-            }
-
-            return client.InitIndex(indexName);
         }
 
 
@@ -152,7 +153,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <remarks>See <see href="https://www.algolia.com/doc/api-reference/api-methods/list-indices/#response"/></remarks>
         public static List<IndicesResponse> GetStatistics()
         {
-            var client = GetSearchClient();
+            var configuration = Service.ResolveOptional<IConfiguration>();
+            var client = GetSearchClient(configuration);
             if (client == null)
             {
                 return Enumerable.Empty<IndicesResponse>().ToList();
@@ -218,7 +220,7 @@ namespace Kentico.Xperience.AlgoliaSearch
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                LogError(nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
                 return null;
             }
 
@@ -283,7 +285,7 @@ namespace Kentico.Xperience.AlgoliaSearch
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                LogError(nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
                 return false;
             }
 
@@ -324,19 +326,19 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             if (String.IsNullOrEmpty(indexName))
             {
-                LogError(nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
                 return;
             }
 
             if (searchModelType == null)
             {
-                LogError(nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
                 return;
             }
 
             if (mRegisteredIndexes.ContainsKey(indexName))
             {
-                LogError(nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
                 return;
             }
             
@@ -382,13 +384,12 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         /// <summary>
         /// Gets the <see cref="AlgoliaOptions"/> from the appSettings.json file.
+        /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
+        /// application.</param>
         /// </summary>
-        private static AlgoliaOptions GetAlgoliaOptionsCore()
+        private static AlgoliaOptions GetAlgoliaOptionsCore(IConfiguration configuration)
         {
-            var configuration = Service.Resolve<IConfiguration>();
-            var options = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
-
-            return options;
+            return configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
         }
 
 
@@ -472,12 +473,6 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
 
             return searchableAttributes;
-        }
-
-
-        private static void LogError(string code, string message)
-        {
-            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaSearchHelper), code, message);
         }
     }
 }

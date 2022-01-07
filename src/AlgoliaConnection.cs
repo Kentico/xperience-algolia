@@ -10,6 +10,8 @@ using CMS.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
+using Microsoft.Extensions.Configuration;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -53,7 +55,10 @@ namespace Kentico.Xperience.AlgoliaSearch
                 throw new InvalidOperationException("Unable to load search index settings.");
             }
 
-            searchIndex = AlgoliaSearchHelper.GetSearchIndex(indexName);
+            var configuration = Service.ResolveOptional<IConfiguration>();
+            var client = AlgoliaSearchHelper.GetSearchClient(configuration);
+
+            searchIndex = client.InitIndex(indexName);
             searchModelType = AlgoliaSearchHelper.GetModelByIndexName(indexName);
             if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
             {
