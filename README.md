@@ -102,6 +102,9 @@ namespace DancingGoat
         public int SKUPublicStatusID { get; set; }
 
         [Retrievable]
+        public int SKUID { get; set; }
+
+        [Retrievable]
         public DateTime DocumentCreatedWhen { get; set; }
 
         [Facetable]
@@ -456,9 +459,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
 
 ```cs
 using CMS.Core;
-using CMS.DocumentEngine;
 using CMS.Ecommerce;
-using CMS.Helpers;
 using DancingGoat.Services;
 
 namespace DancingGoat.Models.Store
@@ -488,12 +489,8 @@ namespace DancingGoat.Models.Store
         public AlgoliaStoreModel(AlgoliaSiteSearchModel hit)
         {
             Hit = hit;
-
-            var documentId = ValidationHelper.GetInteger(hit.ObjectID, 0);
-            var page = DocumentHelper.GetDocument(documentId, new TreeProvider());
-            var sku = SKUInfo.Provider.Get(page.NodeSKUID);
-            
-            if (hit.SKUPublicStatusID > 0)
+            var sku = SKUInfo.Provider.Get(hit.SKUID);
+            if (sku.SKUPublicStatusID > 0)
             {
                 PublicStatusName = PublicStatusInfo.Provider.Get(hit.SKUPublicStatusID).PublicStatusDisplayName;
             }
