@@ -20,7 +20,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.AlgoliaSearch.Helpers
 {
     /// <summary>
     /// Contains methods for common Algolia tasks and stores all registered Algolia indexes.

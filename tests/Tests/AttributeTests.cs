@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using Kentico.Xperience.AlgoliaSearch.Helpers;
+
+using NUnit.Framework;
 
 using System;
 
@@ -10,9 +12,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
     internal class AttributeTests : AlgoliaTest
     {
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "className" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "filterOnly(prop1)", "searchable(prop2)", "className" })]
-        [TestCase(Model4.IndexName, ExpectedResult = new string[] { "className" })]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "searchable(className)" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "filterOnly(prop1)", "searchable(prop2)", "searchable(className)" })]
+        [TestCase(Model4.IndexName, ExpectedResult = new string[] { "searchable(className)" })]
         public string[] FacetableAttributesConvertedToAlgoliaFormat(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexSettings(indexName).AttributesForFaceting.ToArray();

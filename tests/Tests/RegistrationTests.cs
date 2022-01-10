@@ -1,4 +1,6 @@
-﻿using NUnit.Framework;
+﻿using Kentico.Xperience.AlgoliaSearch.Helpers;
+
+using NUnit.Framework;
 
 using System;
 using System.Linq;

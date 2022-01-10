@@ -208,13 +208,13 @@ public string Thumbnail { get; set; }
 
 ## :mag_right: Searching the index
 
-You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET Core, we recommend intializing the `SearchClient` [during startup](https://www.algolia.com/doc/api-client/getting-started/tutorials/asp.net/csharp/#inject-a-reusable-client) and injecting it into your Controllers/Views:
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET Core, you can use the `AddAlgolia()` extension method to inject `ISearchClient` as well as other classes into your Controllers/Views:
 
 ```cs
 // Startup.cs
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddSingleton<ISearchClient>(AlgoliaSearchHelper.GetSearchClient(Configuration));
+    services.AddAlgolia(Configuration);
 }
 ```
 
@@ -431,7 +431,7 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
 
-1. Inject an instance of `SearchClient` into the `CoffeesController` as described in [this section](#searching-the-index).
+1. Inject an instance of `SearchClient` into the `CoffeesController` as described in [this section](#mag_right-searching-the-index).
 
 2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
@@ -469,8 +469,6 @@ namespace DancingGoat.Models.Store
         public AlgoliaSiteSearchModel Hit { get; set; }
 
         public ProductCatalogPrices PriceDetail { get; }
-
-        public int SelectedVariantID { get; set; }
 
         public string PublicStatusName { get; set; }
 
@@ -681,6 +679,59 @@ If you've been following each section of this guide, the Dancing Goat store list
 We're done! Now, when you check one of the facets our javascript will cause the form to post back to the `Index()` action. The `filter` parameter will contain the facets that were displayed on the page, with the `IsChecked` property of each facet set accordingly. The filter is passed to our `Search()` method which uses `GetFilter()` to filter the search results, and a new `AlgoliaFacetFilterViewModel` is created with the results of the query.
 
 ![Dancing goat facet example](/img/dg-facets.png)
+
+## :bulb: Personalizing search results
+
+Algolia offers search result [Personalization](https://www.algolia.com/doc/guides/personalization/what-is-personalization/) to offer more relevant results to each individual visitor on your website. To begin personalizing search results, you first need to send [events](https://www.algolia.com/doc/guides/sending-events/planning/) to Algolia which detail the visitor's activity. As with much of the Algolia functionality, sending events is very flexible depending on your API of choice and how your search is implemented. You can choose to use any of the approaches in the Algolia documentation (e.g. [Google Tag Manager](https://www.algolia.com/doc/guides/sending-events/implementing/connectors/google-tag-manager/)). The following section details how to send events using C# with the assistance of some classes from this repository.
+
+In order to begin using the Algolia Insights functionality detailed below, the `AddAlgolia()` extension method _must_ be called during startup. Within this method, you must enable the tracking that you wish to use, and you can optionally provide a custom event name for each:
+
+```cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddAlgolia(Configuration, options =>
+    {
+        options.TrackSearchResultClicks = true;
+        options.SearchResultClickedEventName = "Search result clicked";
+        options.TrackSearchResultConversions = true;
+        options.SearchResultConversionEventName = "Search result converted";
+    });
+}
+```
+
+If you do not already have a basic search interface set up, check out [this section](#mag_right-searching-the-index) to set one up first.
+
+### Sending search result click events/conversions
+
+To track these types of events, the `ClickAnalytics` property must be enabled while creating your search query:
+
+```cs
+var query = new Query(searchText)
+{
+    Page = page,
+    HitsPerPage = PAGE_SIZE,
+    ClickAnalytics = true
+};
+```
+
+This repository uses query string parameters to track the required data for submitting search result clicks and conversion to Algolia. As all search models extend `AlgoliaSearchModel` and contain a `Url` property, you can call `AlgoliaInsightsHelper.SetInsightsUrls()` to update the URL of your results with all the necessary data:
+
+```cs
+var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+AlgoliaInsightsHelper.SetInsightsUrls(results);
+```
+
+Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?index=AlgoliaSiteSearchModel&object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject an instance of `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. `_Layout.cshtml`. Call the `LogSearchResultClicked()` method of the service:
+
+```cshtml
+@inject IAlgoliaInsightsService insightsService
+
+@{
+    insightsService.LogSearchResultClicked();
+}
+```
+
+When a visitor lands on a page after clicking a search result, this method will use the data contained in the query string to submit a search result click event __and__ conversion (if enabled). If the visitor arrives on the page without query string parameters (e.g. using the site navigation), nothing is logged.
 
 ## :chart_with_upwards_trend: Xperience Algolia module
 

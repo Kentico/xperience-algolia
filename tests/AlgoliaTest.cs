@@ -3,6 +3,7 @@ using CMS.DocumentEngine;
 using CMS.Tests;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Helpers;
 
 using NUnit.Framework;
 
