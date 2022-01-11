@@ -854,6 +854,30 @@ public ActionResult FacetClicked(string facet)
 }
 ```
 
+### Configuring Personalization
+
+Once you've begun to track events using the examples in the previous sections, you can configure a [Personalization strategy](https://www.algolia.com/doc/guides/personalization/personalizing-results/in-depth/configuring-personalization/). This is done directly in the Algolia interface, in your application's __Personalization__ menu.
+
+After your Personalization strategy is configured, you must set certain properties during your search queries to retrieve personalized results:
+
+- __EnablePersonalization__
+- __UserToken__: A token which identifies the visitor performing the search. Using the code and examples in this repository, the user token will be the current contact's GUID.
+- __X-Forwarded-For__ header: The IP address of the visitor performing the search. See [Algolia's documentation](https://www.algolia.com/doc/guides/getting-analytics/search-analytics/out-of-the-box-analytics/how-to/specify-which-user-is-doing-the-search/#set-the-x-forwarded-for-header).
+
+```cs
+var query = new Query(searchText)
+{
+    Page = page,
+    HitsPerPage = PAGE_SIZE,
+    ClickAnalytics = true,
+    EnablePersonalization = true,
+    UserToken = ContactManagementContext.CurrentContact.ContactGUID.ToString()
+};
+var results = searchIndex.Search<AlgoliaSiteSearchModel>(query, new RequestOptions {
+    Headers = new Dictionary<string, string> { { "X-Forwarded-For", Request.HttpContext.Connection.RemoteIpAddress.ToString() } }
+});
+```
+
 ## :chart_with_upwards_trend: Xperience Algolia module
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
