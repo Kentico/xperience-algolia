@@ -103,6 +103,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
+        public override void LogPageViewed(int documentId, string eventName, string indexName)
+        {
+            if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || documentId <= 0)
+            {
+                return;
+            }
+
+            mInsightsClient.User(ContactGUID).ViewedObjectIDs(eventName, indexName, new string[] { documentId.ToString() });
+        }
+
+
         public override void LogPageConversion(int documentId, string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(conversionName) || documentId <= 0)

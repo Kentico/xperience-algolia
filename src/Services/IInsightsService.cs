@@ -69,6 +69,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
+        /// Logs an event when a visitor views a page contained within the Algolia index, but not after
+        /// a search.
+        /// </summary>
+        /// <param name="documentId">>The <see cref="TreeNode.DocumentID"/> page that the conversion
+        /// occurred on.</param>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        public abstract void LogPageViewed(int documentId, string eventName, string indexName);
+
+
+        /// <summary>
         /// Logs an event when a visitor views search facets but didn't click on them.
         /// </summary>
         /// <param name="facets">The facets that were displayed to the visitor.</param>

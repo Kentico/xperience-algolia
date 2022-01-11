@@ -728,11 +728,11 @@ Now, when you display the search results using the `Url` property, it will look 
 
 When a visitor lands on a page after clicking a search result, these methods use the data contained in the query string to submit a search result click event or conversion. If the visitor arrives on the page without query string parameters (e.g. using the site navigation), nothing is logged.
 
-### Sending generic page-related conversions
+### Sending generic page-related events/conversions
 
-Aside from search result related events/conversions, there are many more generic events you may want to send to Algolia. For example, a very important conversion on E-commerce websites could be "Product added to cart." For sites that produce blog posts or articles, you may want to send an "Article viewed" conversion.
+Aside from search result related events/conversions, there are many more generic events you may want to send to Algolia. For example, a very important conversion on E-commerce websites could be "Product added to cart." For sites that produce blog posts or articles, you may want to send an "Article viewed" event.
 
-For these conversions, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a "Product added to cart" conversion in the __CheckoutController__:
+For a conversion, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a "Product added to cart" conversion in the __CheckoutController__:
 
 ```cs
 public ActionResult AddItem(CartItemUpdateModel item)
@@ -766,21 +766,35 @@ public ActionResult AddItem(CartItemUpdateModel item)
 }
 ```
 
-Similarly, in the __ArticlesController__ we can log an "Article viewed" conversion:
+We can also log an event when a visitor simply views a page with the `LogPageViewed()` method. For example, in the __ArticlesController__ we can log an "Article viewed" event:
 
 ```cs
 public IActionResult Detail([FromServices] ArticleRepository articleRepository)
 {
     var article = articleRepository.GetCurrent();
-    _insightsService.LogPageConversion(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+    _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
 
     return new TemplateResult(article);
 }
 ```
 
+Or, in the _\_Details.cshtml_ view for products, we can log a "Product viewed" event:
+
+```cshtml
+@inject IAlgoliaInsightsService _insightsService
+@inject IPageDataContextRetriever _pageDataContextRetriever
+
+@{
+    if(_pageDataContextRetriever.TryRetrieve<TreeNode>(out var context))
+    {
+        _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
+    }
+}
+```
+
 ### Logging facet-related events/conversions
 
-You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in thr `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `AlgoliaSearchHelper.GetFacetedAttributes()` call:
+You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `AlgoliaSearchHelper.GetFacetedAttributes()` call:
 
 ```cs
 var searchResponse = Search(filter);
