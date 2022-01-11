@@ -51,6 +51,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
             foreach (var facetedAttribute in FacetedAttributes)
             {
                 facetedAttribute.DisplayName = localizer.GetString($"algolia.facet.{facetedAttribute.Attribute}");
+                foreach (var facet in facetedAttribute.Facets)
+                {
+                    facet.DisplayValue = localizer.GetString($"algolia.facet.{facet.Attribute}.{facet.Value}");
+                }
             }
         }
     }

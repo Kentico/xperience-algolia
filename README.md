@@ -611,13 +611,6 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 
 Here, the `GetFacetedAttributes()` method accepts the facets returned from Algolia, but also the current `IAlgoliaFacetFilter`. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "CoffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
 
-4. (Optional) Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Caffeinated." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
-
-    - Inject `IStringLocalizer<SharedResources>` into the controller.
-    - Call `filterViewModel.Localize(_localizer)` in the `Index()` method after constructing the facet filter view model.
-    - The `Localize()` method searches for matching facets in the format _algolia.facet.[AttributeName]_. In __SharedResources.resx__, add the keys "algolia.facet.CoffeeIsDecaf" and "algolia.facet.CoffeeProcessing" with your translations.
-    - The `DisplayName` of each `AlgoliaFacetedAttribute` in the filter is now localized.
-
 ### Displaying the facets
 
 If you've been following each section of this guide, the Dancing Goat store listing now uses Algolia search, and we have a filter which contains our Algolia facets and properly filters the search results. The final step is to display the facets in the store listing and handle user interaction with the facets.
@@ -669,7 +662,7 @@ If you've been following each section of this guide, the Dancing Goat store list
     @Html.HiddenFor(m => Model.Facets[i].Attribute)
     <span class="checkbox js-postback">
         <input asp-for="@Model.Facets[i].IsChecked" />
-        <label asp-for="@Model.Facets[i].IsChecked">@Model.Facets[i].Value (@Model.Facets[i].Count)</label>
+        <label asp-for="@Model.Facets[i].IsChecked">@Model.Facets[i].DisplayValue (@Model.Facets[i].Count)</label>
     </span>
 }
 ```
@@ -677,6 +670,30 @@ If you've been following each section of this guide, the Dancing Goat store list
 We're done! Now, when you check one of the facets our javascript will cause the form to post back to the `Index()` action. The `filter` parameter will contain the facets that were displayed on the page, with the `IsChecked` property of each facet set accordingly. The filter is passed to our `Search()` method which uses `GetFilter()` to filter the search results, and a new `AlgoliaFacetFilterViewModel` is created with the results of the query.
 
 ![Dancing goat facet example](/img/dg-facets.png)
+
+### Localizing facet names and values
+
+Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Caffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+
+1. Inject `IStringLocalizer<SharedResources>` into the __CoffeeController__.
+2. Call `filterViewModel.Localize()` in the `Index()` method after constructing the facet filter view model.
+
+```cs
+public ActionResult Index(AlgoliaFacetFilterViewModel filter)
+{
+    ...
+    var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+    var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
+    filterViewModel.Localize(_localizer);
+    ...
+}
+```
+
+3. The `Localize()` method searches for facet names with keys in the format _algolia.facet.[AttributeName]_, and facet values in the format _algolia.facet.[AttributeName].[FacetValue]_. In __SharedResources.resx__, add the following keys and your translations:
+
+![Resource strings](/img/resource-strings.png)
+
+4. Each `AlgoliaFacetedAttribute.DisplayName` and `AlgoliaFacet.DisplayValue` within the filter is now localized.
 
 ## :bulb: Personalizing search results
 

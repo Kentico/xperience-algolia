@@ -8,18 +8,27 @@
         /// <summary>
         /// The name of the faceted attribute.
         /// </summary>
-        public string Attribute { get; set; }
+        public string Attribute {
+            get;
+            set;
+        }
 
 
         /// <summary>
         /// The display name of the faceted attribute.
         /// </summary>
-        public string DisplayName { get; set; }
+        public string DisplayName {
+            get;
+            set;
+        }
 
 
         /// <summary>
         /// Available facets of the faceted attibute.
         /// </summary>
-        public AlgoliaFacet[] Facets { get; set; }
+        public AlgoliaFacet[] Facets {
+            get;
+            set;
+        }
     }
 }

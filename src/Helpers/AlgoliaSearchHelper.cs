@@ -194,6 +194,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                         {
                             Attribute = dict.Key,
                             Value = facet.Key,
+                            DisplayValue = facet.Key,
                             Count = facet.Value,
                             IsChecked = checkedFacetValues.Contains(facet.Key)
                         }
