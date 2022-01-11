@@ -308,7 +308,7 @@ In the display template, reference your search model's properties to display the
 
 Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/what-is-autocomplete/) functionality via javascript which you can [install](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#installation) and set up any way you'd like. Below is an example of how we added autocomplete functionality to the Dancing Goat demo site's main search box in the top-right of every page.
 
-1. In the `_Layout.cshtml` view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
+1. In the _\_Layout.cshtml_ view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
 
 ```cshtml
 <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
@@ -327,7 +327,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 ```
 
 3. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
-4. Still in `_Layout.cshtml`, add javascript to the `<head>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+4. Still in _\_Layout.cshtml_, add javascript to the `<head>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
 
 ```js
 <script type="text/javascript">
@@ -684,18 +684,12 @@ We're done! Now, when you check one of the facets our javascript will cause the 
 
 Algolia offers search result [Personalization](https://www.algolia.com/doc/guides/personalization/what-is-personalization/) to offer more relevant results to each individual visitor on your website. To begin personalizing search results, you first need to send [events](https://www.algolia.com/doc/guides/sending-events/planning/) to Algolia which detail the visitor's activity. As with much of the Algolia functionality, sending events is very flexible depending on your API of choice and how your search is implemented. You can choose to use any of the approaches in the Algolia documentation (e.g. [Google Tag Manager](https://www.algolia.com/doc/guides/sending-events/implementing/connectors/google-tag-manager/)). The following section details how to send events using C# with the assistance of some classes from this repository.
 
-In order to begin using the Algolia Insights functionality detailed below, the `AddAlgolia()` extension method _must_ be called during startup. Within this method, you must enable the tracking that you wish to use, and you can optionally provide a custom event name for each:
+In order to begin using the Algolia Insights functionality detailed below, ensure that the `AddAlgolia()` extension method is called during startup. This allows you to inject the `IAlgoliaInsightsService` into your Controllers/Views to log events and conversions.
 
 ```cs
 public void ConfigureServices(IServiceCollection services)
 {
-    services.AddAlgolia(Configuration, options =>
-    {
-        options.TrackSearchResultClicks = true;
-        options.SearchResultClickedEventName = "Search result clicked";
-        options.TrackSearchResultConversions = true;
-        options.SearchResultConversionEventName = "Search result converted";
-    });
+    services.AddAlgolia();
 }
 ```
 
@@ -721,19 +715,20 @@ var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
 AlgoliaInsightsHelper.SetInsightsUrls(results);
 ```
 
-Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?index=AlgoliaSiteSearchModel&object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject an instance of `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. `_Layout.cshtml`. Call the `LogSearchResultClicked()` method of the service:
+Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject an instance of `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. _\_Layout.cshtml_. Call `LogSearchResultClicked()`, `LogSearchResultConversion()`, or both methods of the service:
 
 ```cshtml
-@inject IAlgoliaInsightsService insightsService
+@inject IAlgoliaInsightsService _insightsService
 
 @{
-    insightsService.LogSearchResultClicked();
+    _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
+    _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
 }
 ```
 
-When a visitor lands on a page after clicking a search result, this method will use the data contained in the query string to submit a search result click event __and__ conversion (if enabled). If the visitor arrives on the page without query string parameters (e.g. using the site navigation), nothing is logged.
+When a visitor lands on a page after clicking a search result, these methods use the data contained in the query string to submit a search result click event or conversion. If the visitor arrives on the page without query string parameters (e.g. using the site navigation), nothing is logged.
 
-## Sending generic page-related conversions
+### Sending generic page-related conversions
 
 Aside from search result related events/conversions, there are many more generic events you may want to send to Algolia. For example, a very important conversion on E-commerce websites could be "Product added to cart." For sites that produce blog posts or articles, you may want to send an "Article viewed" conversion.
 
@@ -780,6 +775,68 @@ public IActionResult Detail([FromServices] ArticleRepository articleRepository)
     _insightsService.LogPageConversion(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
 
     return new TemplateResult(article);
+}
+```
+
+### Logging facet-related events/conversions
+
+You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in thr `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `AlgoliaSearchHelper.GetFacetedAttributes()` call:
+
+```cs
+var searchResponse = Search(filter);
+var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+_insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
+```
+
+To log an event or conversion when a facet is clicked, we need to use a little AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "coffeeIsDecaf:true"):
+
+```cshtml
+<input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
+```
+
+In the _Index.cshtml_ view for the coffee listing, we already use the `change()` function to run some javascript when a facet is checked or unchecked. Let's add some code that runs only if the facet has been checked which gets the value of the new `data` attribute and sends a POST request:
+
+```js
+<script>
+    $(function () {
+        $('.js-postback input:checkbox').change(function () {
+            if($(this).is(':checked')) {
+                var facet = $(this).data('facet');
+                fetch('@Url.Action("FacetClicked", "Store")?facet='+facet, {
+                    method: 'POST'
+                });
+            }
+
+            $(this).parents('form').submit();
+        });
+    });
+</script>
+```
+
+This will send the request to the __StoreController__ `FacetClicked()` action, but you can send the request anywhere you'd like. Check the __Startup.cs__ to make sure your application can handle this request:
+
+```cs
+endpoints.MapControllerRoute(
+    name: "facetClicked",
+    pattern: "Algolia/FacetClicked/{facet?}",
+    defaults: new { controller = "Store", action = "FacetClicked" }
+);
+```
+
+Now, create the action in the appropriate controller which accepts the facet parameter and logs the event, conversion, or both:
+
+```cs
+[HttpPost]
+public ActionResult FacetClicked(string facet)
+{
+    if (String.IsNullOrEmpty(facet))
+    {
+        return BadRequest();
+    }
+
+    _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
+    _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
+    return Ok();
 }
 ```
 

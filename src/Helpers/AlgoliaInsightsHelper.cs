@@ -46,7 +46,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
             var url = hit.Url;
             var insightsService = Service.Resolve<IAlgoliaInsightsService>();
-            url = URLHelper.AddParameterToUrl(url, insightsService.ParameterNameIndexName, indexName);
             url = URLHelper.AddParameterToUrl(url, insightsService.ParameterNameObjectId, hit.ObjectID);
             url = URLHelper.AddParameterToUrl(url, insightsService.ParameterNamePosition, position.ToString());
             url = URLHelper.AddParameterToUrl(url, insightsService.ParameterNameQueryId, queryId);
