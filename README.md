@@ -733,6 +733,56 @@ Now, when you display the search results using the `Url` property, it will look 
 
 When a visitor lands on a page after clicking a search result, this method will use the data contained in the query string to submit a search result click event __and__ conversion (if enabled). If the visitor arrives on the page without query string parameters (e.g. using the site navigation), nothing is logged.
 
+## Sending generic page-related conversions
+
+Aside from search result related events/conversions, there are many more generic events you may want to send to Algolia. For example, a very important conversion on E-commerce websites could be "Product added to cart." For sites that produce blog posts or articles, you may want to send an "Article viewed" conversion.
+
+For these conversions, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a "Product added to cart" conversion in the __CheckoutController__:
+
+```cs
+public ActionResult AddItem(CartItemUpdateModel item)
+{
+    if (ModelState.IsValid)
+    {
+        shoppingService.AddItemToCart(item.SKUID, item.Units);
+
+        // Find the Xperience page related to the product
+        var skuId = item.SKUID;
+        var sku = SKUInfo.Provider.Get(item.SKUID);
+        if (sku.IsProductVariant)
+        {
+            skuId = sku.SKUParentSKUID;
+        }
+        var currentCulture = System.Threading.Thread.CurrentThread.CurrentUICulture.Name;
+        var page = DocumentHelper.GetDocuments()
+            .Culture(currentCulture)
+            .WhereEquals(nameof(SKUTreeNode.NodeSKUID), skuId)
+            .FirstOrDefault();
+
+        // Log Algolia Insights conversion
+        if (page != null)
+        {
+            _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
+        }
+        
+    }
+
+    return RedirectToAction("ShoppingCart");
+}
+```
+
+Similarly, in the __ArticlesController__ we can log an "Article viewed" conversion:
+
+```cs
+public IActionResult Detail([FromServices] ArticleRepository articleRepository)
+{
+    var article = articleRepository.GetCurrent();
+    _insightsService.LogPageConversion(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+
+    return new TemplateResult(article);
+}
+```
+
 ## :chart_with_upwards_trend: Xperience Algolia module
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).

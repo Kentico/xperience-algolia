@@ -111,5 +111,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 }
             }
         }
+
+        public override void LogPageConversion(int documentId, string eventName, string indexName)
+        {
+            if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || documentId <= 0)
+            {
+                return;
+            }
+
+            mInsightsClient.User(ContactGUID).ConvertedObjectIDs(eventName, indexName, new string[] { documentId.ToString() });
+        }
     }
 }

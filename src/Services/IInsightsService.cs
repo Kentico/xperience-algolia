@@ -1,4 +1,6 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Helpers;
+﻿using CMS.DocumentEngine;
+
+using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
 namespace Kentico.Xperience.AlgoliaSearch.Services
@@ -50,9 +52,19 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Logs a search result click event and conversion with Algolia Insights. Required query parameters
-        /// must be present in the request, or no event is logged.
+        /// Logs a search result click event and conversion with Algolia Insights. Required query
+        /// parameters must be present in the request, or no event is logged.
         /// </summary>
         public abstract void LogSearchResultClicked();
+
+
+        /// <summary>
+        /// Logs a conversion event that didn't occur after an Algolia search.
+        /// </summary>
+        /// <param name="documentId">The <see cref="TreeNode.DocumentID"/> page that the conversion
+        /// occurred on.</param>
+        /// <param name="eventName">The name of the event.</param>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        public abstract void LogPageConversion(int documentId, string eventName, string indexName);
     }
 }
