@@ -1,8 +1,12 @@
 ﻿using Newtonsoft.Json;
+
 using System;
 
 namespace Kentico.Xperience.AlgoliaSearch
 {
+    /// <summary>
+    /// Truncates decimal values to two places.
+    /// </summary>
     public class DecimalPrecisionConverter : JsonConverter
     {
         public override bool CanRead

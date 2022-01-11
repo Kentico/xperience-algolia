@@ -6,7 +6,7 @@
     public class AlgoliaFacetedAttribute
     {
         /// <summary>
-        /// The camel-cased code name of the faceted attribute.
+        /// The name of the faceted attribute.
         /// </summary>
         public string Attribute { get; set; }
 

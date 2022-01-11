@@ -12,9 +12,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
     internal class AttributeTests : AlgoliaTest
     {
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "searchable(className)" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "filterOnly(prop1)", "searchable(prop2)", "searchable(className)" })]
-        [TestCase(Model4.IndexName, ExpectedResult = new string[] { "searchable(className)" })]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1", "searchable(ClassName)" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "filterOnly(Prop1)", "searchable(Prop2)", "searchable(ClassName)" })]
+        [TestCase(Model4.IndexName, ExpectedResult = new string[] { "searchable(ClassName)" })]
         public string[] FacetableAttributesConvertedToAlgoliaFormat(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexSettings(indexName).AttributesForFaceting.ToArray();
@@ -29,9 +29,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1", "objectID", "className", "url" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "objectID", "className", "url" })]
-        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "prop1", "prop2", "objectID", "className", "url" })]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1", "ObjectID", "ClassName", "Url" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "ObjectID", "ClassName", "Url" })]
+        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "Prop1", "Prop2", "ObjectID", "ClassName", "Url" })]
         public string[] RetrievableAttributesConvertedToAlgoliaFormat(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexSettings(indexName).AttributesToRetrieve.ToArray();
@@ -39,11 +39,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "prop1" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "prop1", "prop2" })]
-        [TestCase(Model3.IndexName, ExpectedResult = new string[] { "prop2,prop3", "prop1" })]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "Prop1", "Prop2" })]
+        [TestCase(Model3.IndexName, ExpectedResult = new string[] { "Prop2,Prop3", "Prop1" })]
         [TestCase(Model4.IndexName, ExpectedResult = new string[] { })]
-        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "prop1,prop2", "prop3", "unordered(prop4)", "prop5", "unordered(prop6)" })]
+        [TestCase(Model5.IndexName, ExpectedResult = new string[] { "Prop1,Prop2", "Prop3", "unordered(Prop4)", "Prop5", "unordered(Prop6)" })]
         public string[] SearchableAttributesConvertedToAlgoliaFormat(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexSettings(indexName).SearchableAttributes.ToArray();

@@ -28,13 +28,13 @@ This integration enables the creating of [Algolia](https://www.algolia.com/) sea
 
 ## :computer: How it works
 
-This integration uses a code-first approach to define Algolia indexes. A single class (created by your developers) contains the Algolia index fields, the individual field configurations, and automatically registers the Algolia index on application startup.
+This integration uses a code-first approach to define Algolia indexes. A single class (created by your developers) contains the Algolia index attributes, the individual attribute configurations, and automatically registers the Algolia index on application startup.
 
 We recommend that your developers create a new [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) Class Library project to contain the Algolia search models they will create. This project can be referenced by both the CMS and .NET Core projects, allowing developers to reference the stongly-typed search models in each application. As a result, your developers can utilize Algolia's [POCO philosophy](https://www.algolia.com/doc/api-client/getting-started/install/csharp/?client=csharp#poco-types-and-jsonnet) while creating the search interface.
 
 ## :gear: Creating and registering an Algolia index
 
-An Algolia index and its fields are defined within a single class file, in which your custom class extends [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs). Within the class, you define the fields of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
+An Algolia index and its attributes are defined within a single class file, in which your custom class extends [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs). Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
 The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index:
 
@@ -115,9 +115,9 @@ namespace DancingGoat
     }
 ```
 
-## :memo: Configuring fields with attributes
+## :memo: Configuring Algolia attributes
 
-This package includes five attributes which can be applied to each individual field to further configure the Algolia index:
+This package includes five attributes which can be applied to each individual Algolia attribute to further configure the Algolia index:
 
 - [__Searchable__](#searchable-attribute)
 - [__Facetable__](#facetable-attribute)
@@ -127,10 +127,10 @@ This package includes five attributes which can be applied to each individual fi
 
 ### Searchable attribute
 
-This attribute indicates that a field is [searchable](https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/#how-to-use). Optional attribute properties be defined to fine-tune the performance of your searchable attributes:
+This attribute indicates that an Algolia attribute is [searchable](https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/#how-to-use). Optional attribute properties be defined to fine-tune the performance of your searchable attributes:
 
-- __Order__ (optional): Fields with lower `Order` will be given priority when searching for text. Fields without `Order` set will be added to the end of the list (making them lower priority), while fields with the same `Order` will be added with the same priority and are automatically `Unordered`.
-- __Unordered__ (optional): By default, matches at the beginning of an fields are more relevant than matches at the end of the text. If `true`, the position of the matched text in the field is irrelevant.
+- __Order__ (optional): Attributes with lower `Order` will be given priority when searching for text. Attributes without `Order` set will be added to the end of the list (making them lower priority), while attributes with the same `Order` will be added with the same priority and are automatically `Unordered`.
+- __Unordered__ (optional): By default, matches at the beginning of an attribute are more relevant than matches at the end of the text. If `true`, the position of the matched text in the attribute is irrelevant.
 
 Usage:
 ```cs
@@ -146,13 +146,13 @@ public string DocumentName { get; set; }
 
 ### Facetable attribute
 
-This attribute indicates a field is a [facet or filter](https://www.algolia.com/doc/api-reference/api-parameters/attributesForFaceting/#how-to-use). By creating facets, your developers are able to create a [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) interface on the front-end application. Optional attribute properties can be defined to change the functionality of your faceted fields:
+This attribute indicates an Algolia attribute is a [facet or filter](https://www.algolia.com/doc/api-reference/api-parameters/attributesForFaceting/#how-to-use). By creating facets, your developers are able to create a [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) interface on the front-end application. Optional attribute properties can be defined to change the functionality of your faceted attributes:
 
-- __FilterOnly__ (optional): Defines the field as a filter and not a facet. If you do not need facets, defining a field as a filter reduces the size of the index and improves the speed of the search.
+- __FilterOnly__ (optional): Defines the attribute as a filter and not a facet. If you do not need facets, defining a attribute as a filter reduces the size of the index and improves the speed of the search.
 
 - __Searchable__ (optional): Allows developers to search for values within a facet, e.g. via the [`SearchForFacetValues()`](https://www.algolia.com/doc/api-reference/api-methods/search-for-facet-values/) method.
 
-> :warning: A field cannot be both `FilterOnly` and `Searchable`, or an exception will be thrown.
+> :warning: An attribute cannot be both `FilterOnly` and `Searchable`, or an exception will be thrown.
 
 Usage:
 ```cs
@@ -168,7 +168,7 @@ public decimal? SKUPrice { get; set; }
 
 ### Retrievable attribute
 
-This attribute determines which fields to [retrieve when searching](https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/#how-to-use). Reducing the amount of fields retrieved will help improve the speed of your searches, without impacting the search functionality.
+This attribute determines which attributes to [retrieve when searching](https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/#how-to-use). Reducing the amount of attributes retrieved will help improve the speed of your searches, without impacting the search functionality.
 
 Usage:
 ```cs
@@ -181,7 +181,7 @@ public string ArticleText { get; set; }
 
 ### Source attribute
 
-This attribute can be used to alter the page field that the field value is retrieved from. This can be useful in indexes which include multiple page types, but the different page type fields should be stored in the same Algolia index field. For example, your index should contain a "thumbnail" field containing the URL to an image, but the image for each page type is stored in different page fields.
+This attribute can be used to alter the page field that the attribute value is retrieved from. This can be useful in indexes which include multiple page types, but the different page type fields should be stored in the same Algolia attribute. For example, your index should contain a "Thumbnail" attribute containing the URL to an image, but the image for each page type is stored in different page fields.
 
 Columns specified in the `SourceAttribute` are parsed in the order they appear, until a non-empty string and non-null value is found, which is then indexed. We recommend referencing standard page fields and custom page type fields using `nameof()` to avoid typos.
 
@@ -218,7 +218,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-In your Controllers, you can get a `SearchIndex` object by calling `InitIndex` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index:
+In your Controllers, you can get a `SearchIndex` object by calling `InitIndex()` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index:
 
 ```cs
 private readonly ISearchClient _searchClient;
@@ -344,10 +344,10 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 var autocompleteBox = autocomplete('#search-input', {hint: false}, [
 {
     source: autocomplete.sources.hits(index, {hitsPerPage: 5}),
-    displayKey: 'documentName' // The Algolia field used to display the title of a suggestion
+    displayKey: 'DocumentName' // The Algolia attribute used to display the title of a suggestion
 }
 ]).on('autocomplete:selected', function(event, suggestion, dataset) {
-	window.location = suggestion.url; // Navigate to the clicked suggestion
+	window.location = suggestion.Url; // Navigate to the clicked suggestion
 });
 
 document.querySelector("#search-input").addEventListener("keyup", (e) => {
@@ -412,12 +412,12 @@ var autocompleteBox = autocomplete('#search-input', {hint: false}, [
     source: autocomplete.sources.hits(index, {hitsPerPage: 5}),
     templates: {
         suggestion: (item) =>
-            `<img style='width:40px;margin-right:10px' src='${item.thumbnail}'/><span>${item._highlightResult.documentName.value}</span>`
+            `<img style='width:40px;margin-right:10px' src='${item.Thumbnail}'/><span>${item._highlightResult.DocumentName.value}</span>`
     }
 }
 ```
 
-> :warning: The fields `documentName` and `thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using fields present in your index. See the [sample search model](#determining-the-pages-to-index) to find out how these fields were defined.
+> :warning: The attributes `DocumentName` and `Thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using attributes present in your index. See the [sample search model](#determining-the-pages-to-index) to find out how these attributes were defined.
 
 This is the final result of adding our custom CSS and template:
 
@@ -433,20 +433,19 @@ The Dancing Goat store doesn't use search out-of-the-box, so first we need to ho
 
 1. Inject an instance of `SearchClient` into the `CoffeesController` as described in [this section](#mag_right-searching-the-index).
 
-2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `className` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
+2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
 ```cs
 private SearchResponse<AlgoliaSiteSearchModel> Search()
 {
-    var classNameAttribute = AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.ClassName));
     var facetsToRetrieve = new string[] {
-        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf)),
-        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeProcessing))
+        nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf),
+        nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
     var query = new Query()
     {
-        Filters = $"{classNameAttribute}:{new Coffee().ClassName}",
+        Filters = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}",
         Facets = facetsToRetrieve
     };
 
@@ -536,26 +535,25 @@ public ActionResult Index()
 
 ### Filtering your search with facets
 
-In the `Search()` method, we retrieved the _coffeeIsDecaf_ and _coffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
+In the `Search()` method, we retrieved the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
 
-This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "coffeeIsDecaf"), localized display name (e.g. "Caffeine"), and a list of `AlgoliaFacet`s.
+This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Caffeine"), and a list of `AlgoliaFacet`s.
 
-Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "coffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
+Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
 
 1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter` and adds a filter to `Query.FacetFilters` if facets are selected:
 
 ```cs
 private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter = null)
 {
-    var classNameAttribute = AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.ClassName));
     var facetsToRetrieve = new string[] {
-        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf)),
-        AlgoliaSearchHelper.ConvertToCamelCase(nameof(AlgoliaSiteSearchModel.CoffeeProcessing))
+        nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf),
+        nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
     var query = new Query()
     {
-        Filters = $"{classNameAttribute}:{new Coffee().ClassName}",
+        Filters = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}",
         Facets = facetsToRetrieve
     };
 
@@ -573,8 +571,8 @@ The `GetFilters()` method will return a facet filter for each facet in the `IAlg
 
 ```js
 [
-    [ "coffeeIsDecaf:true" ],
-    [ "coffeeProcessing:washed" ]
+    [ "CoffeeIsDecaf:true" ],
+    [ "CoffeeProcessing:washed" ]
 ]
 ```
 
@@ -611,13 +609,13 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 }
 ```
 
-Here, the `GetFacetedAttributes()` method accepts the facets returned from Algolia, but also the current `IAlgoliaFacetFilter`. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "coffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
+Here, the `GetFacetedAttributes()` method accepts the facets returned from Algolia, but also the current `IAlgoliaFacetFilter`. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "CoffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
 
-4. (Optional) Without localization, your view will display your facet attribute names (e.g. "coffeeIsDecaf") instead of a human-readable header like "Caffeinated." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+4. (Optional) Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Caffeinated." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
 
     - Inject `IStringLocalizer<SharedResources>` into the controller.
     - Call `filterViewModel.Localize(_localizer)` in the `Index()` method after constructing the facet filter view model.
-    - The `Localize()` method searches for matching facets in the format _algolia.facet.[attributeName]_. In __SharedResources.resx__, add the keys "algolia.facet.coffeeIsDecaf" and "algolia.facet.coffeeProcessing" with your translations.
+    - The `Localize()` method searches for matching facets in the format _algolia.facet.[AttributeName]_. In __SharedResources.resx__, add the keys "algolia.facet.CoffeeIsDecaf" and "algolia.facet.CoffeeProcessing" with your translations.
     - The `DisplayName` of each `AlgoliaFacetedAttribute` in the filter is now localized.
 
 ### Displaying the facets
@@ -802,7 +800,7 @@ var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.
 _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
 ```
 
-To log an event or conversion when a facet is clicked, we need to use a little AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "coffeeIsDecaf:true"):
+To log an event or conversion when a facet is clicked, we need to use a little AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
 
 ```cshtml
 <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
@@ -894,4 +892,4 @@ Switch to the __Search preview__ tab to perform a basic Algolia query:
 
 ![Algolia index preview](/img/index-preview.png)
 
-This view will display the `objectID` and `className` fields, plus any other searchable field which contained the matching search term.
+This view will display the `objectID` and `ClassName` attributes, plus any other searchable attributes which contained the matching search term.

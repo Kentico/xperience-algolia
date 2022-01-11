@@ -28,7 +28,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
         /// <summary>
         /// Sets the <see cref="AlgoliaFacetedAttribute.DisplayName"/> of each facet within
         /// <see cref="FacetedAttributes"/>. The key searched within the given <see cref="IStringLocalizer"/>
-        /// is in the format <i>algolia.facet.[attributeName]</i>.
+        /// is in the format <i>algolia.facet.[AttributeName]</i>.
         /// </summary>
         /// <param name="localizer">The localizer containing facet display names. See
         /// <see href="https://docs.xperience.io/multilingual-websites/setting-up-a-multilingual-user-interface/localizing-builder-components"/>.</param>

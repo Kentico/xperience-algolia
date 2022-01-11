@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 
 namespace Kentico.Xperience.AlgoliaSearch.Helpers
 {
@@ -231,7 +230,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             return new IndexSettings()
             {
                 SearchableAttributes = OrderSearchableProperties(searchableProperties),
-                AttributesToRetrieve = retrievablProperties.Select(p => ConvertToCamelCase(p.Name)).ToList(),
+                AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
                 AttributesForFaceting = facetableProperties.Select(GetFilterablePropertyName).ToList()
             };
         }
@@ -347,25 +346,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Converts a string to camel case.
-        /// </summary>
-        /// <param name="input">The string to convert.</param>
-        /// <returns>The original <paramref name="input"/> converted to camel case.</returns>
-        public static string ConvertToCamelCase(string input)
-        {
-            if (String.IsNullOrEmpty(input))
-            {
-                return String.Empty;
-            }
-
-            return Regex.Replace(input, @"([A-Z])([A-Z]+|[a-z0-9_]+)($|[A-Z]\w*)", m =>
-            {
-                return m.Groups[1].Value.ToLower() + m.Groups[2].Value.ToLower() + m.Groups[3].Value;
-            });
-        }
-
-
-        /// <summary>
         /// Gets the <see cref="AlgoliaOptions"/> from the web.config appSettings section.
         /// </summary>
         private static AlgoliaOptions GetAlgoliaOptionsFramework()
@@ -398,7 +378,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// format, based on the configured options of the <see cref="FacetableAttribute"/>.
         /// </summary>
         /// <param name="property">The search model property to get the name of.</param>
-        /// <returns>A camel-cased property name.</returns>
+        /// <returns>The property name marked as either "filterOnly" or "searchable."</returns>
         /// <exception cref="InvalidOperationException">Thrown if the <see cref="FacetableAttribute"/>
         /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
         /// set to true.</exception>
@@ -410,17 +390,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 throw new InvalidOperationException("Facetable attributes cannot be both searchable and filterOnly.");
             }
 
-            var name = ConvertToCamelCase(property.Name);
             if (attr.FilterOnly)
             {
-                return $"filterOnly({name})";
+                return $"filterOnly({property.Name})";
             }
             if (attr.Searchable)
             {
-                return $"searchable({name})";
+                return $"searchable({property.Name})";
             }
 
-            return name;
+            return property.Name;
         }
 
 
@@ -448,13 +427,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             var searchableAttributes = groupedByOrder.Select(group =>
                 group.Select(prop =>
                 {
-                    var propName = ConvertToCamelCase(prop.Key);
                     if (prop.Value.Unordered)
                     {
-                        return $"unordered({propName})";
+                        return $"unordered({prop.Key})";
                     }
 
-                    return propName;
+                    return prop.Key;
                 }).Join(",")
             ).ToList();
 
@@ -462,14 +440,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             var propertiesWithoutOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order == -1);
             foreach (var prop in propertiesWithoutOrdering)
             {
-                var propName = ConvertToCamelCase(prop.Key);
                 if (prop.Value.Unordered)
                 {
-                    searchableAttributes.Add($"unordered({propName})");
+                    searchableAttributes.Add($"unordered({prop.Key})");
                     continue;
                 }
 
-                searchableAttributes.Add(propName);
+                searchableAttributes.Add(prop.Key);
             }
 
             return searchableAttributes;

@@ -234,20 +234,19 @@ namespace Kentico.Xperience.AlgoliaSearch
                     continue;
                 }
 
-                var convertedName = AlgoliaSearchHelper.ConvertToCamelCase(prop.Name);
-                data.Add(convertedName, JToken.FromObject(nodeValue, serializer));
+                data.Add(prop.Name, JToken.FromObject(nodeValue, serializer));
                 
             }
             try
             {
-                data["url"] = DocumentURLProvider.GetAbsoluteUrl(node);
+                data["Url"] = DocumentURLProvider.GetAbsoluteUrl(node);
             }
             catch (Exception ex)
             {
                 // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
                 // and the page was deleted before the update task has processed. In this case, upsert an
                 // empty URL
-                data["url"] = String.Empty;
+                data["Url"] = String.Empty;
             }
 
             data["objectID"] = node.DocumentID.ToString();

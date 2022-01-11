@@ -91,7 +91,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Logs an event when a visitor clicks a facet.
         /// </summary>
-        /// <param name="facet">The facet name and value, e.g. "coffeeIsDecaf:true."</param>
+        /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
         public abstract void LogFacetClicked(string facet, string eventName, string indexName);
@@ -100,7 +100,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Logs a conversion when a visitor clicks a facet.
         /// </summary>
-        /// <param name="facet">The facet name and value, e.g. "coffeeIsDecaf:true."</param>
+        /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
         public abstract void LogFacetConverted(string facet, string conversionName, string indexName);
