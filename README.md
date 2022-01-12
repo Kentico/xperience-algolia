@@ -32,6 +32,8 @@ This integration uses a code-first approach to define Algolia indexes. A single 
 
 We recommend that your developers create a new [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) Class Library project to contain the Algolia search models they will create. This project can be referenced by both the CMS and .NET Core projects, allowing developers to reference the stongly-typed search models in each application. As a result, your developers can utilize Algolia's [POCO philosophy](https://www.algolia.com/doc/api-client/getting-started/install/csharp/?client=csharp#poco-types-and-jsonnet) while creating the search interface.
 
+> :warning: When developing the .NET Standard Class Library project, remember to add `[assembly: CMS.AssemblyDiscoverable]` your code! See [Adding custom assemblies](https://docs.xperience.io/custom-development/adding-custom-assemblies).
+
 ## :gear: Creating and registering an Algolia index
 
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs). Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
@@ -327,7 +329,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 ```
 
 3. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
-4. Still in _\_Layout.cshtml_, add javascript to the `<head>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+4. Still in _\_Layout.cshtml_, add javascript near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
 
 ```js
 <script type="text/javascript">
@@ -896,6 +898,8 @@ var results = searchIndex.Search<AlgoliaSiteSearchModel>(query, new RequestOptio
 ## :chart_with_upwards_trend: Xperience Algolia module
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
+
+After importing, perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project.
 
 ![Algolia module grid](/img/index-grid.png)
 
