@@ -13,7 +13,8 @@ This integration enables the creating of [Algolia](https://www.algolia.com/) sea
 ```json
 "xperience.algolia": {
 	"applicationId": "<your application ID>",
-	"apiKey": "<your Admin API key>"
+	"apiKey": "<your Admin API key>",
+    "searchKey": "<your Search API key>"
 }
 ```
 
@@ -328,12 +329,21 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 </li>
 ```
 
-3. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
-4. Still in _\_Layout.cshtml_, add javascript near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+3. Load the Algolia keys from `appsettings.json`:
+
+```cshtml
+@inject IConfiguration configuration
+
+@{
+    var algoliaOptions = AlgoliaSearchHelper.GetAlgoliaOptions(configuration);
+}
+```
+
+4. Add javascript near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
 
 ```js
 <script type="text/javascript">
-    var client = algoliasearch('<your Application ID>', '<your Search API Key>');
+    var client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
     var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
 </script>
 ```

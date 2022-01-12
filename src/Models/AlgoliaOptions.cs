@@ -28,5 +28,15 @@
             get;
             set;
         }
+
+
+        /// <summary>
+        /// Public API key used for searching only.
+        /// </summary>
+        public string SearchKey
+        {
+            get;
+            set;
+        }
     }
 }
