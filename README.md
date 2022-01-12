@@ -963,7 +963,7 @@ endpoints.MapControllerRoute(
     <script type="text/javascript">
         const search = instantsearch({
           indexName: '@DancingGoatSiteIndexModel.IndexName',
-          searchClient: algoliasearch('@algoliaOptions', '@algoliaOptions.SearchKey'),
+          searchClient: algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey'),
         });
 
         search.addWidgets([
@@ -1024,7 +1024,7 @@ endpoints.MapControllerRoute(
 }
 ```
 
-4. Finally, create the _/Content/Styles/instantsearch.css_ stylesheet which overrides some default InstantSearch.js styling to fit the Dancing Goat theme:
+4. Finally, create the _/wwwroot/Content/Styles/instantsearch.css_ stylesheet which overrides some default InstantSearch.js styling to fit the Dancing Goat theme:
 
 ```css
 .instantsearch-container {
@@ -1103,7 +1103,7 @@ endpoints.MapControllerRoute(
 }
 ```
 
-When you run the site and visit your new page, you'll see that you have a fully functioning search interface with faceting, created with only three new files!
+When you run the site and visit your new page, you'll see that you have a fully functioning search interface with faceting, created with only three new files! See Algolia's [InstantSearch documentation](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) for more detailed walkthroughs on designing the search interface and customizing widgets.
 
 ![InstantSearch example](/img/instantsearch-example.png)
 
