@@ -170,11 +170,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <param name="facetsFromResponse">The <see cref="SearchResponse{T}.Facets"/> returned from an Algolia search.</param>
         /// <param name="filter">The <see cref="IAlgoliaFacetFilter"/> used in previous Algolia searches, containing
         /// the facets that were present and their <see cref="AlgoliaFacet.IsChecked"/> states.</param>
+        /// <param name="displayEmptyFacets">If true, facets that would not return results from Algolia will be added
+        /// to the returned list with a count of zero.</param>
         /// <returns>A new list of <see cref="AlgoliaFacetedAttribute"/>s that are available to filter search
         /// results.</returns>
-        public static AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null)
+        public static AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true)
         {
-            // Get facets in filter that are checked to persist checked state when replacing facets from search response
+            // Get facets in filter that are checked to persist checked state
             var checkedFacetValues = new List<string>();
             if (filter != null)
             {
@@ -184,7 +186,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 }
             }
 
-            return facetsFromResponse.Select(dict =>
+            var facets = facetsFromResponse.Select(dict =>
                 new AlgoliaFacetedAttribute
                 {
                     Attribute = dict.Key,
@@ -200,7 +202,46 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                         }
                     ).ToArray()
                 }
-            ).ToArray();
+            ).ToList();
+
+            if (!displayEmptyFacets)
+            {
+                return facets.ToArray();
+            }
+
+            // Loop through all facets present in previous filter
+            foreach (var previousFacetedAttribute in filter.FacetedAttributes)
+            {
+                var matchingFacetFromResponse = facets.Where(facet => facet.Attribute == previousFacetedAttribute.Attribute).FirstOrDefault();
+                if (matchingFacetFromResponse == null)
+                {
+                    continue;
+                }
+
+                // Loop through each facet value in previous facet attribute
+                foreach(var previousFacet in previousFacetedAttribute.Facets)
+                {
+                    if(matchingFacetFromResponse.Facets.Select(facet => facet.Value).Contains(previousFacet.Value))
+                    {
+                        // The facet value was returned by Algolia search, don't add
+                        continue;
+                    }
+
+                    // The facet value wasn't returned by Algolia search, display with 0 count
+                    previousFacet.Count = 0;
+                    var newFacetList = matchingFacetFromResponse.Facets.ToList();
+                    newFacetList.Add(previousFacet);
+                    matchingFacetFromResponse.Facets = newFacetList.ToArray();
+                }
+            }
+
+            // Sort the facet values. Usually handled by Algolia, but we are modifying the list
+            foreach(var facetedAttribute in facets)
+            {
+                facetedAttribute.Facets = facetedAttribute.Facets.OrderBy(facet => facet.Value).ToArray();
+            }
+
+            return facets.ToArray();
         }
 
 

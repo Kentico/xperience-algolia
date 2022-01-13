@@ -657,6 +657,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 
 @for (var i=0; i<Model.FacetedAttributes.Count(); i++)
 {
+    @Html.HiddenFor(m => Model.FacetedAttributes[i].Attribute)
     @Html.EditorFor(model => Model.FacetedAttributes[i], "~/Views/Shared/Algolia/EditorTemplates/_AlgoliaFacetedAttribute.cshtml")
 }
 ```
@@ -673,7 +674,14 @@ If you've been following each section of this guide, the Dancing Goat store list
     @Html.HiddenFor(m => Model.Facets[i].Value)
     @Html.HiddenFor(m => Model.Facets[i].Attribute)
     <span class="checkbox js-postback">
-        <input asp-for="@Model.Facets[i].IsChecked" />
+        @if (Model.Facets[i].Count == 0)
+        {
+            <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" disabled/>
+        }
+        else
+        {
+            <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
+        }
         <label asp-for="@Model.Facets[i].IsChecked">@Model.Facets[i].DisplayValue (@Model.Facets[i].Count)</label>
     </span>
 }
