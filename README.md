@@ -12,8 +12,8 @@ This integration enables the creating of [Algolia](https://www.algolia.com/) sea
 
 ```json
 "xperience.algolia": {
-	"applicationId": "<your application ID>",
-	"apiKey": "<your Admin API key>",
+    "applicationId": "<your application ID>",
+    "apiKey": "<your Admin API key>",
     "searchKey": "<your Search API key>"
 }
 ```
