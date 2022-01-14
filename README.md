@@ -674,14 +674,7 @@ If you've been following each section of this guide, the Dancing Goat store list
     @Html.HiddenFor(m => Model.Facets[i].Value)
     @Html.HiddenFor(m => Model.Facets[i].Attribute)
     <span class="checkbox js-postback">
-        @if (Model.Facets[i].Count == 0)
-        {
-            <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" disabled/>
-        }
-        else
-        {
-            <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
-        }
+        <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
         <label asp-for="@Model.Facets[i].IsChecked">@Model.Facets[i].DisplayValue (@Model.Facets[i].Count)</label>
     </span>
 }

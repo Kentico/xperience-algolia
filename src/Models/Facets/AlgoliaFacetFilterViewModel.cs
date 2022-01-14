@@ -42,7 +42,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
                 checkedFacets.AddRange(facetedAttribute.Facets.Where(facet => facet.IsChecked));
             }
 
-            return checkedFacets.Select(facet => new string[] { $"{facet.Attribute}:{facet.Value}" });
+            // Group facets by attribute name so they are processed as OR queries
+            var groupedFacets = checkedFacets.GroupBy(facet => facet.Attribute);
+            return groupedFacets.Select(group => group.Select(facet => $"{facet.Attribute}:{facet.Value}"));
         }
 
 
