@@ -579,14 +579,9 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
 }
 ```
 
-The `GetFilters()` method will return a facet filter for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" processing type, the filter will look like this:
+The `GetFilters()` method will return a facet filter for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. Attributes with the same name are grouped within an OR condition. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" and "natural" processing type, the filter will look like this:
 
-```js
-[
-    [ "CoffeeIsDecaf:true" ],
-    [ "CoffeeProcessing:washed" ]
-]
-```
+> "CoffeeIsDecaf:true" AND ("CoffeeProcessing:washed" OR "CoffeeProcessing:natural")
 
 2. In `ProductListViewModel.cs`, add another property which will contain our facet filter:
 
