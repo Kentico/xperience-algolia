@@ -50,12 +50,6 @@ namespace Kentico.Xperience.AlgoliaSearch
                 throw new ArgumentNullException(indexName);
             }
 
-            var indexSettings = AlgoliaSearchHelper.GetIndexSettings(indexName);
-            if (indexSettings == null)
-            {
-                throw new InvalidOperationException("Unable to load search index settings.");
-            }
-
             var configuration = Service.ResolveOptional<IConfiguration>();
             var client = AlgoliaSearchHelper.GetSearchClient(configuration);
 
@@ -65,8 +59,6 @@ namespace Kentico.Xperience.AlgoliaSearch
             {
                 throw new InvalidOperationException("Algolia search models must extend the AlgoliaSearchModel class.");
             }
-
-            searchIndex.SetSettings(indexSettings);
         }
 
 

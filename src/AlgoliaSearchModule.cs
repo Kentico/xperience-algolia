@@ -8,6 +8,8 @@ using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
+using Microsoft.Extensions.Configuration;
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -138,6 +140,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             var attributes = new List<RegisterAlgoliaIndexAttribute>();
             var assemblies = AssemblyDiscoveryHelper.GetAssemblies(discoverableOnly: true);
+            var configuration = Service.ResolveOptional<IConfiguration>();
+            var client = AlgoliaSearchHelper.GetSearchClient(configuration);
 
             foreach (var assembly in assemblies)
             {
@@ -147,6 +151,18 @@ namespace Kentico.Xperience.AlgoliaSearch
             foreach (var attribute in attributes)
             {
                 AlgoliaSearchHelper.RegisterIndex(attribute.IndexName, attribute.Type);
+
+                // Set index settings
+                var searchIndex = client.InitIndex(attribute.IndexName);
+                var indexSettings = AlgoliaSearchHelper.GetIndexSettings(attribute.IndexName);
+                if (indexSettings == null)
+                {
+                    var eventLogService = Service.Resolve<IEventLogService>();
+                    eventLogService.LogError(nameof(AlgoliaSearchModule), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
+                    continue;
+                }
+
+                searchIndex.SetSettings(indexSettings);
             }
         }
 
