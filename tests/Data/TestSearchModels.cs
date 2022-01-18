@@ -33,7 +33,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
             [Facetable(filterOnly: true)]
             [Searchable]
-            [Source("Column1", "Column2")]
+            [Source(new string[] { "Column1", "Column2" })]
             public string Prop1 { get; set; }
 
 

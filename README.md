@@ -81,31 +81,31 @@ namespace DancingGoat
     [IncludedPath("/Store/%", new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
     {
-        public const string IndexName = nameof(AlgoliaSiteSearchModel);
+        public const string IndexName = "DancingGoatSiteSearch";
 
         [Searchable, Retrievable]
         public string DocumentName { get; set; }
 
         [Url, Retrievable]
-        [Source(nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser))]
+        [Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
         public string Thumbnail { get; set; }
 
         [Searchable]
-        [Source(nameof(SKUTreeNode.DocumentSKUDescription), nameof(Article.ArticleText))]
+        [Source(new string[] { nameof(SKUTreeNode.DocumentSKUDescription), nameof(Article.ArticleText) })]
         public string Content { get; set; }
 
         [Searchable, Retrievable]
-        [Source(nameof(SKUTreeNode.DocumentSKUShortDescription), nameof(Article.ArticleSummary))]
+        [Source(new string[] { nameof(SKUTreeNode.DocumentSKUShortDescription), nameof(Article.ArticleSummary) })]
         public string ShortDescription { get; set; }
+
+        [Retrievable]
+        public int SKUID { get; set; }
 
         [Facetable, Retrievable]
         public decimal? SKUPrice { get; set; }
 
         [Retrievable]
         public int SKUPublicStatusID { get; set; }
-
-        [Retrievable]
-        public int SKUID { get; set; }
 
         [Retrievable]
         public DateTime DocumentCreatedWhen { get; set; }
@@ -116,6 +116,7 @@ namespace DancingGoat
         [Facetable]
         public bool CoffeeIsDecaf { get; set; }
     }
+}
 ```
 
 ## :memo: Configuring Algolia attributes
@@ -191,7 +192,7 @@ Columns specified in the `SourceAttribute` are parsed in the order they appear, 
 Usage:
 ```cs
 [Url, Retrievable]
-[Source(nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser))]
+[Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
 public string Thumbnail { get; set; }
 ```
 

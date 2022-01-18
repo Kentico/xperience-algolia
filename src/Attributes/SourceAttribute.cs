@@ -26,7 +26,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         /// <param name="sources">A list of columns used to load an Algolia search
         /// model's property value from. Columns are checked for non-null values in
         /// the order they appear in the array.</param>
-        public SourceAttribute(params string[] sources)
+        public SourceAttribute(string[] sources)
         {
             Sources = sources;
         }
