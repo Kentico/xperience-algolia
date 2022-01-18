@@ -206,7 +206,7 @@ Usage:
 public string ArticleTeaser { get; set; }
 
 [Url, Retrievable] // Multiple fields
-[Source(nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser))]
+[Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
 public string Thumbnail { get; set; }
 ```
 
