@@ -9,7 +9,7 @@
 	<PropertyGroup>
 		<Title>Xperience Algolia Search</Title>
 		<PackageId>Kentico.Xperience.AlgoliaSearch</PackageId>
-		<Version>0.0.7</Version>
+		<Version>1.0.0-preview</Version>
 		<Authors>Kentico Software</Authors>
 		<Company>Kentico Software</Company>
 		<PackageIcon>icon.png</PackageIcon>
