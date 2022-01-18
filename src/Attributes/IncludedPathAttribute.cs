@@ -7,7 +7,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     /// page type(s) are included in the index.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = true)]
-    public class IncludedPathAttribute : Attribute
+    public sealed class IncludedPathAttribute : Attribute
     {
         /// <summary>
         /// The node alias pattern that will be used to match pages in the content tree for indexing.
@@ -16,7 +16,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         public string AliasPath
         {
             get;
-            set;
         }
 
 
@@ -45,15 +44,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="path">The node alias pattern that will be used to match pages in the content tree
+        /// <param name="aliasPath">The node alias pattern that will be used to match pages in the content tree
         /// for indexing.</param>
         /// <param name="pageTypes">A list of page types under the specified <see cref="AliasPath"/> that
         /// will be indexed. If not provided, all page types are indexed.</param>
         /// <param name="cultures">A list of the page culture versions to include in the index. If empty, all
         /// culture versions are indexed.</param>
-        public IncludedPathAttribute(string path, string[] pageTypes = null, string[] cultures = null)
+        public IncludedPathAttribute(string aliasPath, string[] pageTypes = null, string[] cultures = null)
         {
-            AliasPath = path;
+            AliasPath = aliasPath;
             PageTypes = (pageTypes == null ? Array.Empty<string>() : pageTypes);
             Cultures = (cultures == null ? Array.Empty<string>() : cultures);
         }

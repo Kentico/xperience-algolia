@@ -9,7 +9,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     /// and its configuration will be registered during startup to enable indexing.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class RegisterAlgoliaIndexAttribute : Attribute
+    public sealed class RegisterAlgoliaIndexAttribute : Attribute
     {
         /// <summary>
         /// The type of the class which extends <see cref="AlgoliaSearchModel"/>.
@@ -17,7 +17,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         public Type Type
         {
             get;
-            set;
         }
 
 
@@ -27,7 +26,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         public string IndexName
         {
             get;
-            set;
         }
 
 

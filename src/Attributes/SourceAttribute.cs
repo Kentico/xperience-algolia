@@ -7,7 +7,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     /// as the data source for the property, in order of priority.
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
-    public class SourceAttribute : Attribute
+    public sealed class SourceAttribute : Attribute
     {
         /// <summary>
         /// A list of columns used to load an Algolia search model's property value
@@ -17,7 +17,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         public string[] Sources
         {
             get;
-            set;
         }
 
 

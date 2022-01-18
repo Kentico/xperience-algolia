@@ -7,7 +7,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     /// </summary>
     /// <remarks>See <see href="https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/"/>.</remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public class RetrievableAttribute : Attribute
+    public sealed class RetrievableAttribute : Attribute
     {
     }
 }
