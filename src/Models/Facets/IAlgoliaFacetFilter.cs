@@ -2,7 +2,7 @@
 
 using Microsoft.Extensions.Localization;
 
-using System.Collections.Generic;
+using System;
 
 namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
 {
@@ -19,10 +19,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
 
 
         /// <summary>
-        /// Gets a collection of facet filters to be used in <see cref="Query.FacetFilters"/> to
+        /// Gets the facet filters to be added to the <see cref="Query.Filters"/> to
         /// filter an Algolia search based on selected facets and their values.
         /// </summary>
-        IEnumerable<IEnumerable<string>> GetFilters();
+        /// <param name="searchModelType">The Algolia search model that is being used in
+        /// the current query. If null, all facet filters will use the "OR" condition.</param>
+        public string GetFilter(Type searchModelType = null);
 
 
         /// <summary>

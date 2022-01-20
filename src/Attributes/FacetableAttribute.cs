@@ -2,6 +2,8 @@
 
 using System;
 
+using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+
 namespace Kentico.Xperience.AlgoliaSearch.Attributes
 {
     /// <summary>
@@ -35,6 +37,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
+        /// By default, <see cref="IAlgoliaFacetFilter.GetFilter"/> joins conditions of the same
+        /// faceted attribute with an OR condition. If true, filters generated with this property
+        /// will be joined with an AND condition.
+        /// </summary>
+        public bool UseAndCondition
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="filterOnly">Defines an attribute as filterable only and not facetable. If you
@@ -43,10 +57,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         /// <param name="searchable"> Defines an attribute as searchable. If you want to search for values
         /// of a given facet (using <see cref="SearchIndex.SearchForFacetValue"/>) you need to specify
         /// searchable.</param>
-        public FacetableAttribute(bool filterOnly = false, bool searchable = false)
+        /// <param name="useAndCondition">By default, <see cref="IAlgoliaFacetFilter.GetFilter"/> joins
+        /// conditions of the same faceted attribute with an OR condition. If true, filters generated with
+        /// this property will be joined with an AND condition.</param>
+        public FacetableAttribute(bool filterOnly = false, bool searchable = false, bool useAndCondition = false)
         {
             FilterOnly = filterOnly;
             Searchable = searchable;
+            UseAndCondition = useAndCondition;
         }
      }
 }

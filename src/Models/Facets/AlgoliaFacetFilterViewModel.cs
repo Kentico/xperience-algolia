@@ -1,5 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Localization;
 
@@ -34,7 +38,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
         }
 
 
-        public IEnumerable<IEnumerable<string>> GetFilters()
+        public string GetFilter(Type searchModelType = null)
         {
             var checkedFacets = new List<AlgoliaFacet>();
             foreach (var facetedAttribute in FacetedAttributes)
@@ -42,9 +46,25 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
                 checkedFacets.AddRange(facetedAttribute.Facets.Where(facet => facet.IsChecked));
             }
 
-            // Group facets by attribute name so they are processed as OR queries
             var groupedFacets = checkedFacets.GroupBy(facet => facet.Attribute);
-            return groupedFacets.Select(group => group.Select(facet => $"{facet.Attribute}:{facet.Value}"));
+            var attributeFilters = groupedFacets.Select(group => {
+
+                var joinString = " OR ";
+                if (searchModelType != null)
+                {
+                    var facetedProperty = searchModelType.GetProperty(group.Key);
+                    var facetableAttribute = facetedProperty.GetCustomAttribute<FacetableAttribute>(false);
+                    if (facetableAttribute != null && facetableAttribute.UseAndCondition)
+                    {
+                        joinString = " AND ";
+                    }
+                }
+
+                var facets = String.Join(joinString, group.Select(facet => $"{facet.Attribute}:{facet.Value}"));
+                return $"({facets})";
+            });
+
+            return String.Join(" AND ", attributeFilters);
         }
 
 

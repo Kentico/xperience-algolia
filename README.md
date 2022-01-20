@@ -156,6 +156,8 @@ This attribute indicates an Algolia attribute is a [facet or filter](https://www
 
 - __Searchable__ (optional): Allows developers to search for values within a facet, e.g. via the [`SearchForFacetValues()`](https://www.algolia.com/doc/api-reference/api-methods/search-for-facet-values/) method.
 
+- __UseAndCondition__ (optional): When using the sample code in this repository and the `AlgoliaFacetFilterViewModel` class, facet conditions of the same attribute are joined by "OR" by default. For example, _"(CoffeProcessing:washed OR CoffeeProcessing:natural)."_ You may set this property to __true__ to join them by "AND" instead.
+
 > :warning: An attribute cannot be both `FilterOnly` and `Searchable`, or an exception will be thrown.
 
 Usage:
@@ -456,9 +458,10 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
         nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
+    var defaultFilter = $"{AlgoliaSiteSearchModel.ClassName}:{new Coffee().ClassName}";
     var query = new Query()
     {
-        Filters = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}",
+        Filters = defaultFilter,
         Facets = facetsToRetrieve
     };
 
@@ -550,11 +553,11 @@ public ActionResult Index()
 
 In the `Search()` method, we retrieved the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
 
-This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Caffeine"), and a list of `AlgoliaFacet`s.
+This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet`s.
 
 Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
 
-1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter` and adds a filter to `Query.FacetFilters` if facets are selected:
+1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter`. Then, check whether the `filter` is non-null and call the `GetFilter()` method to generate the facet filters:
 
 ```cs
 private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter = null)
@@ -564,25 +567,32 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
-    var query = new Query()
-    {
-        Filters = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}",
-        Facets = facetsToRetrieve
-    };
-
+    var defaultFilter = $"{AlgoliaSiteSearchModel.ClassName}:{new Coffee().ClassName}";
     if (filter != null)
     {
-        query.FacetFilters = filter.GetFilters();
+        var facetFilter = filter.GetFilter(typeof(AlgoliaSiteSearchModel));
+        if (!String.IsNullOrEmpty(facetFilter))
+        {
+            defaultFilter += $" AND {facetFilter}";
+        }
     }
+
+    var query = new Query()
+    {
+        Filters = defaultFilter,
+        Facets = facetsToRetrieve
+    };
 
     var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
 
-The `GetFilters()` method will return a facet filter for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. Attributes with the same name are grouped within an OR condition. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" and "natural" processing type, the filter will look like this:
+The `GetFilter()` method will return a condition for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. Facets with the same attribute name are grouped within an "OR" condition. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" and "natural" processing type, the filter will look like this:
 
 > "CoffeeIsDecaf:true" AND ("CoffeeProcessing:washed" OR "CoffeeProcessing:natural")
+
+You can change this behavior by setting the [`UseAndCondition`](#facetable-attribute) property of your faceted attributes, or by registering your own implementation of `IAlgoliaFacetFilter`.
 
 2. In `ProductListViewModel.cs`, add another property which will contain our facet filter:
 
