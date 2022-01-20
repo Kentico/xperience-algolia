@@ -132,7 +132,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         private bool EventShouldCancel(TreeNode node, bool wasDeleted)
         {
             return !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(node) ||
-                (!wasDeleted && !node.IsPublished);
+                (!wasDeleted && !node.PublishedVersionExists);
         }
 
 

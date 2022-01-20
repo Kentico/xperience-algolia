@@ -231,17 +231,21 @@ namespace Kentico.Xperience.AlgoliaSearch
             }
             try
             {
-                data["Url"] = DocumentURLProvider.GetAbsoluteUrl(node);
+                data[nameof(AlgoliaSearchModel.Url)] = DocumentURLProvider.GetAbsoluteUrl(node);
             }
             catch (Exception ex)
             {
                 // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
                 // and the page was deleted before the update task has processed. In this case, upsert an
                 // empty URL
-                data["Url"] = String.Empty;
+                data[nameof(AlgoliaSearchModel.Url)] = String.Empty;
             }
 
             data["objectID"] = node.DocumentID.ToString();
+
+            // Convert scheduled publishing times to Unix timestamp in UTC
+            data[nameof(AlgoliaSearchModel.DocumentPublishTo)] = node.DocumentPublishTo.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+            data[nameof(AlgoliaSearchModel.DocumentPublishFrom)] = node.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
         }
 
 

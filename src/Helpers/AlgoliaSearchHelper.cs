@@ -90,7 +90,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
 
             // Don't include properties with SourceAttribute at first, check the sources and add to list after
-            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public|BindingFlags.Instance|BindingFlags.DeclaredOnly)
+            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
             var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
@@ -104,6 +104,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
                 indexedColumnNames.AddRange(sourceAttribute.Sources);
             }
+
+            // Remove column names from AlgoliaSearchModel that aren't database columns
+            var columnsToRemove = new string[] {
+                nameof(AlgoliaSearchModel.ObjectID),
+                nameof(AlgoliaSearchModel.Url),
+                nameof(AlgoliaSearchModel.ClassName)
+            };
+            indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
 
             return indexedColumnNames.ToArray();
         }
