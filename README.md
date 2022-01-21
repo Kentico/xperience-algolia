@@ -351,8 +351,6 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 </script>
 ```
 
-> :bulb: You can also load the Application ID and Search API Key from the `appsettings.json` file by injecting `IConfiguration` into your view.
-
 5. Initialize the autocomplete search box, then create a handler for when users click on autocomplete suggestions, and when the _Enter_ button is pushed:
 
 ```js
