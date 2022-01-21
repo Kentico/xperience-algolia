@@ -567,7 +567,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
-    var defaultFilter = $"{AlgoliaSiteSearchModel.ClassName}:{new Coffee().ClassName}";
+    var defaultFilter = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}";
     if (filter != null)
     {
         var facetFilter = filter.GetFilter(typeof(AlgoliaSiteSearchModel));
