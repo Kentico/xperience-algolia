@@ -39,8 +39,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         /// The <see cref="TreeNode.DocumentPublishFrom"/> value which is automatically
         /// converted to a Unix timestamp in UTC.
         /// </summary>
-        [Searchable]
-        public DateTime DocumentPublishFrom
+        [Facetable(filterOnly: true)]
+        public int DocumentPublishFrom
         {
             get;
             set;
@@ -51,8 +51,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         /// The <see cref="TreeNode.DocumentPublishTo"/> value which is automatically
         /// converted to a Unix timestamp in UTC.
         /// </summary>
-        [Searchable]
-        public DateTime DocumentPublishTo
+        [Facetable(filterOnly: true)]
+        public int DocumentPublishTo
         {
             get;
             set;
