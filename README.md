@@ -458,7 +458,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
         nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
     };
 
-    var defaultFilter = $"{AlgoliaSiteSearchModel.ClassName}:{new Coffee().ClassName}";
+    var defaultFilter = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}";
     var query = new Query()
     {
         Filters = defaultFilter,
