@@ -224,7 +224,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-In your Controllers, you can get a `SearchIndex` object by calling `InitIndex()` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index:
+In your Controllers, you can get a `SearchIndex` object by calling `InitIndex()` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
 
 ```cs
 private readonly ISearchClient _searchClient;
@@ -241,7 +241,7 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
     var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
     var query = new Query(searchText)
     {
-        Page = page,
+        Page = page - 1,
         HitsPerPage = PAGE_SIZE
     };
 
