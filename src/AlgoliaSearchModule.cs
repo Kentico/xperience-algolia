@@ -1,6 +1,7 @@
 ﻿using CMS;
 using CMS.Base;
 using CMS.Core;
+using CMS.DataEngine;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch;
@@ -39,10 +40,42 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             base.OnInit();
             RegisterAlgoliaIndexes();
-            DocumentEvents.Update.Before += LogTreeNodeUpdate;
+            DocumentEvents.Update.After += LogTreeNodeUpdate;
             DocumentEvents.Insert.After += LogTreeNodeInsert;
-            DocumentEvents.Delete.After += LogTreeNodeDelete;
+            DocumentEvents.Delete.Before += LogTreeNodeDelete;
+            AclInfo.TYPEINFO.Events.Update.After += LogAclUpdate;
             RequestEvents.RunEndRequestTasks.Execute += (sender, eventArgs) => AlgoliaQueueWorker.Current.EnsureRunningThread();
+        }
+
+
+        /// <summary>
+        /// Called when a page ACL is updated. Logs an Algolia task for the ACL's node as
+        /// well as all children to ensure the nodes are added/removed to Algolia based on
+        /// the new permissions.
+        /// </summary>
+        private void LogAclUpdate(object sender, ObjectEventArgs e)
+        {
+            var aclInfo = e.Object as AclInfo;
+            if (aclInfo == null)
+            {
+                return;
+            }
+
+            var nodeOwner = DocumentHelper.GetDocuments()
+                .OnCurrentSite()
+                .WhereEquals(nameof(TreeNode.NodeACLID), aclInfo.ACLID)
+                .FirstOrDefault();
+
+            if (nodeOwner == null)
+            {
+                return;
+            }
+
+            EnqueueAlgoliaItem(nodeOwner, false, false);
+            foreach (var child in nodeOwner.AllChildren)
+            {
+                EnqueueAlgoliaItem(child, false, false);
+            }
         }
 
 
@@ -51,12 +84,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         private void LogTreeNodeDelete(object sender, DocumentEventArgs e)
         {
-            if (EventShouldCancel(e.Node, true))
-            {
-                return;
-            }
-
-            EnqueueAlgoliaItems(e.Node, true, false);
+            EnqueueAlgoliaItem(e.Node, true, false);
         }
 
 
@@ -65,12 +93,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         private void LogTreeNodeInsert(object sender, DocumentEventArgs e)
         {
-            if (EventShouldCancel(e.Node, false))
-            {
-                return;
-            }
-
-            EnqueueAlgoliaItems(e.Node, false, true);
+            EnqueueAlgoliaItem(e.Node, false, true);
         }
 
 
@@ -79,12 +102,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         private void LogTreeNodeUpdate(object sender, DocumentEventArgs e)
         {
-            if (EventShouldCancel(e.Node, false))
-            {
-                return;
-            }
-
-            EnqueueAlgoliaItems(e.Node, false, false);
+            EnqueueAlgoliaItem(e.Node, false, false);
         }
 
 
@@ -96,43 +114,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
         /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
         /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
-        private void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
+        private void EnqueueAlgoliaItem(TreeNode node, bool wasDeleted, bool isNew)
         {
-            foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
+            AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
             {
-                if (!AlgoliaSearchHelper.IsNodeIndexedByIndex(node, index.Key))
-                {
-                    continue;
-                }
-
-                var indexedColumns = AlgoliaSearchHelper.GetIndexedColumnNames(index.Key);
-                if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
-                {
-                    continue;
-                }
-
-                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
-                {
-                    Node = node,
-                    Deleted = wasDeleted,
-                    IndexName = index.Key
-                });
-            }
-        }
-
-
-        /// <summary>
-        /// Returns true if the page event event handler should stop processing. Checks
-        /// if the page is indexed by any Algolia index, and for new/updated pages, the
-        /// page must be published.
-        /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
-        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
-        /// <returns></returns>
-        private bool EventShouldCancel(TreeNode node, bool wasDeleted)
-        {
-            return !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(node) ||
-                (!wasDeleted && !node.PublishedVersionExists);
+                Node = node,
+                IsNew = isNew,
+                Deleted = wasDeleted
+            });
         }
 
 

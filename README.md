@@ -68,6 +68,7 @@ While the above sample code will create an Algolia index, pages in the content t
 - __AliasPath__: The path of the content tree to index. Use "/%" to index all children of a page.
 - __PageTypes__ (optional): The code names of the page types under the specified `AliasPath` to index. If not provided, all page types are indexed.
 - __Cultures__ (optional): The culture codes of the page language versions to include in the index. If not provided, all culture versions are indexed.
+- __AllowedRoles__ (optional): The code names of the Xperience roles that are checked during indexing. When a page is indexed, all listed roles _must_ have `Read` permission for the page, or it is not indexed. If not provided, permissions are not checked.
 
 > :bulb: We recommend using the generated [Xperience page type code](https://docs.xperience.io/developing-websites/generating-classes-for-xperience-objects) to reference page type class names.
 
