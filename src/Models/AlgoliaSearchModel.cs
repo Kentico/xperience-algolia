@@ -1,4 +1,8 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
+﻿using CMS.DocumentEngine;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
+
+using System;
 
 namespace Kentico.Xperience.AlgoliaSearch.Models
 {
@@ -25,6 +29,30 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         [Retrievable]
         [Facetable(searchable: true)]
         public string ClassName
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
+        /// The <see cref="TreeNode.DocumentPublishFrom"/> value which is automatically
+        /// converted to a Unix timestamp in UTC.
+        /// </summary>
+        [Facetable(filterOnly: true)]
+        public int DocumentPublishFrom
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
+        /// The <see cref="TreeNode.DocumentPublishTo"/> value which is automatically
+        /// converted to a Unix timestamp in UTC.
+        /// </summary>
+        [Facetable(filterOnly: true)]
+        public int DocumentPublishTo
         {
             get;
             set;

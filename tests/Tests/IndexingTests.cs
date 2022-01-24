@@ -26,8 +26,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
         [Test]
-        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1" })]
-        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "Prop2", "Column1", "Column2" })]
+        [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1", "DocumentPublishFrom", "DocumentPublishTo" })]
+        [TestCase(Model2.IndexName, ExpectedResult = new string[] { "Prop2", "DocumentPublishFrom", "DocumentPublishTo", "Column1", "Column2" })]
         public string[] IndexedColumnsMatch(string indexName)
         {
             return AlgoliaSearchHelper.GetIndexedColumnNames(indexName);

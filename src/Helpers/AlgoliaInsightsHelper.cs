@@ -22,7 +22,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         {
             for (var i = 0; i < searchResponse.Hits.Count; i++)
             {
-                var position = i + 1 + (searchResponse.HitsPerPage * (searchResponse.Page - 1));
+                var position = i + 1 + (searchResponse.HitsPerPage * searchResponse.Page);
                 searchResponse.Hits[i].Url = GetInsightsUrl(searchResponse.Hits[i], position, searchResponse.QueryID);
             }
         }

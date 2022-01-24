@@ -310,6 +310,20 @@ In the display template, reference your search model's properties to display the
 </div>
 ```
 
+### Working with scheduled content
+
+Content indexed in Algolia follow the same caveats as described in our [Azure search documentation](https://docs.xperience.io/configuring-xperience/setting-up-search-on-your-website/using-azure-cognitive-search#UsingAzureCognitiveSearch-Indexingpageswithsetpublishingintervals). That is, pages which use the __Publish From__ and __Publish To__ fields remain in the Algolia index after they are unpublished. If you want to filter them out of your search results, you must add a condition in your search code.
+
+This repository automatically indexes the `DocumentPublishFrom` and `DocumentPublishTo` columns and converts them to a Unix timestamp in UTC as [recommended by Algolia](https://www.algolia.com/doc/guides/managing-results/refine-results/filtering/how-to/filter-by-date/). To remove pages that have not reached their publish date or have been unpublished, get the current Unix timestamp in UTC and use the following condition:
+
+```cs
+var nowUnixTimestamp = DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
+var query = new Query(searchText)
+{
+    Filters = $"{nameof(AlgoliaSiteSearchModel.DocumentPublishFrom)} <= {nowUnixTimestamp} AND {nameof(AlgoliaSiteSearchModel.DocumentPublishTo)} > {nowUnixTimestamp}"
+};
+```
+
 ### Creating an autocomplete search box
 
 Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/what-is-autocomplete/) functionality via javascript which you can [install](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#installation) and set up any way you'd like. Below is an example of how we added autocomplete functionality to the Dancing Goat demo site's main search box in the top-right of every page.

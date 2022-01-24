@@ -101,6 +101,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 {
                     var data = new JObject();
                     MapTreeNodeProperties(node, data);
+                    MapCommonProperties(node, data);
                     dataObjects.Add(data);
                 }
                 
@@ -229,19 +230,47 @@ namespace Kentico.Xperience.AlgoliaSearch
                 data.Add(prop.Name, JToken.FromObject(nodeValue, serializer));
                 
             }
+        }
+
+
+        /// <summary>
+        /// Sets values in the <paramref name="data"/> object using the common search model properties
+        /// located within the <see cref="AlgoliaSearchModel"/> class.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
+        /// <param name="data">The dynamic data that will be passed to Algolia.</param>
+        private void MapCommonProperties(TreeNode node, JObject data)
+        {
             try
             {
-                data["Url"] = DocumentURLProvider.GetAbsoluteUrl(node);
+                data[nameof(AlgoliaSearchModel.Url)] = DocumentURLProvider.GetAbsoluteUrl(node);
             }
             catch (Exception ex)
             {
                 // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
                 // and the page was deleted before the update task has processed. In this case, upsert an
                 // empty URL
-                data["Url"] = String.Empty;
+                data[nameof(AlgoliaSearchModel.Url)] = String.Empty;
             }
 
             data["objectID"] = node.DocumentID.ToString();
+
+            // Convert scheduled publishing times to Unix timestamp in UTC
+            var publishToUnix = Int32.MaxValue;
+            if (node.DocumentPublishTo != DateTime.MaxValue)
+            {
+                var nodePublishToUnix = node.DocumentPublishTo.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                publishToUnix = ValidationHelper.GetInteger(nodePublishToUnix, publishToUnix);
+            }
+            var publishFromUnix = 0;
+            if (node.DocumentPublishFrom != DateTime.MinValue)
+            {
+                var nodePublishFromUnix = node.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                publishFromUnix = ValidationHelper.GetInteger(nodePublishFromUnix, publishFromUnix);
+            }
+
+            data[nameof(AlgoliaSearchModel.DocumentPublishTo)] = publishToUnix;
+            data[nameof(AlgoliaSearchModel.DocumentPublishFrom)] = publishFromUnix;
         }
 
 
