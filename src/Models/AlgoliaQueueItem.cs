@@ -19,10 +19,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
 
 
         /// <summary>
-        /// True if the <see cref="Node"/> was recently deleted and should be removed
-        /// from the Algolia index.
+        /// True if <see cref="Node"/> was recently created in the content tree.
         /// </summary>
-        public bool Deleted
+        public bool IsNew
         {
             get;
             set;
@@ -30,9 +29,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
 
 
         /// <summary>
-        /// The code name of the Algolia index to be updated.
+        /// True if the <see cref="Node"/> was recently deleted and should be removed
+        /// from the Algolia index.
         /// </summary>
-        public string IndexName
+        public bool Deleted
         {
             get;
             set;

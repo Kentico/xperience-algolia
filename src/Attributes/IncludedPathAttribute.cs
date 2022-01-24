@@ -42,6 +42,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
+        /// A list of the roles which must have <b>Read</b> permission for a page in order for it to
+        /// be indexed.
+        /// </summary>
+        public string[] AllowedRoles
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="aliasPath">The node alias pattern that will be used to match pages in the content tree
@@ -50,11 +61,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         /// will be indexed. If not provided, all page types are indexed.</param>
         /// <param name="cultures">A list of the page culture versions to include in the index. If empty, all
         /// culture versions are indexed.</param>
-        public IncludedPathAttribute(string aliasPath, string[] pageTypes = null, string[] cultures = null)
+        /// <param name="allowedRoles">A list of the roles which must have <b>Read</b> permission for a page in
+        /// order for it to be indexed.</param>
+        public IncludedPathAttribute(string aliasPath, string[] pageTypes = null, string[] cultures = null, string[] allowedRoles = null)
         {
             AliasPath = aliasPath;
             PageTypes = (pageTypes == null ? Array.Empty<string>() : pageTypes);
             Cultures = (cultures == null ? Array.Empty<string>() : cultures);
+            AllowedRoles = (allowedRoles == null ? Array.Empty<string>() : allowedRoles);
         }
     }
 }
