@@ -19,7 +19,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         {
             get;
             set;
-        }
+        } = -1;
 
 
         /// <summary>
@@ -35,19 +35,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="SearchableAttribute"/> class.
         /// </summary>
-        /// <param name="order">A non-negative number indicating the priority of the attribute when
-        /// searching, where zero is the highest priority. Algolia records with matching search terms
-        /// in high priority attributes will appear higher in the search results than records with
-        /// matches in lower priority attributes.</param>
-        /// <param name="unordered">If true, a search term match anywhere in the attribute's value has
-        /// the same weight. If false, matching terms near the begininng of the value have higher weight
-        /// than matches near the end.</param>
-        public SearchableAttribute(int order = -1, bool unordered = false)
+        public SearchableAttribute()
         {
-            Order = order;
-            Unordered = unordered;
         }
     }
 }

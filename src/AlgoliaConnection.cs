@@ -35,8 +35,8 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
-        /// Constructor. Initializes the Algolia index and its <see cref="IndexSettings"/> by scanning
-        /// the registered search model class for custom attributes.
+        /// Initializes the inner Algolia <see cref="SearchIndex"/> for performing indexing
+        /// operations.
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index to manage.</param>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="indexName"/> is empty
@@ -55,9 +55,15 @@ namespace Kentico.Xperience.AlgoliaSearch
 
             searchIndex = client.InitIndex(indexName);
             searchModelType = AlgoliaSearchHelper.GetModelByIndexName(indexName);
+
+            if (searchModelType == null)
+            {
+                throw new InvalidOperationException($"Unable to load search model class for index '{indexName}.'");
+            }
+
             if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
             {
-                throw new InvalidOperationException("Algolia search models must extend the AlgoliaSearchModel class.");
+                throw new InvalidOperationException($"Algolia search models must extend the {nameof(AlgoliaSearchModel)} class.");
             }
         }
 

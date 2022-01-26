@@ -1,11 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
+﻿using Algolia.Search.Models.Search;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Localization;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
 {
@@ -19,16 +21,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="AlgoliaFacetFilterViewModel"/> class
+        /// with an empty set of <see cref="FacetedAttributes"/>.
         /// </summary>
         public AlgoliaFacetFilterViewModel()
         {
-
         }
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="AlgoliaFacetFilterViewModel"/> class
+        /// with the <see cref="FacetedAttributes"/> set to the provided <paramref name="facets"/>.
         /// </summary>
         /// <param name="facets">A collection of an Algolia index's faceted attributes and the
         /// available facets.</param>

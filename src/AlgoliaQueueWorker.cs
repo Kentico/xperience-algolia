@@ -22,7 +22,9 @@ namespace Kentico.Xperience.AlgoliaSearch
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="AlgoliaQueueItem"/> class. Should
+        /// not be called directly- the worker should be initialized during startup using
+        /// <see cref="ThreadWorker{T}.EnsureRunningThread"/>.
         /// </summary>
         public AlgoliaQueueWorker()
         {

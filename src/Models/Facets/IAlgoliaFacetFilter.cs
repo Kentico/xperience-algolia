@@ -15,7 +15,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
         /// <summary>
         /// A collection of an Algolia index's faceted attributes and the available facets.
         /// </summary>
-        public abstract AlgoliaFacetedAttribute[] FacetedAttributes { get; set; }
+        public abstract AlgoliaFacetedAttribute[] FacetedAttributes
+        {
+            get;
+            set;
+        }
 
 
         /// <summary>

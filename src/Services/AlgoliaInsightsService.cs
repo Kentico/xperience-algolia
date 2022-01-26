@@ -73,7 +73,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="AlgoliaInsightsService"/> class.
+        /// Should not be called directly- use <see cref="AlgoliaStartupExtensions.AddAlgolia"/>
+        /// to register this class with Dependency Injection.
         /// </summary>
         public AlgoliaInsightsService(IInsightsClient insightsClient)
         {

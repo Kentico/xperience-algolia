@@ -82,8 +82,8 @@ Below is an example of an Algolia index which includes multiple paths and page t
 [assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName)]
 namespace DancingGoat
 {
-    [IncludedPath("/Articles/%", new string[] { Article.CLASS_NAME })]
-    [IncludedPath("/Store/%", new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
+    [IncludedPath("/Articles/%", PageTypes = new string[] { Article.CLASS_NAME })]
+    [IncludedPath("/Store/%", PageTypes = new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
     {
         public const string IndexName = "DancingGoatSiteSearch";
@@ -146,10 +146,10 @@ Usage:
 [Searchable]
 public string DocumentName { get; set; }
 
-[Searchable(0)] // Highest priority
+[Searchable(Order = 0)] // Highest priority
 public string DocumentName { get; set; }
 
-[Searchable(unordered: true)]
+[Searchable(Unordered = true)]
 public string DocumentName { get; set; }
 ```
 
@@ -170,10 +170,10 @@ Usage:
 [Facetable]
 public decimal? SKUPrice { get; set; }
 
-[Facetable(true)] // Filter
+[Facetable(FilterOnly = true)] // Filter
 public decimal? SKUPrice { get; set; }
 
-[Facetable(searchable: true)] // Searchable
+[Facetable(Searchable = true)] // Searchable
 public decimal? SKUPrice { get; set; }
 ```
 

@@ -31,19 +31,19 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public const string IndexName = "Model2";
 
 
-            [Facetable(filterOnly: true)]
+            [Facetable(FilterOnly = true)]
             [Searchable]
             [Source(new string[] { "Column1", "Column2" })]
             public string Prop1 { get; set; }
 
 
-            [Facetable(searchable: true)]
+            [Facetable(Searchable = true)]
             [Searchable]
             public string Prop2 { get; set; }
         }
 
 
-        [IncludedPath("/%", new string[] { "Test.Article" }, new string[] { "en-US" })]
+        [IncludedPath("/%", PageTypes = new string[] { "Test.Article" }, Cultures = new string[] { "en-US" })]
         public class Model3 : AlgoliaSearchModel
         {
             public const string IndexName = "Model3";
@@ -54,12 +54,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
             [Retrievable]
-            [Searchable(0)]
+            [Searchable(Order = 0)]
             public string Prop2 { get; set; }
 
 
             [Retrievable]
-            [Searchable(0)]
+            [Searchable(Order = 0)]
             public string Prop3 { get; set; }
         }
 
@@ -78,29 +78,29 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public const string IndexName = "Model5";
 
 
-            [Searchable(unordered: true)]
+            [Searchable(Unordered = true)]
             public string Prop6 { get; set; }
 
 
-            [Searchable(4)]
+            [Searchable(Order = 4)]
             public string Prop5 { get; set; }
 
 
             [Retrievable]
-            [Searchable(1)]
+            [Searchable(Order = 1)]
             public string Prop1 { get; set; }
 
 
             [Retrievable]
-            [Searchable(1)]
+            [Searchable(Order = 1)]
             public string Prop2 { get; set; }
 
 
-            [Searchable(2)]
+            [Searchable(Order = 2)]
             public string Prop3 { get; set; }
 
 
-            [Searchable(3, true)]
+            [Searchable(Order = 3, Unordered = true)]
             public string Prop4 { get; set; }
         }
 
@@ -110,7 +110,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public const string IndexName = "Model6";
 
 
-            [Facetable(true, true)]
+            [Facetable(FilterOnly = true, Searchable = true)]
             [Searchable]
             public string Prop1 { get; set; }
         }

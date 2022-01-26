@@ -11,7 +11,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
     {
         /// <summary>
         /// A list of columns used to load an Algolia search model's property value
-        /// from .Columns are checked for non-null values in the order they appear
+        /// from. Columns are checked for non-null values in the order they appear
         /// in the array.
         /// </summary>
         public string[] Sources
@@ -21,7 +21,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="SourceAttribute"/> class.
         /// </summary>
         /// <param name="sources">A list of columns used to load an Algolia search
         /// model's property value from. Columns are checked for non-null values in

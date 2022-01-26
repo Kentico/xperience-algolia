@@ -30,7 +30,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
-        /// Constructor.
+        /// Initializes a new instance of the <see cref="RegisterAlgoliaIndexAttribute"/> class.
         /// </summary>
         /// <param name="type">The type of the class which extends <see cref="AlgoliaSearchModel"/>.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
