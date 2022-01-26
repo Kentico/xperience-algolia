@@ -71,6 +71,11 @@ While the above sample code will create an Algolia index, pages in the content t
 
 > :bulb: We recommend using the generated [Xperience page type code](https://docs.xperience.io/developing-websites/generating-classes-for-xperience-objects) to reference page type class names.
 
+All pages under the specified __AliasPath__ will be indexed regardless of their [permissions](https://docs.xperience.io/managing-users/configuring-permissions/configuring-page-permissions/page-level-permissions-acls). This means that if there are publicly-accessible pages and secured pages (e.g. articles only meant for partners), they will be added to your index together. If you need to separate this content in your search functionality, you can either:
+
+- Create different sections in your content tree for public and secured pages, and use multiple Algolia indexes to store the information.
+- Store the content in the same Algolia index and filter your search results to display the appropriate content to the user. To check whether a user has __Read__ permissions for a page, you can use `DocumentSecurityHelper.IsAuthorizedPerDocument()`.
+
 Below is an example of an Algolia index which includes multiple paths and page types:
 
 ```cs
