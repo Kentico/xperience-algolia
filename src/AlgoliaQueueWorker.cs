@@ -1,6 +1,7 @@
 ﻿using CMS.Base;
 using CMS.Core;
 
+using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
@@ -53,38 +54,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
-        /// <summary>
-        /// Processes multiple queue items from all Algolia indexes in batches. Algolia
-        /// automatically applies batching in multiples of 1,000 when using their API,
-        /// so all queue items are forwarded to the API.
-        /// </summary>
-        /// <param name="items">The items to process.</param>
-        /// <returns>The number of processed items.</returns>
         protected override int ProcessItems(IEnumerable<AlgoliaQueueItem> items)
         {
-            // Group queue items based on index name
-            var groups = items.ToList().GroupBy(item => item.IndexName);
-            foreach (var group in groups)
-            {
-                try
-                {
-                    var connection = new AlgoliaConnection(group.Key);
-                    var deleteTasks = group.Where(queueItem => queueItem.Deleted);
-                    var updateTasks = group.Where(queueItem => !queueItem.Deleted);
-
-                    connection.UpsertTreeNodes(updateTasks.Select(queueItem => queueItem.Node));
-                    connection.DeleteTreeNodes(deleteTasks.Select(queueItem => queueItem.Node));
-                }
-                catch (InvalidOperationException ex)
-                {
-                    LogError(ex.Message, nameof(ProcessItems));
-                }
-                catch (ArgumentNullException ex)
-                {
-                    LogError(ex.Message, nameof(ProcessItems));
-                }
-            }
-
+            AlgoliaIndexingHelper.ProcessAlgoliaTasks(items);
             return items.Count();
         }
 

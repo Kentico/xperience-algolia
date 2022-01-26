@@ -1,0 +1,246 @@
+﻿using CMS.Core;
+using CMS.DataEngine;
+using CMS.DocumentEngine;
+using CMS.FormEngine;
+using CMS.Helpers;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
+namespace Kentico.Xperience.AlgoliaSearch.Helpers
+{
+    /// <summary>
+    /// Contains methods used during the indexing of content in an Algolia index.
+    /// </summary>
+    public class AlgoliaIndexingHelper
+    {
+        /// <summary>
+        /// Gets a dynamic <see cref="JObject"/> containing the properties of the Algolia
+        /// search model and base class <see cref="AlgoliaSearchModel"/>, populated with data
+        /// from the <paramref name="node"/>.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> being indexed.</param>
+        /// <param name="searchModelType">The class of the Algolia search model.</param>
+        /// <returns>A <see cref="JObject"/> with its properties and values set.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="node"/> or
+        /// <paramref name="searchModelType"/> are null.</exception>
+        public static JObject GetTreeNodeData(TreeNode node, Type searchModelType)
+        {
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            if (searchModelType == null)
+            {
+                throw new ArgumentException(nameof(searchModelType));
+            }
+
+            var data = new JObject();
+            MapTreeNodeProperties(node, data, searchModelType);
+            MapCommonProperties(node, data);
+
+            return data;
+        }
+
+
+        /// <summary>
+        /// Processes multiple queue items from all Algolia indexes in batches. Algolia
+        /// automatically applies batching in multiples of 1,000 when using their API,
+        /// so all queue items are forwarded to the API.
+        /// </summary>
+        /// <param name="items">The items to process.</param>
+        public static void ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items)
+        {
+            // Group queue items based on index name
+            var groups = items.ToList().GroupBy(item => item.IndexName);
+            foreach (var group in groups)
+            {
+                try
+                {
+                    var connection = new AlgoliaConnection(group.Key);
+                    var deleteTasks = group.Where(queueItem => queueItem.Deleted);
+                    var updateTasks = group.Where(queueItem => !queueItem.Deleted);
+
+                    connection.UpsertTreeNodes(updateTasks.Select(queueItem => queueItem.Node));
+                    connection.DeleteTreeNodes(deleteTasks.Select(queueItem => queueItem.Node));
+                }
+                catch (InvalidOperationException ex)
+                {
+                    LogError(nameof(ProcessAlgoliaTasks), ex.Message);
+                }
+                catch (ArgumentNullException ex)
+                {
+                    LogError(nameof(ProcessAlgoliaTasks), ex.Message);
+                }
+            }
+        }
+
+
+        /// <summary>
+        /// Converts the value from the <paramref name="node"/>'s column from a relative URL
+        /// (e.g. ~/getmedia) or an attachment reference into an absolute live-site URL.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> the value was loaded from.</param>
+        /// <param name="nodeValue">The original value of the column.</param>
+        /// <param name="columnName">The name of the column the value was loaded from.</param>
+        /// <returns>An absolute URL, or null if it couldn't be converted.</returns>
+        private static string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName)
+        {
+            var strValue = ValidationHelper.GetString(nodeValue, "");
+            if (String.IsNullOrEmpty(strValue))
+            {
+                return null;
+            }
+
+            if (!strValue.StartsWith("~"))
+            {
+                // Value is not a URL, get field data type and load URL
+                var dataClassInfo = DataClassInfoProvider.GetDataClassInfo(node.ClassName, false);
+                var formInfo = new FormInfo(dataClassInfo.ClassFormDefinition);
+                var field = formInfo.GetFormField(columnName);
+
+                if (field == null)
+                {
+                    LogError(nameof(GetAbsoluteUrlForColumn), $"Unable to load field definition for page type '{node.ClassName}' column name '{columnName}.'");
+                    return null;
+                }
+
+                switch (field.DataType)
+                {
+                    case FieldDataType.File: // Attachment
+                        var attachment = AttachmentInfo.Provider.Get(new Guid(strValue), node.NodeSiteID);
+                        nodeValue = AttachmentURLProvider.GetAttachmentUrl(attachment.AttachmentGUID, attachment.AttachmentName);
+                        break;
+                }
+            }
+
+            var liveSiteDomain = node.Site.SitePresentationURL;
+            return URLHelper.GetAbsoluteUrl(ValidationHelper.GetString(nodeValue, ""), null, liveSiteDomain, null);
+        }
+
+
+        /// <summary>
+        /// Gets the <paramref name="node"/> value using the <paramref name="property"/>
+        /// name, or the property's <see cref="SourceAttribute"/> if specified.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to load a value from.</param>
+        /// <param name="property">The Algolia search model property.</param>
+        private static object GetNodeValue(TreeNode node, PropertyInfo property)
+        {
+            if (!Attribute.IsDefined(property, typeof(SourceAttribute)))
+            {
+                return node.GetValue(property.Name);
+            }
+
+            // Property uses SourceAttribute, loop through column names until a non-null value is found
+            object nodeValue = null;
+            string usedColumn = null;
+            var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
+            foreach (var source in sourceAttribute.Sources)
+            {
+                nodeValue = node.GetValue(source);
+                if (nodeValue != null)
+                {
+                    usedColumn = source;
+                    break;
+                }
+            }
+
+            if (nodeValue == null)
+            {
+                return null;
+            }
+
+            // Convert node value to URL by referencing the used source column
+            if (Attribute.IsDefined(property, typeof(UrlAttribute)))
+            {
+                nodeValue = GetAbsoluteUrlForColumn(node, nodeValue, usedColumn);
+            }
+
+            return nodeValue;
+        }
+
+
+        /// <summary>
+        /// Locates the registered search model properties which match the property names of the passed
+        /// <paramref name="node"/> and sets the <paramref name="data"/> values from the <paramref name="node"/>.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
+        /// <param name="data">The dynamic data that will be passed to Algolia.</param>
+        /// <param name="searchModelType">The class of the Algolia search model.</param>
+        private static void MapTreeNodeProperties(TreeNode node, JObject data, Type searchModelType)
+        {
+            var serializer = new JsonSerializer();
+            serializer.Converters.Add(new DecimalPrecisionConverter());
+
+            var searchModel = Activator.CreateInstance(searchModelType);
+            PropertyInfo[] properties = searchModel.GetType().GetProperties();
+            foreach (var prop in properties)
+            {
+                object nodeValue = GetNodeValue(node, prop);
+                if (nodeValue == null)
+                {
+                    continue;
+                }
+
+                data.Add(prop.Name, JToken.FromObject(nodeValue, serializer));
+            }
+        }
+
+
+        /// <summary>
+        /// Sets values in the <paramref name="data"/> object using the common search model properties
+        /// located within the <see cref="AlgoliaSearchModel"/> class.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
+        /// <param name="data">The dynamic data that will be passed to Algolia.</param>
+        private static void MapCommonProperties(TreeNode node, JObject data)
+        {
+            try
+            {
+                data[nameof(AlgoliaSearchModel.Url)] = DocumentURLProvider.GetAbsoluteUrl(node);
+            }
+            catch (Exception ex)
+            {
+                // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
+                // and the page was deleted before the update task has processed. In this case, upsert an
+                // empty URL
+                data[nameof(AlgoliaSearchModel.Url)] = String.Empty;
+            }
+
+            data["objectID"] = node.DocumentID.ToString();
+
+            // Convert scheduled publishing times to Unix timestamp in UTC
+            var publishToUnix = Int32.MaxValue;
+            if (node.DocumentPublishTo != DateTime.MaxValue)
+            {
+                var nodePublishToUnix = node.DocumentPublishTo.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                publishToUnix = ValidationHelper.GetInteger(nodePublishToUnix, publishToUnix);
+            }
+            var publishFromUnix = 0;
+            if (node.DocumentPublishFrom != DateTime.MinValue)
+            {
+                var nodePublishFromUnix = node.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds;
+                publishFromUnix = ValidationHelper.GetInteger(nodePublishFromUnix, publishFromUnix);
+            }
+
+            data[nameof(AlgoliaSearchModel.DocumentPublishTo)] = publishToUnix;
+            data[nameof(AlgoliaSearchModel.DocumentPublishFrom)] = publishFromUnix;
+        }
+
+
+        private static void LogError(string code, string message)
+        {
+            Service.Resolve<IEventLogService>().LogError(nameof(AlgoliaIndexingHelper), code, message);
+        }
+    }
+}

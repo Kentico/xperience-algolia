@@ -1,11 +1,9 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Search;
-using Algolia.Search.Models.Settings;
 
 using CMS.Base;
 using CMS.Core;
-using CMS.DocumentEngine;
 using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
@@ -22,11 +20,10 @@ using System.Reflection;
 namespace Kentico.Xperience.AlgoliaSearch.Helpers
 {
     /// <summary>
-    /// Contains methods for common Algolia tasks and stores all registered Algolia indexes.
+    /// Contains methods for common Algolia tasks.
     /// </summary>
     public class AlgoliaSearchHelper
     {
-        private static Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
         private static IEventLogService mEventLogService;
 
 
@@ -40,19 +37,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 }
 
                 return mEventLogService;
-            }
-        }
-
-
-        /// <summary>
-        /// A collection of Algolia index names and the object type which represents the columns
-        /// included in the index.
-        /// </summary>
-        public static Dictionary<string, Type> RegisteredIndexes
-        {
-            get
-            {
-                return mRegisteredIndexes;
             }
         }
 
@@ -83,7 +67,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <returns>The names of the database columns that are indexed.</returns>
         public static string[] GetIndexedColumnNames(string indexName)
         {
-            var searchModelType = GetModelByIndexName(indexName);
+            var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
                 return new string[] { };
@@ -114,23 +98,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
 
             return indexedColumnNames.ToArray();
-        }
-
-
-        /// <summary>
-        /// Gets the registered search model class that is paired with the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The search model class type, or null if not found.</returns>
-        public static Type GetModelByIndexName(string indexName)
-        {
-            var records = mRegisteredIndexes.Where(i => i.Key == indexName);
-            if (records.Count() == 0)
-            {
-                return null;
-            }
-
-            return records.FirstOrDefault().Value;
         }
 
 
@@ -254,176 +221,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Gets the <see cref="IndexSettings"/> of the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <returns>The index settings, or null if not found.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static IndexSettings GetIndexSettings(string indexName)
-        {
-            if (String.IsNullOrEmpty(indexName))
-            {
-                throw new ArgumentNullException(nameof(indexName));
-            }
-
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
-            {
-                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
-                return null;
-            }
-
-            var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-            var retrievablProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
-            var facetableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
-            ;
-            return new IndexSettings()
-            {
-                SearchableAttributes = OrderSearchableProperties(searchableProperties),
-                AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
-                AttributesForFaceting = facetableProperties.Select(GetFilterablePropertyName).ToList()
-            };
-        }
-
-
-        /// <summary>
-        /// Returns true if the passed node's <see cref="TreeNode.NodeAliasPath"/> is included in an
-        /// Algolia index's allowed paths, and the node's <see cref="TreeNode.ClassName"/> is included
-        /// in a matching allowed path.
-        /// </summary>
-        /// <param name="node"></param>
-        /// <returns></returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static bool IsNodeAlgoliaIndexed(TreeNode node)
-        {
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
-
-            foreach (var index in mRegisteredIndexes)
-            {
-                if (IsNodeIndexedByIndex(node, index.Key))
-                {
-                    return true;
-                }
-            }
-
-            return false;
-        }
-
-
-        /// <summary>
-        /// Returns true if the <paramref name="node"/> is included in the Algolia index's allowed
-        /// paths as set by the <see cref="IncludedPathAttribute"/>.
-        /// </summary>
-        /// <param name="node">The node to check for indexing.</param>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static bool IsNodeIndexedByIndex(TreeNode node, string indexName)
-        {
-            if (String.IsNullOrEmpty(indexName))
-            {
-                throw new ArgumentNullException(nameof(indexName));
-            }
-            if (node == null)
-            {
-                throw new ArgumentNullException(nameof(node));
-            }
-
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
-            {
-                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
-                return false;
-            }
-
-            var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
-            foreach (var includedPathAttribute in includedPathAttributes)
-            {
-                var path = includedPathAttribute.AliasPath;
-                var matchesPageType = (includedPathAttribute.PageTypes.Length == 0 || includedPathAttribute.PageTypes.Contains(node.ClassName));
-                var matchesCulture = (includedPathAttribute.Cultures.Length == 0 || includedPathAttribute.Cultures.Contains(node.DocumentCulture));
-
-                if (path.EndsWith("/%"))
-                {
-                    path = path.TrimEnd('%', '/');
-                    if (node.NodeAliasPath.StartsWith(path) && matchesPageType && matchesCulture)
-                    {
-                        return true;
-                    }
-                }
-                else
-                {
-                    if (node.NodeAliasPath == path && matchesPageType && matchesCulture)
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-
-        /// <summary>
-        /// Saves an Algolia index code name and its search model to the <see cref="RegisteredIndexes"/>.
-        /// </summary>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <param name="searchModelType">The search model type.</param>
-        public static void RegisterIndex(string indexName, Type searchModelType)
-        {
-            if (String.IsNullOrEmpty(indexName))
-            {
-                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
-                return;
-            }
-
-            if (searchModelType == null)
-            {
-                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
-                return;
-            }
-
-            if (mRegisteredIndexes.ContainsKey(indexName))
-            {
-                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
-                return;
-            }
-            
-            mRegisteredIndexes.Add(indexName, searchModelType);
-        }
-
-
-        /// <summary>
-        /// Gets the <see cref="AlgoliaOptions"/> from the web.config appSettings section.
-        /// </summary>
-        private static AlgoliaOptions GetAlgoliaOptionsFramework()
-        {
-            var appSettingService = Service.Resolve<IAppSettingsService>();
-            var applicationId = ValidationHelper.GetString(appSettingService["AlgoliaApplicationId"], String.Empty);
-            var apiKey = ValidationHelper.GetString(appSettingService["AlgoliaApiKey"], String.Empty);
-
-            return new AlgoliaOptions()
-            {
-                ApiKey = apiKey,
-                ApplicationId = applicationId
-            };
-        }
-
-
-        /// <summary>
-        /// Gets the <see cref="AlgoliaOptions"/> from the appSettings.json file.
-        /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
-        /// application.</param>
-        /// </summary>
-        private static AlgoliaOptions GetAlgoliaOptionsCore(IConfiguration configuration)
-        {
-            return configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
-        }
-
-
-        /// <summary>
         /// Converts a property name with a <see cref="FacetableAttribute"/> into the correct Algolia
         /// format, based on the configured options of the <see cref="FacetableAttribute"/>.
         /// </summary>
@@ -432,7 +229,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <exception cref="InvalidOperationException">Thrown if the <see cref="FacetableAttribute"/>
         /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
         /// set to true.</exception>
-        private static string GetFilterablePropertyName(PropertyInfo property)
+        public static string GetFilterablePropertyName(PropertyInfo property)
         {
             var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
             if (attr.FilterOnly && attr.Searchable)
@@ -461,7 +258,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <param name="searchableProperties">The properties of the search model to be ordered.</param>
         /// <returns>A list of strings appropriate for setting Algolia searchable attributes (see
         /// <see href="https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/"/>).</returns>
-        private static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
+        public static List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
         {
             var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
             foreach (var prop in searchableProperties)
@@ -500,6 +297,34 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
 
             return searchableAttributes;
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="AlgoliaOptions"/> from the web.config appSettings section.
+        /// </summary>
+        private static AlgoliaOptions GetAlgoliaOptionsFramework()
+        {
+            var appSettingService = Service.Resolve<IAppSettingsService>();
+            var applicationId = ValidationHelper.GetString(appSettingService["AlgoliaApplicationId"], String.Empty);
+            var apiKey = ValidationHelper.GetString(appSettingService["AlgoliaApiKey"], String.Empty);
+
+            return new AlgoliaOptions()
+            {
+                ApiKey = apiKey,
+                ApplicationId = applicationId
+            };
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="AlgoliaOptions"/> from the appSettings.json file.
+        /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
+        /// application.</param>
+        /// </summary>
+        private static AlgoliaOptions GetAlgoliaOptionsCore(IConfiguration configuration)
+        {
+            return configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
         }
     }
 }

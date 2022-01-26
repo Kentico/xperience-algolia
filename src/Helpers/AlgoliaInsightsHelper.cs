@@ -9,7 +9,7 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 namespace Kentico.Xperience.AlgoliaSearch.Helpers
 {
     /// <summary>
-    /// Methods for assisting with the logging of Algolia Insights events and conversions.
+    /// Contains methods for assisting with the logging of Algolia Insights events and conversions.
     /// </summary>
     public class AlgoliaInsightsHelper
     {
@@ -31,7 +31,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         private static string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel
         {
             var indexName = "";
-            foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
+            foreach (var index in AlgoliaRegistrationHelper.RegisteredIndexes)
             {
                 if (index.Value == typeof(TModel))
                 {

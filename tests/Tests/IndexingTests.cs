@@ -9,7 +9,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
     [TestFixture]
     internal class IndexingTests : AlgoliaTest
     {
-        [Test]
         [TestCase(Model1.IndexName, "/Articles/1", ExpectedResult = true)]
         [TestCase(Model1.IndexName, "/CZ/Articles/1", ExpectedResult = false)]
         [TestCase(Model2.IndexName, "/Articles/1", ExpectedResult = true)]
@@ -21,11 +20,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         public bool IsNodeIndexedByIndex(string indexName, string nodeAliasPath)
         {
             var node = FakeNodes.GetNode(nodeAliasPath);
-            return AlgoliaSearchHelper.IsNodeIndexedByIndex(node, indexName);
+            return AlgoliaRegistrationHelper.IsNodeIndexedByIndex(node, indexName);
         }
 
 
-        [Test]
         [TestCase(Model1.IndexName, ExpectedResult = new string[] { "Prop1", "DocumentPublishFrom", "DocumentPublishTo" })]
         [TestCase(Model2.IndexName, ExpectedResult = new string[] { "Prop2", "DocumentPublishFrom", "DocumentPublishTo", "Column1", "Column2" })]
         public string[] IndexedColumnsMatch(string indexName)

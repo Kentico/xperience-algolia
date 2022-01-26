@@ -25,7 +25,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             var attributes = GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
             foreach (var attribute in attributes)
             {
-                AlgoliaSearchHelper.RegisterIndex(attribute.IndexName, attribute.Type);
+                AlgoliaRegistrationHelper.RegisterIndex(attribute.IndexName, attribute.Type);
             }
 
             // Register document types for faking
@@ -44,7 +44,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         [OneTimeTearDown]
         public void OneTimeTearDown()
         {
-            AlgoliaSearchHelper.RegisteredIndexes.Clear();
+            AlgoliaRegistrationHelper.RegisteredIndexes.Clear();
             FakeNodes.ClearNodes();
         }
 

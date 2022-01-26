@@ -1,6 +1,5 @@
 ﻿using CMS;
 using CMS.Base;
-using CMS.Core;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch;
@@ -8,20 +7,13 @@ using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
-using Microsoft.Extensions.Configuration;
-
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-
 [assembly: AssemblyDiscoverable]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
 namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
     /// Initializes the Algolia integration by scanning assemblies for custom models containing the
-    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="AlgoliaSearchHelper.RegisteredIndexes"/>.
+    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="AlgoliaRegistrationHelper.RegisteredIndexes"/>.
     /// Also registers event handlers required for indexing content.
     /// </summary>
     public class AlgoliaSearchModule : CMS.DataEngine.Module
@@ -38,7 +30,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         protected override void OnInit()
         {
             base.OnInit();
-            RegisterAlgoliaIndexes();
+            AlgoliaRegistrationHelper.RegisterAlgoliaIndexes();
             DocumentEvents.Update.Before += LogTreeNodeUpdate;
             DocumentEvents.Insert.After += LogTreeNodeInsert;
             DocumentEvents.Delete.After += LogTreeNodeDelete;
@@ -98,9 +90,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
         private void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
         {
-            foreach (var index in AlgoliaSearchHelper.RegisteredIndexes)
+            foreach (var index in AlgoliaRegistrationHelper.RegisteredIndexes)
             {
-                if (!AlgoliaSearchHelper.IsNodeIndexedByIndex(node, index.Key))
+                if (!AlgoliaRegistrationHelper.IsNodeIndexedByIndex(node, index.Key))
                 {
                     continue;
                 }
@@ -131,58 +123,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <returns></returns>
         private bool EventShouldCancel(TreeNode node, bool wasDeleted)
         {
-            return !AlgoliaSearchHelper.IsNodeAlgoliaIndexed(node) ||
+            return !AlgoliaRegistrationHelper.IsNodeAlgoliaIndexed(node) ||
                 (!wasDeleted && !node.PublishedVersionExists);
-        }
-
-
-        private void RegisterAlgoliaIndexes()
-        {
-            var attributes = new List<RegisterAlgoliaIndexAttribute>();
-            var assemblies = AssemblyDiscoveryHelper.GetAssemblies(discoverableOnly: true);
-            var configuration = Service.ResolveOptional<IConfiguration>();
-            var client = AlgoliaSearchHelper.GetSearchClient(configuration);
-
-            foreach (var assembly in assemblies)
-            {
-                attributes.AddRange(GetAlgoliaIndexAttributes(assembly));
-            }
-
-            foreach (var attribute in attributes)
-            {
-                AlgoliaSearchHelper.RegisterIndex(attribute.IndexName, attribute.Type);
-
-                // Set index settings
-                var searchIndex = client.InitIndex(attribute.IndexName);
-                var indexSettings = AlgoliaSearchHelper.GetIndexSettings(attribute.IndexName);
-                if (indexSettings == null)
-                {
-                    var eventLogService = Service.Resolve<IEventLogService>();
-                    eventLogService.LogError(nameof(AlgoliaSearchModule), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
-                    continue;
-                }
-
-                searchIndex.SetSettings(indexSettings);
-            }
-        }
-
-
-        public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
-        {
-            var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
-
-            try
-            {
-                attributes = assembly.GetCustomAttributes(typeof(RegisterAlgoliaIndexAttribute), false)
-                                    .Cast<RegisterAlgoliaIndexAttribute>();
-            }
-            catch (Exception exception)
-            {
-                var error = new DiscoveryError(exception, assembly.FullName);
-                error.LogEvent();
-            }
-
-            return attributes;
         }
     }
 }

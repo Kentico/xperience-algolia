@@ -16,17 +16,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         [Test]
         public void AllIndexesRegistered()
         {
-            var actualRegistrations = AlgoliaSearchModule.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-            Assert.AreEqual(actualRegistrations.Count(), AlgoliaSearchHelper.RegisteredIndexes.Count());
+            var actualRegistrations = AlgoliaRegistrationHelper.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
+            Assert.AreEqual(actualRegistrations.Count(), AlgoliaRegistrationHelper.RegisteredIndexes.Count());
         }
 
 
-        [Test]
         [TestCase(Model1.IndexName, ExpectedResult = typeof(Model1))]
         [TestCase(Model2.IndexName, ExpectedResult = typeof(Model2))]
         public Type SearchModelsRetrievable(string indexName)
         {
-            return AlgoliaSearchHelper.GetModelByIndexName(indexName);
+            return AlgoliaRegistrationHelper.GetModelByIndexName(indexName);
         }
     }
 }
