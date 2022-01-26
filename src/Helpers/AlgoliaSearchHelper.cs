@@ -75,6 +75,49 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
+        /// Gets the indexed page columns specified by the the index's search model properties.
+        /// The names of properties with the <see cref="SourceAttribute"/> are ignored, and instead
+        /// the array of sources is added to the list of indexed columns.
+        /// </summary>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        /// <returns>The names of the database columns that are indexed.</returns>
+        public static string[] GetIndexedColumnNames(string indexName)
+        {
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
+            {
+                return new string[] { };
+            }
+
+            // Don't include properties with SourceAttribute at first, check the sources and add to list after
+            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
+            var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
+            foreach (var property in propertiesWithSourceAttribute)
+            {
+                var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
+                if (sourceAttribute == null)
+                {
+                    continue;
+                }
+
+                indexedColumnNames.AddRange(sourceAttribute.Sources);
+            }
+
+            // Remove column names from AlgoliaSearchModel that aren't database columns
+            var columnsToRemove = new string[] {
+                nameof(AlgoliaSearchModel.ObjectID),
+                nameof(AlgoliaSearchModel.Url),
+                nameof(AlgoliaSearchModel.ClassName)
+            };
+            indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
+
+            return indexedColumnNames.ToArray();
+        }
+
+
+        /// <summary>
         /// Gets the registered search model class that is paired with the Algolia index.
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
@@ -244,24 +287,82 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Returns true if the <paramref name="node"/> should be indexed based on the configuration
-        /// of the <paramref name="includedPathAttribute"/> and the node's ACLs.
+        /// Returns true if the passed node's <see cref="TreeNode.NodeAliasPath"/> is included in an
+        /// Algolia index's allowed paths, and the node's <see cref="TreeNode.ClassName"/> is included
+        /// in a matching allowed path.
         /// </summary>
-        /// <param name="includedPathAttribute">An index's path attribute.</param>
-        /// <param name="node">The node to check permissions for.</param>
-        public static bool NodeMeetsPermissionRequirements(IncludedPathAttribute includedPathAttribute, TreeNode node)
+        /// <param name="node"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static bool IsNodeAlgoliaIndexed(TreeNode node)
         {
-            var nodeRoles = AclItemInfoProvider.GetAllowedRoles(node.NodeACLID, NodePermissionsEnum.Read, "OperatorName");
-            var nodeRoleNames = nodeRoles.Tables[0].Select().Select(row => ValidationHelper.GetString(row["OperatorName"], String.Empty));
-            foreach (var role in includedPathAttribute.AllowedRoles)
+            if (node == null)
             {
-                if (!nodeRoleNames.Contains(role))
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            foreach (var index in mRegisteredIndexes)
+            {
+                if (IsNodeIndexedByIndex(node, index.Key))
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
+        }
+
+
+        /// <summary>
+        /// Returns true if the <paramref name="node"/> is included in the Algolia index's allowed
+        /// paths as set by the <see cref="IncludedPathAttribute"/>.
+        /// </summary>
+        /// <param name="node">The node to check for indexing.</param>
+        /// <param name="indexName">The Algolia index code name.</param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static bool IsNodeIndexedByIndex(TreeNode node, string indexName)
+        {
+            if (String.IsNullOrEmpty(indexName))
+            {
+                throw new ArgumentNullException(nameof(indexName));
+            }
+            if (node == null)
+            {
+                throw new ArgumentNullException(nameof(node));
+            }
+
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
+            {
+                LogService.LogError(nameof(AlgoliaSearchHelper), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                return false;
+            }
+
+            var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
+            foreach (var includedPathAttribute in includedPathAttributes)
+            {
+                var path = includedPathAttribute.AliasPath;
+                var matchesPageType = (includedPathAttribute.PageTypes.Length == 0 || includedPathAttribute.PageTypes.Contains(node.ClassName));
+                var matchesCulture = (includedPathAttribute.Cultures.Length == 0 || includedPathAttribute.Cultures.Contains(node.DocumentCulture));
+
+                if (path.EndsWith("/%"))
+                {
+                    path = path.TrimEnd('%', '/');
+                    if (node.NodeAliasPath.StartsWith(path) && matchesPageType && matchesCulture)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (node.NodeAliasPath == path && matchesPageType && matchesCulture)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
 
 

@@ -30,7 +30,6 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaConnection
     {
-        private string indexName;
         private Type searchModelType;
         private SearchIndex searchIndex;
 
@@ -54,7 +53,6 @@ namespace Kentico.Xperience.AlgoliaSearch
             var configuration = Service.ResolveOptional<IConfiguration>();
             var client = AlgoliaSearchHelper.GetSearchClient(configuration);
 
-            this.indexName = indexName;
             searchIndex = client.InitIndex(indexName);
             searchModelType = AlgoliaSearchHelper.GetModelByIndexName(indexName);
             if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
@@ -151,14 +149,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                     query.Culture(includedPathAttribute.Cultures);
                 }
 
-                // Validate retrieved nodes meet permission requirements (other requirements are part of query)
-                foreach (var node in query.TypedResult)
-                {
-                    if (AlgoliaSearchHelper.NodeMeetsPermissionRequirements(includedPathAttribute, node))
-                    {
-                        indexedNodes.Add(node);
-                    }
-                }
+                indexedNodes.AddRange(query.TypedResult);
             }
 
             UpsertTreeNodes(indexedNodes);
