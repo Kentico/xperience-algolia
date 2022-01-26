@@ -59,49 +59,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Gets the indexed page columns specified by the the index's search model properties.
-        /// The names of properties with the <see cref="SourceAttribute"/> are ignored, and instead
-        /// the array of sources is added to the list of indexed columns.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The names of the database columns that are indexed.</returns>
-        public static string[] GetIndexedColumnNames(string indexName)
-        {
-            var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(indexName);
-            if (searchModelType == null)
-            {
-                return new string[] { };
-            }
-
-            // Don't include properties with SourceAttribute at first, check the sources and add to list after
-            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
-            var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
-            foreach (var property in propertiesWithSourceAttribute)
-            {
-                var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
-                if (sourceAttribute == null)
-                {
-                    continue;
-                }
-
-                indexedColumnNames.AddRange(sourceAttribute.Sources);
-            }
-
-            // Remove column names from AlgoliaSearchModel that aren't database columns
-            var columnsToRemove = new string[] {
-                nameof(AlgoliaSearchModel.ObjectID),
-                nameof(AlgoliaSearchModel.Url),
-                nameof(AlgoliaSearchModel.ClassName)
-            };
-            indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
-
-            return indexedColumnNames.ToArray();
-        }
-
-
-        /// <summary>
         /// Gets a <see cref="SearchClient"/> for performing Algolia search methods.
         /// </summary>
         /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core

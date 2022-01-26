@@ -97,7 +97,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                     continue;
                 }
 
-                var indexedColumns = AlgoliaSearchHelper.GetIndexedColumnNames(index.Key);
+                var indexedColumns = AlgoliaRegistrationHelper.GetIndexedColumnNames(index.Key);
                 if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
                 {
                     continue;

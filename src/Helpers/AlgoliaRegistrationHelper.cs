@@ -5,7 +5,7 @@ using CMS.Core;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Microsoft.Extensions.Configuration;
 
 using System;
@@ -49,6 +49,121 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             {
                 return mRegisteredIndexes;
             }
+        }
+
+
+        /// <summary>
+        /// Gets all <see cref="RegisterAlgoliaIndexAttribute"/>s present in the provided assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly to scan for attributes.</param>
+        public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
+        {
+            var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
+
+            try
+            {
+                attributes = assembly.GetCustomAttributes(typeof(RegisterAlgoliaIndexAttribute), false)
+                                    .Cast<RegisterAlgoliaIndexAttribute>();
+            }
+            catch (Exception exception)
+            {
+                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
+            }
+
+            return attributes;
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="IndexSettings"/> of the Algolia index.
+        /// </summary>
+        /// <param name="indexName">The Algolia index code name.</param>
+        /// <returns>The index settings, or null if not found.</returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static IndexSettings GetIndexSettings(string indexName)
+        {
+            if (String.IsNullOrEmpty(indexName))
+            {
+                throw new ArgumentNullException(nameof(indexName));
+            }
+
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
+            {
+                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
+                return null;
+            }
+
+            var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievablProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            ;
+            return new IndexSettings()
+            {
+                SearchableAttributes = AlgoliaSearchHelper.OrderSearchableProperties(searchableProperties),
+                AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
+                AttributesForFaceting = facetableProperties.Select(AlgoliaSearchHelper.GetFilterablePropertyName).ToList()
+            };
+        }
+
+
+        /// <summary>
+        /// Gets the registered search model class that is paired with the Algolia index.
+        /// </summary>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        /// <returns>The search model class type, or null if not found.</returns>
+        public static Type GetModelByIndexName(string indexName)
+        {
+            var records = mRegisteredIndexes.Where(i => i.Key == indexName);
+            if (records.Count() == 0)
+            {
+                return null;
+            }
+
+            return records.FirstOrDefault().Value;
+        }
+
+
+        /// <summary>
+        /// Gets the indexed page columns specified by the the index's search model properties.
+        /// The names of properties with the <see cref="SourceAttribute"/> are ignored, and instead
+        /// the array of sources is added to the list of indexed columns.
+        /// </summary>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        /// <returns>The names of the database columns that are indexed.</returns>
+        public static string[] GetIndexedColumnNames(string indexName)
+        {
+            var searchModelType = GetModelByIndexName(indexName);
+            if (searchModelType == null)
+            {
+                return new string[] { };
+            }
+
+            // Don't include properties with SourceAttribute at first, check the sources and add to list after
+            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
+            var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
+            foreach (var property in propertiesWithSourceAttribute)
+            {
+                var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
+                if (sourceAttribute == null)
+                {
+                    continue;
+                }
+
+                indexedColumnNames.AddRange(sourceAttribute.Sources);
+            }
+
+            // Remove column names from AlgoliaSearchModel that aren't database columns
+            var columnsToRemove = new string[] {
+                nameof(AlgoliaSearchModel.ObjectID),
+                nameof(AlgoliaSearchModel.Url),
+                nameof(AlgoliaSearchModel.ClassName)
+            };
+            indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
+
+            return indexedColumnNames.ToArray();
         }
 
 
@@ -126,78 +241,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
 
             return false;
-        }
-
-
-        /// <summary>
-        /// Gets all <see cref="RegisterAlgoliaIndexAttribute"/>s present in the provided assembly.
-        /// </summary>
-        /// <param name="assembly">The assembly to scan for attributes.</param>
-        public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
-        {
-            var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
-
-            try
-            {
-                attributes = assembly.GetCustomAttributes(typeof(RegisterAlgoliaIndexAttribute), false)
-                                    .Cast<RegisterAlgoliaIndexAttribute>();
-            }
-            catch (Exception exception)
-            {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
-            }
-
-            return attributes;
-        }
-
-
-        /// <summary>
-        /// Gets the <see cref="IndexSettings"/> of the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <returns>The index settings, or null if not found.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static IndexSettings GetIndexSettings(string indexName)
-        {
-            if (String.IsNullOrEmpty(indexName))
-            {
-                throw new ArgumentNullException(nameof(indexName));
-            }
-
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
-            {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
-                return null;
-            }
-
-            var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-            var retrievablProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
-            var facetableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
-            ;
-            return new IndexSettings()
-            {
-                SearchableAttributes = AlgoliaSearchHelper.OrderSearchableProperties(searchableProperties),
-                AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
-                AttributesForFaceting = facetableProperties.Select(AlgoliaSearchHelper.GetFilterablePropertyName).ToList()
-            };
-        }
-
-
-        /// <summary>
-        /// Gets the registered search model class that is paired with the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The search model class type, or null if not found.</returns>
-        public static Type GetModelByIndexName(string indexName)
-        {
-            var records = mRegisteredIndexes.Where(i => i.Key == indexName);
-            if (records.Count() == 0)
-            {
-                return null;
-            }
-
-            return records.FirstOrDefault().Value;
         }
 
 

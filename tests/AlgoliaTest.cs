@@ -14,11 +14,12 @@ using System.Reflection;
 
 using Tests.DocumentEngine;
 
+[assembly: Category("Algolia")]
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class AlgoliaTest : UnitTests
     {
-        [OneTimeSetUp]
+        [OneTimeSetUp, Category.Unit]
         public void OneTimeSetUp()
         {
             // Register Algolia indexes
