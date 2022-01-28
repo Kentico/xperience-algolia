@@ -5,6 +5,7 @@ using Kentico.Xperience.AlgoliaSearch.Helpers;
 
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch.Pages
 {
@@ -43,14 +44,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         {
             var indexedProperties = new List<IndexedProperty>();
             var modelProperties = searchModelType.GetProperties();
+
             foreach (var property in modelProperties)
             {
+                var sources = String.Empty;
+                if (Attribute.IsDefined(property, typeof(SourceAttribute)))
+                {
+                    var sourceAttribute = property.GetCustomAttribute<SourceAttribute>();
+                    sources = sourceAttribute.Sources.Join(", ");
+                }
+
                 indexedProperties.Add(new IndexedProperty
                 {
                     Name = property.Name,
                     Searchable = Attribute.IsDefined(property, typeof(SearchableAttribute)),
                     Retrievable = Attribute.IsDefined(property, typeof(RetrievableAttribute)),
-                    Facetable = Attribute.IsDefined(property, typeof(FacetableAttribute))
+                    Facetable = Attribute.IsDefined(property, typeof(FacetableAttribute)),
+                    Source = sources
                 });
             }
 

@@ -12,7 +12,8 @@
                 <ug:Column Source="Name" Caption="Property" />
                 <ug:Column Source="Searchable" Caption="Searchable" ExternalSourceName="#yesno" />
                 <ug:Column Source="Retrievable" Caption="Retrievable" ExternalSourceName="#yesno" />
-                <ug:Column Source="Facetable"  Caption="Facetable" ExternalSourceName="#yesno" />
+                <ug:Column Source="Facetable" Caption="Facetable" ExternalSourceName="#yesno" />
+                <ug:Column Source="Source" Caption="Source" />
                 <ug:Column CssClass="filling-column" />
             </GridColumns>
         </cms:UniGrid>

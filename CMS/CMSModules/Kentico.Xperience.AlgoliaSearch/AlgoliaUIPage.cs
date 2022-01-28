@@ -1,4 +1,6 @@
-﻿using CMS.UIControls;
+﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
+
+using CMS.UIControls;
 
 using System;
 using System.Collections.Generic;
@@ -16,16 +18,54 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         protected class IndexedProperty
         {
-            public string Name { get; set; }
+            /// <summary>
+            /// The name of the property.
+            /// </summary>
+            public string Name
+            {
+                get;
+                set;
+            }
 
 
-            public bool Searchable { get; set; }
+            /// <summary>
+            /// True if the property uses the <see cref="SearchableAttribute"/>.
+            /// </summary>
+            public bool Searchable
+            {
+                get;
+                set;
+            }
 
 
-            public bool Retrievable { get; set; }
+            /// <summary>
+            /// True if the property uses the <see cref="RetrievableAttribute"/>.
+            /// </summary>
+            public bool Retrievable
+            {
+                get;
+                set;
+            }
 
 
-            public bool Facetable { get; set;}
+            /// <summary>
+            /// True if the property uses the <see cref="FacetableAttribute"/>.
+            /// </summary>
+            public bool Facetable
+            {
+                get;
+                set;
+            }
+
+
+            /// <summary>
+            /// A list of column names compiled from the property's <see cref="SourceAttribute.Sources"/>.
+            /// </summary>
+            public string Source
+            {
+                get;
+                set;
+            }
         }
 
 
@@ -34,13 +74,34 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         protected class IncludedContent
         {
-            public string Path { get; set; }
+            /// <summary>
+            /// The NodeAliasPath included in the index.
+            /// </summary>
+            public string Path
+            {
+                get;
+                set;
+            }
 
 
-            public string PageTypes { get; set; }
+            /// <summary>
+            /// The page types included in the index.
+            /// </summary>
+            public string PageTypes
+            {
+                get;
+                set;
+            }
 
 
-            public string Cultures { get; set; }
+            /// <summary>
+            /// The cultures included in the index.
+            /// </summary>
+            public string Cultures
+            {
+                get;
+                set;
+            }
         }
 
 
