@@ -1133,7 +1133,7 @@ When you run the site and visit your new page, you'll see that you have a fully 
 
 ## :chart_with_upwards_trend: Xperience Algolia module
 
-While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest [_Kentico.Xperience.AlgoliaSearch_](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) ZIP package in the root of this repository, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
+While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
 
 After importing, perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project.
 
