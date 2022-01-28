@@ -11,6 +11,7 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 [assembly: RegisterAlgoliaIndex(typeof(Model4), Model4.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model5), Model5.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model6), Model6.IndexName)]
+[assembly: RegisterAlgoliaIndex(typeof(Model7), Model7.IndexName)]
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     public class TestSearchModels
@@ -73,7 +74,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public const string IndexName = "Model4";
 
 
-            [Source(new string[] { nameof(TreeNode.DocumentCreatedWhen) })]
+            [Source(new string[] { nameof(TreeNode.NodeAliasPath) })]
             public string Prop1 { get; set; }
         }
 
@@ -118,6 +119,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Facetable(FilterOnly = true, Searchable = true)]
             [Searchable]
             public string Prop1 { get; set; }
+        }
+
+
+        public class Model7 : ModelBaseClass
+        {
+            public const string IndexName = "Model7";
+
+
+            [Searchable]
+            public string NodeAliasPath { get; set; }
         }
     }
 }

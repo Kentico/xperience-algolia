@@ -66,5 +66,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
             get;
             set;
         }
+
+
+        /// <summary>
+        /// Called when indexing a search model property. Does not trigger when indexing the
+        /// properties specified by <see cref="AlgoliaSearchModel"/>.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> currently being indexed.</param>
+        /// <param name="propertyName">The search model property that is being indexed.</param>
+        /// <param name="usedColumn">The column that the value was retrieved from when the
+        /// property uses the <see cref="SourceAttribute"/>. If not used, the parameter will
+        /// be null.</param>
+        /// <param name="foundValue">The value of the property that was found in the <paramref name="node"/>,
+        /// or null if no value was found.</param>
+        /// <returns>The value that will be indexed in Algolia.</returns>
+        public virtual object OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
+        {
+            return foundValue;
+        }
     }
 }

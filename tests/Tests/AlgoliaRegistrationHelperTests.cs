@@ -1,6 +1,4 @@
-﻿using CMS.Core;
-
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+﻿using Kentico.Xperience.AlgoliaSearch.Helpers;
 
 using NUnit.Framework;
 
@@ -65,6 +63,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetIndexSettings_IndexWithInvalidConfiguration_ThrowsInvalidOperationException()
             {
                 Assert.Throws<InvalidOperationException>(() => AlgoliaRegistrationHelper.GetIndexSettings(Model6.IndexName));
+            }
+
+
+            [Test]
+            public void GetIndexSettings_IndexInheritsBaseClass_ContainsPropertiesFromAllClasses()
+            {
+                var indexSettings = AlgoliaRegistrationHelper.GetIndexSettings(Model7.IndexName);
+
+                Assert.Multiple(() => {
+                    Assert.Contains(nameof(Model7.NodeAliasPath), indexSettings.SearchableAttributes);
+                    Assert.Contains(nameof(ModelBaseClass.DocumentName), indexSettings.SearchableAttributes);
+                });
             }
         }
 

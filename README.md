@@ -124,6 +124,37 @@ namespace DancingGoat
 }
 ```
 
+### Customizing the indexing process
+
+In some cases, you may want to customize the values that are sent to Algolia during page indexing. For example, in the search model above we have a `Content` property which retrieves its value from the _DocumentSKUDescription_ or _ArticleText_ columns. However, if we are indexing the "About Us" page in Dancing Goat, the content of the page actually comes from the child pages.
+
+To customize the indexing process, you can override the `OnIndexingProperty()` that is defined in the search model base class `AlgoliaSearchModel`. This method is called during the indexing of a page, for each property defined in your search model. When called, you are provided useful information such as the page being indexed, the value that would be indexed, the search model property name, and the name of the database column the value was retrieved from.
+
+To index the data from the child pages and store it in the "About Us" record in Algolia, we can use this method to loop through the child pages and retrieve text from their fields:
+
+```cs
+public override object OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
+{
+    switch (propertyName)
+    {
+        case nameof(Content):
+            if (node.DocumentName == "About Us")
+            {
+                var text = new StringBuilder();
+                var aboutUsSections = node.Children.WithAllData.Where(child => child.ClassName == AboutUsSection.CLASS_NAME);
+                foreach (var aboutUsSection in aboutUsSections)
+                {
+                    text.Append(aboutUsSection.AboutUsSectionText);
+                }
+                return text.ToString();
+            }
+            break;
+    }
+
+    return foundValue;
+}
+```
+
 ## :memo: Configuring Algolia attributes
 
 This package includes five attributes which can be applied to each individual Algolia attribute to further configure the Algolia index:

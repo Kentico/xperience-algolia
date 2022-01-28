@@ -78,10 +78,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
 
             var searchConfig = new SearchConfig(options.ApplicationId, options.ApiKey);
-            var httpRequester = Service.ResolveOptional<IHttpRequester>();
-            if (httpRequester != null)
+
+            // Allow injection of custom IHttpRequester after IoCContainer is initialized
+            if (TypeManager.PreInitialized)
             {
-                return new SearchClient(searchConfig, httpRequester);
+                var httpRequester = Service.ResolveOptional<IHttpRequester>();
+                if (httpRequester != null)
+                {
+                    return new SearchClient(searchConfig, httpRequester);
+                }
             }
 
             return new SearchClient(searchConfig);

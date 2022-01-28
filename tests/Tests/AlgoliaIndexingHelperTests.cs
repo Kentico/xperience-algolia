@@ -37,8 +37,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var scheduledNode = TreeNode.New(FakeNodes.DOCTYPE_ARTICLE).With(p =>
                 {
-                    p.SetValue("DocumentPublishFrom", new DateTime(2022, 1, 1));
-                    p.SetValue("DocumentPublishTo", new DateTime(2023, 1, 1));
+                    p.SetValue(nameof(AlgoliaSearchModel.DocumentPublishFrom), new DateTime(2022, 1, 1));
+                    p.SetValue(nameof(AlgoliaSearchModel.DocumentPublishTo), new DateTime(2023, 1, 1));
                 });
 
                 var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model1.IndexName);
@@ -65,11 +65,39 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void GetTreeNodeData_PropertyWithSource_MatchNodeValue()
             {
-                var node = FakeNodes.GetNode("/Articles/1");
+                var nodeAliasPath = "/Articles/1";
+                var node = FakeNodes.GetNode(nodeAliasPath);
                 var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model4.IndexName);
                 var nodeData = AlgoliaIndexingHelper.GetTreeNodeData(node, searchModelType);
 
-                Assert.AreEqual(nodeData.Value<DateTime>(nameof(Model4.Prop1)), new DateTime(2022, 1, 1));
+                Assert.AreEqual(nodeData.Value<string>(nameof(Model4.Prop1)), nodeAliasPath);
+            }
+
+
+            [Test]
+            public void GetTreeNodeData_InheritsBaseClass_ContainsNodeValuesFromAllClasses()
+            {
+                var node = FakeNodes.GetNode("/Articles/1");
+                var data = AlgoliaIndexingHelper.GetTreeNodeData(node, typeof(Model7));
+
+                Assert.Multiple(() => {
+                    Assert.IsNotNull(data.Value<string>(nameof(Model7.NodeAliasPath)));
+                    Assert.IsNotNull(data.Value<string>(nameof(ModelBaseClass.DocumentName)));
+                });
+            }
+
+
+            [Test]
+            public void GetTreeNodeData_OnIndexingPropertyHandler_ValueIsUpperCase()
+            {
+                var nodeAliasPath = "/Articles/1";
+                var node = FakeNodes.GetNode(nodeAliasPath);
+                var data = AlgoliaIndexingHelper.GetTreeNodeData(node, typeof(Model7));
+
+                Assert.Multiple(() => {
+                    Assert.AreEqual(nodeAliasPath.ToUpper(), data.Value<string>(nameof(Model7.NodeAliasPath)));
+                    Assert.AreEqual("NAME", data.Value<string>(nameof(ModelBaseClass.DocumentName)));
+                });
             }
         }
 

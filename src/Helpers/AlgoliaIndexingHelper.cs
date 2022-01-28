@@ -182,16 +182,20 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load a value from.</param>
         /// <param name="property">The Algolia search model property.</param>
-        private static object GetNodeValue(TreeNode node, PropertyInfo property)
+        /// <param name="searchModelType">The Algolia search model.</param>
+        private static object GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType)
         {
+            object nodeValue = null;
+            string usedColumn = null;
+            var searchModel = Activator.CreateInstance(searchModelType) as AlgoliaSearchModel;
+
             if (!Attribute.IsDefined(property, typeof(SourceAttribute)))
             {
-                return node.GetValue(property.Name);
+                nodeValue = node.GetValue(property.Name);
+                return searchModel.OnIndexingProperty(node, property.Name, usedColumn, nodeValue);
             }
 
             // Property uses SourceAttribute, loop through column names until a non-null value is found
-            object nodeValue = null;
-            string usedColumn = null;
             var sourceAttribute = property.GetCustomAttributes<SourceAttribute>(false).FirstOrDefault();
             foreach (var source in sourceAttribute.Sources)
             {
@@ -203,16 +207,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 }
             }
 
-            if (nodeValue == null)
-            {
-                return null;
-            }
-
             // Convert node value to URL by referencing the used source column
             if (Attribute.IsDefined(property, typeof(UrlAttribute)))
             {
                 nodeValue = GetAbsoluteUrlForColumn(node, nodeValue, usedColumn);
             }
+
+            nodeValue = searchModel.OnIndexingProperty(node, property.Name, usedColumn, nodeValue);
 
             return nodeValue;
         }
@@ -234,7 +235,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             PropertyInfo[] properties = searchModel.GetType().GetProperties();
             foreach (var prop in properties)
             {
-                object nodeValue = GetNodeValue(node, prop);
+                if (prop.DeclaringType == typeof(AlgoliaSearchModel))
+                {
+                    continue;
+                }
+
+                object nodeValue = GetNodeValue(node, prop, searchModelType);
                 if (nodeValue == null)
                 {
                     continue;
@@ -253,6 +259,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <param name="data">The dynamic data that will be passed to Algolia.</param>
         private static void MapCommonProperties(TreeNode node, JObject data)
         {
+            data["objectID"] = node.DocumentID.ToString();
+            data[nameof(AlgoliaSearchModel.ClassName)] = node.ClassName;
+
             try
             {
                 data[nameof(AlgoliaSearchModel.Url)] = DocumentURLProvider.GetAbsoluteUrl(node);
@@ -264,8 +273,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 // empty URL
                 data[nameof(AlgoliaSearchModel.Url)] = String.Empty;
             }
-
-            data["objectID"] = node.DocumentID.ToString();
 
             // Convert scheduled publishing times to Unix timestamp in UTC
             var publishToUnix = Int32.MaxValue;

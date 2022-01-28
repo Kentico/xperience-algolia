@@ -55,7 +55,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 throw new InvalidOperationException($"Unable to load search model class for index '{indexName}.'");
             }
 
-            if (searchModelType.BaseType != typeof(AlgoliaSearchModel))
+            if (!searchModelType.IsSubclassOf(typeof(AlgoliaSearchModel)))
             {
                 throw new InvalidOperationException($"Algolia search models must extend the {nameof(AlgoliaSearchModel)} class.");
             }

@@ -20,6 +20,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             var node = TreeNode.New(pageType).With(p =>
             {
                 p.DocumentCulture = culture;
+                p.SetValue("DocumentName", "name");
                 p.SetValue("DocumentCreatedWhen", new DateTime(2022, 1, 1));
                 p.SetValue("NodeAliasPath", nodeAliasPath);
             });
