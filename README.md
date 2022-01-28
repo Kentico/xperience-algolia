@@ -25,7 +25,7 @@ This integration enables the creating of [Algolia](https://www.algolia.com/) sea
 <add key="AlgoliaApiKey" value="<your Admin API key>"/>
 ```
 
-5. (Optional) Import the [Xperience Algolia module](#xperience-algolia-module) in your Xperience website.
+5. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-xperience-algolia-module) in your Xperience website.
 
 ## :computer: How it works
 
