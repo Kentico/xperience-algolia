@@ -1,5 +1,8 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
+﻿using CMS.DocumentEngine;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
+
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 [assembly: RegisterAlgoliaIndex(typeof(Model1), Model1.IndexName)]
@@ -21,18 +24,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Searchable]
             [Facetable]
             [Retrievable]
-            public string Prop1 { get; set; }
+            public string DocumentCreatedWhen { get; set; }
         }
 
 
-        [IncludedPath("/%")]
+        [IncludedPath("/%", PageTypes = new string[] { "Test.Article" })]
         public class Model2 : AlgoliaSearchModel
         {
             public const string IndexName = "Model2";
 
 
             [Facetable(FilterOnly = true)]
-            [Searchable]
+            [Searchable(Unordered = true)]
             [Source(new string[] { "Column1", "Column2" })]
             public string Prop1 { get; set; }
 
@@ -64,11 +67,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         }
 
 
+        [IncludedPath("/Store/Products/%")]
         public class Model4 : AlgoliaSearchModel
         {
             public const string IndexName = "Model4";
 
 
+            [Source(new string[] { nameof(TreeNode.DocumentCreatedWhen) })]
             public string Prop1 { get; set; }
         }
 

@@ -1,4 +1,5 @@
 ﻿using Algolia.Search.Clients;
+using Algolia.Search.Http;
 using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Search;
 
@@ -61,6 +62,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <summary>
         /// Gets a <see cref="SearchClient"/> for performing Algolia search methods.
         /// </summary>
+        /// <remarks>Logs an error if the <see cref="AlgoliaOptions"/> cannot be loaded
+        /// or the values of the options are empty.</remarks>
         /// <param name="configuration">The <see cref="IConfiguration"/> of the .NET Core
         /// application, or null if running from the Xperience application.</param>
         /// <returns>An Algolia <see cref="SearchClient"/>, or null if there was an error
@@ -74,7 +77,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 return null;
             }
 
-            return new SearchClient(options.ApplicationId, options.ApiKey);
+            var searchConfig = new SearchConfig(options.ApplicationId, options.ApiKey);
+            var httpRequester = Service.ResolveOptional<IHttpRequester>();
+            if (httpRequester != null)
+            {
+                return new SearchClient(searchConfig, httpRequester);
+            }
+
+            return new SearchClient(searchConfig);
         }
 
 

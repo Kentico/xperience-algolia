@@ -1,5 +1,4 @@
 ﻿using CMS.Base;
-using CMS.Core;
 
 using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
@@ -16,9 +15,6 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaQueueWorker : ThreadQueueWorker<AlgoliaQueueItem, AlgoliaQueueWorker>
     {
-        private readonly IEventLogService mEventLogService;
-
-
         protected override int DefaultInterval => 10000;
 
 
@@ -29,7 +25,6 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         public AlgoliaQueueWorker()
         {
-            mEventLogService = Service.Resolve<IEventLogService>();
         }
 
 
@@ -64,12 +59,6 @@ namespace Kentico.Xperience.AlgoliaSearch
         protected override void ProcessItem(AlgoliaQueueItem item)
         {
             ProcessItems(new AlgoliaQueueItem[] { item });
-        }
-
-
-        private void LogError(string message, string code)
-        {
-            mEventLogService.LogError(nameof(AlgoliaQueueWorker), code, message);
         }
     }
 }

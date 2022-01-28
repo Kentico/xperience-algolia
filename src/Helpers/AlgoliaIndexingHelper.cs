@@ -23,6 +23,46 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
     public class AlgoliaIndexingHelper
     {
         /// <summary>
+        /// Loops through all registered Algolia indexes and logs a task if the passed
+        /// <paramref name="node"/> is indexed. For updated pages, a task is only logged
+        /// if one of the indexed columns has been modified.
+        /// </summary>
+        /// <remarks>Logs an error if there are issues loading indexed columns.</remarks>
+        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
+        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
+        /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
+        public static void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
+        {
+            foreach (var index in AlgoliaRegistrationHelper.RegisteredIndexes)
+            {
+                if (!AlgoliaRegistrationHelper.IsNodeIndexedByIndex(node, index.Key))
+                {
+                    continue;
+                }
+
+                var indexedColumns = AlgoliaRegistrationHelper.GetIndexedColumnNames(index.Key);
+                if (indexedColumns.Length == 0)
+                {
+                    LogError(nameof(EnqueueAlgoliaItems), $"Unable to enqueue node change: Error loading indexed columns.");
+                    continue;
+                }
+
+                if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
+                {
+                    continue;
+                }
+
+                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
+                {
+                    Node = node,
+                    Deleted = wasDeleted,
+                    IndexName = index.Key
+                });
+            }
+        }
+
+
+        /// <summary>
         /// Gets a dynamic <see cref="JObject"/> containing the properties of the Algolia
         /// search model and base class <see cref="AlgoliaSearchModel"/>, populated with data
         /// from the <paramref name="node"/>.
@@ -41,7 +81,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
             if (searchModelType == null)
             {
-                throw new ArgumentException(nameof(searchModelType));
+                throw new ArgumentNullException(nameof(searchModelType));
             }
 
             var data = new JObject();
@@ -57,9 +97,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// automatically applies batching in multiples of 1,000 when using their API,
         /// so all queue items are forwarded to the API.
         /// </summary>
+        /// <remarks>Logs errors if there are issues instantiating an <see cref="AlgoliaConnection"/>.</remarks>
         /// <param name="items">The items to process.</param>
-        public static void ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items)
+        /// <returns>The number of items processed.</returns>
+        public static int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items)
         {
+            var successfulOperations = 0;
+
             // Group queue items based on index name
             var groups = items.ToList().GroupBy(item => item.IndexName);
             foreach (var group in groups)
@@ -70,8 +114,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                     var deleteTasks = group.Where(queueItem => queueItem.Deleted);
                     var updateTasks = group.Where(queueItem => !queueItem.Deleted);
 
-                    connection.UpsertTreeNodes(updateTasks.Select(queueItem => queueItem.Node));
-                    connection.DeleteTreeNodes(deleteTasks.Select(queueItem => queueItem.Node));
+                    successfulOperations += connection.UpsertTreeNodes(updateTasks.Select(queueItem => queueItem.Node));
+                    successfulOperations += connection.DeleteTreeNodes(deleteTasks.Select(queueItem => queueItem.Node));
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -82,6 +126,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                     LogError(nameof(ProcessAlgoliaTasks), ex.Message);
                 }
             }
+
+            return successfulOperations;
         }
 
 
@@ -89,6 +135,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// Converts the value from the <paramref name="node"/>'s column from a relative URL
         /// (e.g. ~/getmedia) or an attachment reference into an absolute live-site URL.
         /// </summary>
+        /// <remarks>Logs an error if the definition of the <paramref name="columnName"/> can't
+        /// be found.</remarks>
         /// <param name="node">The <see cref="TreeNode"/> the value was loaded from.</param>
         /// <param name="nodeValue">The original value of the column.</param>
         /// <param name="columnName">The name of the column the value was loaded from.</param>

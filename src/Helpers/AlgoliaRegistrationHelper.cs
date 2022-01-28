@@ -23,7 +23,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
     {
         private static IEventLogService mEventLogService;
         private static Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
-        
+        private static string[] ignoredPropertiesForTrackingChanges = new string[] {
+            nameof(AlgoliaSearchModel.ObjectID),
+            nameof(AlgoliaSearchModel.Url),
+            nameof(AlgoliaSearchModel.ClassName)
+        };
+
 
         private static IEventLogService LogService
         {
@@ -55,6 +60,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <summary>
         /// Gets all <see cref="RegisterAlgoliaIndexAttribute"/>s present in the provided assembly.
         /// </summary>
+        /// <remarks>Logs an error if the were issues scanning the assembly.</remarks>
         /// <param name="assembly">The assembly to scan for attributes.</param>
         public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
         {
@@ -90,7 +96,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetIndexSettings), $"Unable to load search model class for index '{indexName}.'");
                 return null;
             }
 
@@ -125,12 +130,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Gets the indexed page columns specified by the the index's search model properties.
-        /// The names of properties with the <see cref="SourceAttribute"/> are ignored, and instead
-        /// the array of sources is added to the list of indexed columns.
+        /// Gets the indexed page columns specified by the the index's search model properties for
+        /// use when checking whether an indexed column was updated after a page update. The names
+        /// of properties with the <see cref="SourceAttribute"/> are ignored, and instead the array
+        /// of sources is added to the list of indexed columns.
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The names of the database columns that are indexed.</returns>
+        /// <returns>The names of the database columns that are indexed, or an empty array.</returns>
         public static string[] GetIndexedColumnNames(string indexName)
         {
             var searchModelType = GetModelByIndexName(indexName);
@@ -156,12 +162,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
 
             // Remove column names from AlgoliaSearchModel that aren't database columns
-            var columnsToRemove = new string[] {
-                nameof(AlgoliaSearchModel.ObjectID),
-                nameof(AlgoliaSearchModel.Url),
-                nameof(AlgoliaSearchModel.ClassName)
-            };
-            indexedColumnNames.RemoveAll(col => columnsToRemove.Contains(col));
+            indexedColumnNames.RemoveAll(col => ignoredPropertiesForTrackingChanges.Contains(col));
 
             return indexedColumnNames.ToArray();
         }
@@ -195,6 +196,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// Returns true if the <paramref name="node"/> is included in the Algolia index's allowed
         /// paths as set by the <see cref="IncludedPathAttribute"/>.
         /// </summary>
+        /// <remarks>Logs an error if the search model cannot be found.</remarks>
         /// <param name="node">The node to check for indexing.</param>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <exception cref="ArgumentNullException"></exception>
@@ -250,6 +252,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <see cref="SearchIndex.SetSettings"/> to initialize the Algolia index's configuration
         /// based on the attributes defined in the search model.
         /// </summary>
+        /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
         public static void RegisterAlgoliaIndexes()
         {
             var attributes = new List<RegisterAlgoliaIndexAttribute>();
@@ -283,6 +286,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         /// <summary>
         /// Saves an Algolia index code name and its search model to the <see cref="RegisteredIndexes"/>.
         /// </summary>
+        /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <param name="searchModelType">The search model type.</param>
         public static void RegisterIndex(string indexName, Type searchModelType)

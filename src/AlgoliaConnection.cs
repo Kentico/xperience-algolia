@@ -68,15 +68,23 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// to delete.
         /// </summary>
         /// <param name="nodes">The <see cref="TreeNode"/>s to delete.</param>
-        public void DeleteTreeNodes(IEnumerable<TreeNode> nodes)
+        /// <returns>The number of nodes processed.</returns>
+        public int DeleteTreeNodes(IEnumerable<TreeNode> nodes)
         {
+            var deletedCount = 0;
             if (nodes == null || nodes.Count() == 0)
             {
-                return;
+                return 0;
             }
 
             var documentIds = nodes.Select(node => node.DocumentID.ToString());
-            searchIndex.DeleteObjects(documentIds);
+            var responses = searchIndex.DeleteObjects(documentIds).Responses;
+            foreach (var response in responses)
+            {
+                deletedCount += response.ObjectIDs.Count();
+            }
+
+            return deletedCount;
         }
 
 
@@ -86,12 +94,15 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// collection. The internal Algolia object IDs are set to the <see cref="TreeNode.DocumentID"/>
         /// of each <see cref="TreeNode"/>.
         /// </summary>
+        /// <remarks>Logs an error if there are issues loading the node data.</remarks>
         /// <param name="nodes">The <see cref="TreeNode"/>s to load property values from.</param>
-        public void UpsertTreeNodes(IEnumerable<TreeNode> nodes)
+        /// <returns>The number of nodes processed.</returns>
+        public int UpsertTreeNodes(IEnumerable<TreeNode> nodes)
         {
+            var upsertedCount = 0;
             if (nodes == null || nodes.Count() == 0)
             {
-                return;
+                return 0;
             }
 
             try
@@ -103,11 +114,18 @@ namespace Kentico.Xperience.AlgoliaSearch
                     dataObjects.Add(data);
                 }
                 
-                searchIndex.SaveObjects(dataObjects);
+                var responses = searchIndex.SaveObjects(dataObjects).Responses;
+                foreach (var response in responses)
+                {
+                    upsertedCount += response.ObjectIDs.Count();
+                }
+
+                return upsertedCount;
             }
-            catch (InvalidOperationException ex)
+            catch (ArgumentNullException ex)
             {
                 LogError(nameof(UpsertTreeNodes), ex.Message);
+                return upsertedCount;
             }
         }
 

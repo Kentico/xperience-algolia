@@ -5,7 +5,6 @@ using CMS.DocumentEngine;
 using Kentico.Xperience.AlgoliaSearch;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Helpers;
-using Kentico.Xperience.AlgoliaSearch.Models;
 
 [assembly: AssemblyDiscoverable]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
@@ -48,7 +47,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            EnqueueAlgoliaItems(e.Node, true, false);
+            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, true, false);
         }
 
 
@@ -62,7 +61,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            EnqueueAlgoliaItems(e.Node, false, true);
+            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, false, true);
         }
 
 
@@ -76,40 +75,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            EnqueueAlgoliaItems(e.Node, false, false);
-        }
-
-
-        /// <summary>
-        /// Loops through all registered Algolia indexes and logs a task if the passed
-        /// <paramref name="node"/> is indexed. For updated pages, a task is only logged
-        /// if one of the indexed columns has been modified.
-        /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
-        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
-        /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
-        private void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
-        {
-            foreach (var index in AlgoliaRegistrationHelper.RegisteredIndexes)
-            {
-                if (!AlgoliaRegistrationHelper.IsNodeIndexedByIndex(node, index.Key))
-                {
-                    continue;
-                }
-
-                var indexedColumns = AlgoliaRegistrationHelper.GetIndexedColumnNames(index.Key);
-                if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
-                {
-                    continue;
-                }
-
-                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
-                {
-                    Node = node,
-                    Deleted = wasDeleted,
-                    IndexName = index.Key
-                });
-            }
+            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, false, false);
         }
 
 
