@@ -89,6 +89,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 var matchingFacetFromResponse = facets.Where(facet => facet.Attribute == previousFacetedAttribute.Attribute).FirstOrDefault();
                 if (matchingFacetFromResponse == null)
                 {
+                    // Previous attribute was not returned by Algolia, add to new facet list
+                    facets.Add(previousFacetedAttribute);
                     continue;
                 }
 
