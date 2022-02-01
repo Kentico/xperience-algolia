@@ -1,6 +1,7 @@
-﻿using CMS.DocumentEngine;
+﻿using Algolia.Search.Models.Search;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using CMS.DocumentEngine;
+
 using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 
@@ -18,7 +19,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.ObjectID"/> that
         /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
         /// </summary>
-        public abstract string ParameterNameObjectId
+        protected abstract string ParameterNameObjectId
         {
             get;
         }
@@ -28,7 +29,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.QueryID"/> that
         /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
         /// </summary>
-        public abstract string ParameterNameQueryId
+        protected abstract string ParameterNameQueryId
         {
             get;
         }
@@ -38,7 +39,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.Position"/> that
         /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
         /// </summary>
-        public abstract string ParameterNamePosition
+        protected abstract string ParameterNamePosition
         {
             get;
         }
@@ -104,5 +105,27 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
         public abstract void LogFacetConverted(string facet, string conversionName, string indexName);
+
+
+        /// <summary>
+        /// Updates the <see cref="AlgoliaSearchModel.Url"/> property of all search results
+        /// with the query parameters needed to track search result click and conversion events
+        /// via the <see cref="AlgoliaInsightsService"/>.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
+        /// <param name="searchResponse">The full response of an Algolia search.</param>
+        public abstract void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel;
+
+
+        /// <summary>
+        /// Gets the Algolia hit's absolute URL with the appropriate query string parameters
+        /// populated to log search result click events.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
+        /// <param name="hit">The Aloglia hit to retrieve the URL for.</param>
+        /// <param name="position">The position the <paramref name="hit"/> appeared in the
+        /// search results.</param>
+        /// <param name="queryId">The unique identifier of the Algolia query.</param>
+        protected abstract string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel;
     }
 }

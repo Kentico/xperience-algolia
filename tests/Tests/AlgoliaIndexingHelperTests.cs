@@ -1,7 +1,6 @@
 ﻿using CMS.DataEngine;
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
 using NUnit.Framework;
@@ -13,17 +12,17 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    [TestFixture]
     internal class AlgoliaIndexingHelperTests
     {
-        internal class GetTreeNodeDataTests : AlgoliaTest
+        [TestFixture]
+        internal class GetTreeNodeDataTests : AlgoliaTests
         {
             [Test]
             public void GetTreeNodeData_UnscheduledNode_ContainsMinMaxPublishingDates()
             {
                 var unscheduledNode = FakeNodes.GetNode("/Articles/1");
-                var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model1.IndexName);
-                var nodeData = AlgoliaIndexingHelper.GetTreeNodeData(unscheduledNode, searchModelType);
+                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(unscheduledNode, searchModelType);
 
                 Assert.Multiple(() => {
                     Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), 0);
@@ -41,8 +40,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     p.SetValue(nameof(AlgoliaSearchModel.DocumentPublishTo), new DateTime(2023, 1, 1));
                 });
 
-                var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model1.IndexName);
-                var nodeData = AlgoliaIndexingHelper.GetTreeNodeData(scheduledNode, searchModelType);
+                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(scheduledNode, searchModelType);
 
                 Assert.Multiple(() => {
                     Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), scheduledNode.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
@@ -55,8 +54,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_PropertiesFromModel_MatchNodeValue()
             {
                 var node = FakeNodes.GetNode("/Articles/1");
-                var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model1.IndexName);
-                var nodeData = AlgoliaIndexingHelper.GetTreeNodeData(node, searchModelType);
+                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, searchModelType);
 
                 Assert.AreEqual(nodeData.Value<DateTime>(nameof(Model1.DocumentCreatedWhen)), new DateTime(2022, 1, 1));
             }
@@ -67,8 +66,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var nodeAliasPath = "/Articles/1";
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                var searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(Model4.IndexName);
-                var nodeData = AlgoliaIndexingHelper.GetTreeNodeData(node, searchModelType);
+                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model4.IndexName);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, searchModelType);
 
                 Assert.AreEqual(nodeData.Value<string>(nameof(Model4.Prop1)), nodeAliasPath);
             }
@@ -78,7 +77,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_InheritsBaseClass_ContainsNodeValuesFromAllClasses()
             {
                 var node = FakeNodes.GetNode("/Articles/1");
-                var data = AlgoliaIndexingHelper.GetTreeNodeData(node, typeof(Model7));
+                var data = algoliaIndexingService.GetTreeNodeData(node, typeof(Model7));
 
                 Assert.Multiple(() => {
                     Assert.IsNotNull(data.Value<string>(nameof(Model7.NodeAliasPath)));
@@ -92,7 +91,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var nodeAliasPath = "/Articles/1";
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                var data = AlgoliaIndexingHelper.GetTreeNodeData(node, typeof(Model7));
+                var data = algoliaIndexingService.GetTreeNodeData(node, typeof(Model7));
 
                 Assert.Multiple(() => {
                     Assert.AreEqual(nodeAliasPath.ToUpper(), data.Value<string>(nameof(Model7.NodeAliasPath)));
@@ -101,7 +100,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             }
         }
 
-        internal class ProcessAlgoliaTasksTests : AlgoliaTest
+
+        [TestFixture]
+        internal class ProcessAlgoliaTasksTests : AlgoliaTests
         {
             [Test]
             public void ProcessAlgoliaTasks_ListOfValidQueueItems_ReturnsProcessedCount()
@@ -135,7 +136,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     }
                 };
 
-                var successfulOperations = AlgoliaIndexingHelper.ProcessAlgoliaTasks(testQueueItems);
+                var successfulOperations = algoliaIndexingService.ProcessAlgoliaTasks(testQueueItems);
                 Assert.AreEqual(testQueueItems.Count, successfulOperations);
             }
 
@@ -161,10 +162,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     }
                 };
 
-                var successfulOperations = AlgoliaIndexingHelper.ProcessAlgoliaTasks(testQueueItems);
+                var successfulOperations = algoliaIndexingService.ProcessAlgoliaTasks(testQueueItems);
+                var loggedEvent = (eventLogService as MockEventLogService).LoggedEvent;
+
                 Assert.Multiple(() => {
                     Assert.AreEqual(successfulOperations, 1);
-                    Assert.AreEqual(mEventLogService.LoggedEvent.EventDescription, $"Unable to load search model class for index '{indexName}.'");
+                    Assert.AreEqual(loggedEvent.EventDescription, $"Unable to load search model class for index '{indexName}.'");
                 });
             }
         }

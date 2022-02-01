@@ -1,14 +1,19 @@
 ﻿using Algolia.Search.Clients;
+using Algolia.Search.Models.Search;
 
+using CMS;
 using CMS.ContactManagement;
+using CMS.Core;
 using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
+[assembly: RegisterImplementation(typeof(IAlgoliaInsightsService), typeof(AlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
@@ -18,16 +23,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// </summary>
     public class AlgoliaInsightsService : IAlgoliaInsightsService
     {
-        private readonly IInsightsClient mInsightsClient;
+        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
+        private readonly IInsightsClient insightsClient;
 
 
-        public override string ParameterNameObjectId => "object";
+        protected override string ParameterNameObjectId => "object";
 
 
-        public override string ParameterNameQueryId => "query";
+        protected override string ParameterNameQueryId => "query";
 
 
-        public override string ParameterNamePosition => "pos";
+        protected override string ParameterNamePosition => "pos";
 
 
         private string ContactGUID
@@ -74,12 +80,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AlgoliaInsightsService"/> class.
-        /// Should not be called directly- use <see cref="AlgoliaStartupExtensions.AddAlgolia"/>
-        /// to register this class with Dependency Injection.
+        /// Should not be called directly- use Dependency Injection to obtain an instance
+        /// of this class.
         /// </summary>
-        public AlgoliaInsightsService(IInsightsClient insightsClient)
+        public AlgoliaInsightsService(IAlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
         {
-            mInsightsClient = insightsClient;
+            this.algoliaRegistrationService = algoliaRegistrationService;
+            this.insightsClient = insightsClient;
         }
 
 
@@ -90,7 +97,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ClickedObjectIDsAfterSearch(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
+            insightsClient.User(ContactGUID).ClickedObjectIDsAfterSearch(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
         }
 
 
@@ -101,7 +108,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearch(conversionName, indexName, new string[] { ObjectId }, QueryId);
+            insightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearch(conversionName, indexName, new string[] { ObjectId }, QueryId);
         }
 
 
@@ -112,7 +119,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ViewedObjectIDs(eventName, indexName, new string[] { documentId.ToString() });
+            insightsClient.User(ContactGUID).ViewedObjectIDs(eventName, indexName, new string[] { documentId.ToString() });
         }
 
 
@@ -123,7 +130,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ConvertedObjectIDs(conversionName, indexName, new string[] { documentId.ToString() });
+            insightsClient.User(ContactGUID).ConvertedObjectIDs(conversionName, indexName, new string[] { documentId.ToString() });
         }
 
 
@@ -142,7 +149,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             if (viewedFacets.Count > 0)
             {
-                mInsightsClient.User(ContactGUID).ViewedFilters(eventName, indexName, viewedFacets);
+                insightsClient.User(ContactGUID).ViewedFilters(eventName, indexName, viewedFacets);
             }
         }
 
@@ -154,7 +161,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ClickedFilters(eventName, indexName, new string[] { facet });
+            insightsClient.User(ContactGUID).ClickedFilters(eventName, indexName, new string[] { facet });
         }
 
 
@@ -165,7 +172,42 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return;
             }
 
-            mInsightsClient.User(ContactGUID).ConvertedFilters(conversionName, indexName, new string[] { facet });
+            insightsClient.User(ContactGUID).ConvertedFilters(conversionName, indexName, new string[] { facet });
+        }
+
+
+        public override void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse)
+        {
+            for (var i = 0; i < searchResponse.Hits.Count; i++)
+            {
+                var position = i + 1 + (searchResponse.HitsPerPage * searchResponse.Page);
+                searchResponse.Hits[i].Url = GetInsightsUrl(searchResponse.Hits[i], position, searchResponse.QueryID);
+            }
+        }
+
+
+        protected override string GetInsightsUrl<TModel>(TModel hit, int position, string queryId)
+        {
+            var indexName = "";
+            foreach (var index in algoliaRegistrationService.RegisteredIndexes)
+            {
+                if (index.Value == typeof(TModel))
+                {
+                    indexName = index.Key;
+                }
+            }
+
+            if (string.IsNullOrEmpty(indexName))
+            {
+                return hit.Url;
+            }
+
+            var url = hit.Url;
+            url = URLHelper.AddParameterToUrl(url, ParameterNameObjectId, hit.ObjectID);
+            url = URLHelper.AddParameterToUrl(url, ParameterNamePosition, position.ToString());
+            url = URLHelper.AddParameterToUrl(url, ParameterNameQueryId, queryId);
+
+            return url;
         }
     }
 }

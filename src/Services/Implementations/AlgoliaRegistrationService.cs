@@ -1,54 +1,39 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Settings;
 
+using CMS;
 using CMS.Core;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
-using Microsoft.Extensions.Configuration;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Kentico.Xperience.AlgoliaSearch.Helpers
+[assembly: RegisterImplementation(typeof(IAlgoliaRegistrationService), typeof(AlgoliaRegistrationService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Stores the registered Algolia indexes in memory and contains methods for retrieving information
-    /// about the registered indexes.
+    /// Default implementation of <see cref="IAlgoliaRegistrationService"/>.
     /// </summary>
-    public class AlgoliaRegistrationHelper
+    internal class AlgoliaRegistrationService : IAlgoliaRegistrationService
     {
-        private static IEventLogService mEventLogService;
-        private static Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
-        private static string[] ignoredPropertiesForTrackingChanges = new string[] {
+        private readonly IAlgoliaSearchService algoliaSearchService;
+        private readonly IEventLogService eventLogService;
+        private readonly ISearchClient searchClient;
+        private Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
+        private string[] ignoredPropertiesForTrackingChanges = new string[] {
             nameof(AlgoliaSearchModel.ObjectID),
             nameof(AlgoliaSearchModel.Url),
             nameof(AlgoliaSearchModel.ClassName)
         };
 
 
-        private static IEventLogService LogService
-        {
-            get
-            {
-                if (mEventLogService == null)
-                {
-                    mEventLogService = Service.Resolve<IEventLogService>();
-                }
-
-                return mEventLogService;
-            }
-        }
-
-
-        /// <summary>
-        /// A collection of Algolia index names and the object type which represents the columns
-        /// included in the index.
-        /// </summary>
-        public static Dictionary<string, Type> RegisteredIndexes
+        public override Dictionary<string, Type> RegisteredIndexes
         {
             get
             {
@@ -58,11 +43,21 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
 
 
         /// <summary>
-        /// Gets all <see cref="RegisterAlgoliaIndexAttribute"/>s present in the provided assembly.
+        /// Initializes a new instance of the <see cref="AlgoliaRegistrationService"/> class.
+        /// Should not be called directly- use Dependency Injection to obtain an instance
+        /// of this class.
         /// </summary>
-        /// <remarks>Logs an error if the were issues scanning the assembly.</remarks>
-        /// <param name="assembly">The assembly to scan for attributes.</param>
-        public static IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
+        public AlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
+            IEventLogService eventLogService,
+            ISearchClient searchClient)
+        {
+            this.algoliaSearchService = algoliaSearchService;
+            this.eventLogService = eventLogService;
+            this.searchClient = searchClient;
+        }
+
+
+        public override IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
         {
             var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
 
@@ -73,20 +68,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             }
             catch (Exception exception)
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
+                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
             }
 
             return attributes;
         }
 
 
-        /// <summary>
-        /// Gets the <see cref="IndexSettings"/> of the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <returns>The index settings, or null if not found.</returns>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static IndexSettings GetIndexSettings(string indexName)
+        public override IndexSettings GetIndexSettings(string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -105,19 +94,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             ;
             return new IndexSettings()
             {
-                SearchableAttributes = AlgoliaSearchHelper.OrderSearchableProperties(searchableProperties),
+                SearchableAttributes = algoliaSearchService.OrderSearchableProperties(searchableProperties),
                 AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
-                AttributesForFaceting = facetableProperties.Select(AlgoliaSearchHelper.GetFilterablePropertyName).ToList()
+                AttributesForFaceting = facetableProperties.Select(algoliaSearchService.GetFilterablePropertyName).ToList()
             };
         }
 
 
-        /// <summary>
-        /// Gets the registered search model class that is paired with the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The search model class type, or null if not found.</returns>
-        public static Type GetModelByIndexName(string indexName)
+        public override Type GetModelByIndexName(string indexName)
         {
             var records = mRegisteredIndexes.Where(i => i.Key == indexName);
             if (records.Count() == 0)
@@ -129,15 +113,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         }
 
 
-        /// <summary>
-        /// Gets the indexed page columns specified by the the index's search model properties for
-        /// use when checking whether an indexed column was updated after a page update. The names
-        /// of properties with the <see cref="SourceAttribute"/> are ignored, and instead the array
-        /// of sources is added to the list of indexed columns.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The names of the database columns that are indexed, or an empty array.</returns>
-        public static string[] GetIndexedColumnNames(string indexName)
+        public override string[] GetIndexedColumnNames(string indexName)
         {
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
@@ -168,12 +144,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         }
 
 
-        /// <summary>
-        /// Returns true if the passed node is included in any registered Algolia index.
-        /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> to check for indexing.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static bool IsNodeAlgoliaIndexed(TreeNode node)
+        public override bool IsNodeAlgoliaIndexed(TreeNode node)
         {
             if (node == null)
             {
@@ -192,15 +163,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         }
 
 
-        /// <summary>
-        /// Returns true if the <paramref name="node"/> is included in the Algolia index's allowed
-        /// paths as set by the <see cref="IncludedPathAttribute"/>.
-        /// </summary>
-        /// <remarks>Logs an error if the search model cannot be found.</remarks>
-        /// <param name="node">The node to check for indexing.</param>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <exception cref="ArgumentNullException"></exception>
-        public static bool IsNodeIndexedByIndex(TreeNode node, string indexName)
+        public override bool IsNodeIndexedByIndex(TreeNode node, string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -214,7 +177,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
                 return false;
             }
 
@@ -246,19 +209,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         }
 
 
-        /// <summary>
-        /// Scans all discoverable assemblies for instances of <see cref="RegisterAlgoliaIndexAttribute"/>s
-        /// and stores the Algolia index name and search model class in memory. Also calls
-        /// <see cref="SearchIndex.SetSettings"/> to initialize the Algolia index's configuration
-        /// based on the attributes defined in the search model.
-        /// </summary>
-        /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
-        public static void RegisterAlgoliaIndexes()
+        public override void RegisterAlgoliaIndexes()
         {
             var attributes = new List<RegisterAlgoliaIndexAttribute>();
             var assemblies = AssemblyDiscoveryHelper.GetAssemblies(discoverableOnly: true);
-            var configuration = Service.ResolveOptional<IConfiguration>();
-            var client = AlgoliaSearchHelper.GetSearchClient(configuration);
 
             foreach (var assembly in assemblies)
             {
@@ -270,11 +224,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
                 RegisterIndex(attribute.IndexName, attribute.Type);
 
                 // Set index settings
-                var searchIndex = client.InitIndex(attribute.IndexName);
+                var searchIndex = searchClient.InitIndex(attribute.IndexName);
                 var indexSettings = GetIndexSettings(attribute.IndexName);
                 if (indexSettings == null)
                 {
-                    LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
+                    eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
                     continue;
                 }
 
@@ -283,29 +237,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Helpers
         }
 
 
-        /// <summary>
-        /// Saves an Algolia index code name and its search model to the <see cref="RegisteredIndexes"/>.
-        /// </summary>
-        /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <param name="searchModelType">The search model type.</param>
-        public static void RegisterIndex(string indexName, Type searchModelType)
+        public override void RegisterIndex(string indexName, Type searchModelType)
         {
             if (String.IsNullOrEmpty(indexName))
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
+                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
                 return;
             }
 
             if (searchModelType == null)
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
+                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
                 return;
             }
 
             if (mRegisteredIndexes.ContainsKey(indexName))
             {
-                LogService.LogError(nameof(AlgoliaRegistrationHelper), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
+                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
                 return;
             }
 

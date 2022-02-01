@@ -1,10 +1,11 @@
-﻿using Algolia.Search.Http;
+﻿using Algolia.Search.Clients;
 
 using CMS.Core;
 using CMS.DocumentEngine;
 using CMS.Tests;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Microsoft.Extensions.Configuration;
 
@@ -18,16 +19,18 @@ using Tests.DocumentEngine;
 [assembly: Category("Algolia")]
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class AlgoliaTest : UnitTests
+    internal class AlgoliaTests : UnitTests
     {
+        protected IAlgoliaRegistrationService algoliaRegistrationService;
+        protected IAlgoliaIndexingService algoliaIndexingService;
+        protected IAlgoliaSearchService algoliaSearchService;
+        protected IEventLogService eventLogService;
+
         public const string APPLICATION_ID = "my-app";
         public const string API_KEY = "my-key";
 
-        
-        protected MockEventLogService mEventLogService;
 
-
-        private Dictionary<string, string> algoliaOptions = new Dictionary<string, string>
+        private Dictionary<string, string> keys = new Dictionary<string, string>
         {
             {"xperience.algolia:applicationId", APPLICATION_ID},
             {"xperience.algolia:apiKey", API_KEY}
@@ -37,26 +40,31 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         protected override void RegisterTestServices()
         {
             base.RegisterTestServices();
+            
             var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(algoliaOptions)
+                .AddInMemoryCollection(keys)
                 .Build();
+            var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
+            var searchClient = new SearchClient(new SearchConfig(algoliaOptions.ApplicationId, algoliaOptions.ApiKey), new MockHttpRequester());
 
-            mEventLogService = new MockEventLogService();
-
-            Service.Use<IConfiguration>(configuration);
-            Service.Use<IEventLogService>(mEventLogService);
-            Service.Use<IHttpRequester, MockHttpRequester>();
+            Service.Use<ISearchClient>(searchClient);
+            Service.Use<IEventLogService, MockEventLogService>();
         }
 
 
         [SetUp]
         public void SetUp()
         {
+            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
+            eventLogService = Service.Resolve<IEventLogService>();
+
             // Register Algolia indexes
-            var attributes = AlgoliaRegistrationHelper.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
+            var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
             foreach (var attribute in attributes)
             {
-                AlgoliaRegistrationHelper.RegisterIndex(attribute.IndexName, attribute.Type);
+                algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
             }
 
             // Register document types for faking
@@ -78,7 +86,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         [TearDown]
         public void TearDown()
         {
-            AlgoliaRegistrationHelper.RegisteredIndexes.Clear();
             FakeNodes.ClearNodes();
         }
     }

@@ -4,7 +4,7 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            if (AlgoliaRegistrationHelper.RegisteredIndexes.Count == 0)
+            ShowTaskCount();
+
+            if(RequestHelper.IsPostBack())
+            {
+                return;
+            }
+
+            if (algoliaRegistrationService.RegisteredIndexes.Count == 0)
             {
                 ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
                 return;
@@ -27,11 +34,22 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         }
 
 
+        private void ShowTaskCount()
+        {
+            if (algoliaRegistrationService.RegisteredIndexes.Count == 0)
+            {
+                return;
+            }
+
+            ShowInformation($"Queued Algolia search tasks: <b>{AlgoliaQueueWorker.Current.ItemsInQueue}</b>.");
+        }
+
+
         private void LoadIndexes()
         {
             var indexesToList = new List<IndicesResponse>();
-            var indexStatistics = AlgoliaSearchHelper.GetStatistics();
-            foreach (var index in AlgoliaRegistrationHelper.RegisteredIndexes)
+            var indexStatistics = algoliaSearchService.GetStatistics();
+            foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
                 // Find statistics with matching name
                 var matchingStatistics = indexStatistics.Where(i => i.Name == index.Key);
@@ -91,7 +109,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 case "rebuild":
                     try
                     {
-                        var conn = new AlgoliaConnection(indexName);
+                        var conn = Service.Resolve<IAlgoliaConnection>();
+                        conn.Initialize(indexName);
                         conn.Rebuild();
                         ShowInformation("Index is rebuilding. Please refresh the page after a few moments.");
                     }

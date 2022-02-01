@@ -1,8 +1,9 @@
-﻿using Algolia.Search.Models.Search;
-
+﻿using Algolia.Search.Clients;
+using Algolia.Search.Models.Search;
+using CMS.Core;
 using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Newtonsoft.Json.Linq;
 
@@ -33,7 +34,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 string searchText = QueryHelper.GetString("searchtext", "");
                 if (!string.IsNullOrEmpty(searchText))
                 {
-                    var client = AlgoliaSearchHelper.GetSearchClient();
+                    var client = Service.Resolve<ISearchClient>();
                     var searchIndex = client.InitIndex(indexName);
                     if (searchIndex == null)
                     {

@@ -1,5 +1,7 @@
 ﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
+using CMS.Core;
 using CMS.UIControls;
 
 using System;
@@ -13,6 +15,51 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaUIPage : CMSPage
     {
+        protected IAlgoliaRegistrationService algoliaRegistrationService;
+        protected IAlgoliaSearchService algoliaSearchService;
+
+
+        protected override void OnInit(EventArgs e)
+        {
+            base.OnInit(e);
+            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
+        }
+
+
+        /// <summary>
+        /// Converts a collection of objects into a <see cref="DataSet"/>.
+        /// </summary>
+        protected DataSet ToDataSet<T>(IList<T> list)
+        {
+            Type elementType = typeof(T);
+            DataSet ds = new DataSet();
+            DataTable t = new DataTable();
+            ds.Tables.Add(t);
+
+            foreach (var propInfo in elementType.GetProperties())
+            {
+                Type ColType = Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
+
+                t.Columns.Add(propInfo.Name, ColType);
+            }
+
+            foreach (T item in list)
+            {
+                DataRow row = t.NewRow();
+
+                foreach (var propInfo in elementType.GetProperties())
+                {
+                    row[propInfo.Name] = propInfo.GetValue(item, null) ?? DBNull.Value;
+                }
+
+                t.Rows.Add(row);
+            }
+
+            return ds;
+        }
+
+
         /// <summary>
         /// Model for displaying a search model property configuration in a UniGrid.
         /// </summary>
@@ -102,39 +149,6 @@ namespace Kentico.Xperience.AlgoliaSearch
                 get;
                 set;
             }
-        }
-
-
-        /// <summary>
-        /// Converts a collection of objects into a <see cref="DataSet"/>.
-        /// </summary>
-        protected DataSet ToDataSet<T>(IList<T> list)
-        {
-            Type elementType = typeof(T);
-            DataSet ds = new DataSet();
-            DataTable t = new DataTable();
-            ds.Tables.Add(t);
-
-            foreach (var propInfo in elementType.GetProperties())
-            {
-                Type ColType = Nullable.GetUnderlyingType(propInfo.PropertyType) ?? propInfo.PropertyType;
-
-                t.Columns.Add(propInfo.Name, ColType);
-            }
-
-            foreach (T item in list)
-            {
-                DataRow row = t.NewRow();
-
-                foreach (var propInfo in elementType.GetProperties())
-                {
-                    row[propInfo.Name] = propInfo.GetValue(item, null) ?? DBNull.Value;
-                }
-
-                t.Rows.Add(row);
-            }
-
-            return ds;
         }
     }
 }

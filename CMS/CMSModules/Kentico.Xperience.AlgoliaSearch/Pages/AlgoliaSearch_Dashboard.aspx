@@ -5,7 +5,13 @@
 <%@ Register Namespace="CMS.UIControls.UniGridConfig" TagPrefix="ug" Assembly="CMS.UIControls" %>
 
 <asp:Content ID="cntBody" ContentPlaceHolderID="plcContent" runat="server">
-    <cms:LocalizedHeading runat="server" ID="headElem" Text="Registered indexes" Level="3" />
+    <cms:CMSUpdatePanel runat="server" ID="pnlUpdate" CatchErrors="true" EnableViewState="true">
+        <ContentTemplate>
+            <asp:Timer ID="timRefresh" runat="server" Interval="1000" EnableViewState="false" Enabled="True" />
+        </ContentTemplate>
+    </cms:CMSUpdatePanel>
+    
+    <cms:LocalizedHeading runat="server" Text="Registered indexes" Level="3" />
     <cms:UniGrid ID="ugIndexes" runat="server">
         <GridActions>
             <ug:Action Name="view" ExternalSourceName="view" CommandArgument="Name" Caption="View configuration" FontIconClass="icon-eye" FontIconStyle="Allow" />

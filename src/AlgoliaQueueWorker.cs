@@ -1,7 +1,8 @@
 ﻿using CMS.Base;
+using CMS.Core;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
 using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,9 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaQueueWorker : ThreadQueueWorker<AlgoliaQueueItem, AlgoliaQueueWorker>
     {
+        private IAlgoliaIndexingService algoliaIndexingService;
+
+
         protected override int DefaultInterval => 10000;
 
 
@@ -25,6 +29,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         public AlgoliaQueueWorker()
         {
+            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
         }
 
 
@@ -43,6 +48,19 @@ namespace Kentico.Xperience.AlgoliaSearch
         }
 
 
+        /// <summary>
+        /// Adds mulitple <see cref="AlgoliaQueueItem"/>s to the worker queue to be processed.
+        /// </summary>
+        /// <param name="queueItems"></param>
+        public static void EnqueueAlgoliaQueueItems(IEnumerable<AlgoliaQueueItem> queueItems)
+        {
+            foreach(var queueItem in queueItems)
+            {
+                EnqueueAlgoliaQueueItem(queueItem);
+            }
+        }
+
+
         protected override void Finish()
         {
             RunProcess();
@@ -51,7 +69,7 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         protected override int ProcessItems(IEnumerable<AlgoliaQueueItem> items)
         {
-            AlgoliaIndexingHelper.ProcessAlgoliaTasks(items);
+            algoliaIndexingService.ProcessAlgoliaTasks(items);
             return items.Count();
         }
 
