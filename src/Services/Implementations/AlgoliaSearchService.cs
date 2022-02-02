@@ -4,6 +4,7 @@ using Algolia.Search.Models.Common;
 using CMS;
 using CMS.Base;
 using CMS.Core;
+using CMS.DataEngine;
 using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
@@ -139,6 +140,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             }
 
             return property.Name;
+        }
+
+
+        public override bool IsIndexingEnabled()
+        {
+            var existingKey = SettingsKeyInfoProvider.GetSettingsKeyInfo(KEY_INDEXING_ENABLED);
+            if (existingKey == null)
+            {
+                return true;
+            }
+
+            return ValidationHelper.GetBoolean(existingKey.KeyValue, true);
         }
 
 

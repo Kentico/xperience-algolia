@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\xperience-algolia.csproj" />
+    <ProjectReference Include="..\src\Kentico.Xperience.AlgoliaSearch.csproj" />
   </ItemGroup>
 
 </Project>

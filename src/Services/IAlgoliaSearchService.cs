@@ -12,6 +12,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// </summary>
     public abstract class IAlgoliaSearchService
     {
+        protected const string KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
+
+
         /// <summary>
         /// Gets the indices of the Algolia application with basic statistics.
         /// </summary>
@@ -43,6 +46,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
         /// set to true.</exception>
         public abstract string GetFilterablePropertyName(PropertyInfo property);
+
+
+        /// <summary>
+        /// Returns true if Algolia indexing is enabled, or if the settings key doesn't exist.
+        /// </summary>
+        public abstract bool IsIndexingEnabled();
 
 
         /// <summary>

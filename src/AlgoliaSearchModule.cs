@@ -26,6 +26,7 @@ namespace Kentico.Xperience.AlgoliaSearch
     {
         private IAlgoliaIndexingService algoliaIndexingService;
         private IAlgoliaRegistrationService algoliaRegistrationService;
+        private IAlgoliaSearchService algoliaSearchService;
 
 
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
@@ -60,6 +61,7 @@ namespace Kentico.Xperience.AlgoliaSearch
 
             algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
             algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
             algoliaRegistrationService.RegisterAlgoliaIndexes();
 
             DocumentEvents.Update.Before += LogTreeNodeUpdate;
@@ -121,7 +123,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <returns></returns>
         private bool EventShouldCancel(TreeNode node, bool wasDeleted)
         {
-            return !algoliaRegistrationService.IsNodeAlgoliaIndexed(node) ||
+            return !algoliaSearchService.IsIndexingEnabled() ||
+                !algoliaRegistrationService.IsNodeAlgoliaIndexed(node) ||
                 (!wasDeleted && !node.PublishedVersionExists);
         }
     }

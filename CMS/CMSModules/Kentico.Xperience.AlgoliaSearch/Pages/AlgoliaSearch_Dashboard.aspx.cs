@@ -19,11 +19,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         {
             ShowTaskCount();
 
-            if(RequestHelper.IsPostBack())
-            {
-                return;
-            }
-
             if (algoliaRegistrationService.RegisteredIndexes.Count == 0)
             {
                 ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
