@@ -14,13 +14,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Stores the registered Algolia indexes in memory and contains methods for retrieving information
     /// about the registered indexes.
     /// </summary>
-    public abstract class AlgoliaRegistrationService
+    public interface IAlgoliaRegistrationService
     {
         /// <summary>
         /// A collection of Algolia index names and the object type which represents the columns
         /// included in the index.
         /// </summary>
-        public abstract Dictionary<string, Type> RegisteredIndexes
+        public Dictionary<string, Type> RegisteredIndexes
         {
             get;
         }
@@ -31,7 +31,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <remarks>Logs an error if the were issues scanning the assembly.</remarks>
         /// <param name="assembly">The assembly to scan for attributes.</param>
-        public abstract IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly);
+        public IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly);
 
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The Algolia index code name.</param>
         /// <returns>The index settings, or null if not found.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public abstract IndexSettings GetIndexSettings(string indexName);
+        public IndexSettings GetIndexSettings(string indexName);
 
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The search model class type, or null if not found.</returns>
-        public abstract Type GetModelByIndexName(string indexName);
+        public Type GetModelByIndexName(string indexName);
 
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The names of the database columns that are indexed, or an empty array.</returns>
-        public abstract string[] GetIndexedColumnNames(string indexName);
+        public string[] GetIndexedColumnNames(string indexName);
 
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to check for indexing.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public abstract bool IsNodeAlgoliaIndexed(TreeNode node);
+        public bool IsNodeAlgoliaIndexed(TreeNode node);
 
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The node to check for indexing.</param>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public abstract bool IsNodeIndexedByIndex(TreeNode node, string indexName);
+        public bool IsNodeIndexedByIndex(TreeNode node, string indexName);
 
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// based on the attributes defined in the search model.
         /// </summary>
         /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
-        public abstract void RegisterAlgoliaIndexes();
+        public void RegisterAlgoliaIndexes();
 
 
         /// <summary>
@@ -97,6 +97,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <param name="searchModelType">The search model type.</param>
-        public abstract void RegisterIndex(string indexName, Type searchModelType);
+        public void RegisterIndex(string indexName, Type searchModelType);
     }
 }

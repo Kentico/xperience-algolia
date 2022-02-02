@@ -16,15 +16,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(AlgoliaSearchService), typeof(DefaultAlgoliaSearchService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(IAlgoliaSearchService), typeof(DefaultAlgoliaSearchService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="AlgoliaSearchService"/>.
+    /// Default implementation of <see cref="IAlgoliaSearchService"/>.
     /// </summary>
-    public class DefaultAlgoliaSearchService : AlgoliaSearchService
+    public class DefaultAlgoliaSearchService : IAlgoliaSearchService
     {
         private readonly ISearchClient searchClient;
+        private const string KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
 
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override List<IndicesResponse> GetStatistics()
+        public List<IndicesResponse> GetStatistics()
         {
             if (searchClient == null)
             {
@@ -47,7 +48,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true)
+        public AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true)
         {
             // Get facets in filter that are checked to persist checked state
             var checkedFacetValues = new List<string>();
@@ -120,7 +121,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override string GetFilterablePropertyName(PropertyInfo property)
+        public string GetFilterablePropertyName(PropertyInfo property)
         {
             var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
             if (attr.FilterOnly && attr.Searchable)
@@ -141,7 +142,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override bool IsIndexingEnabled()
+        public bool IsIndexingEnabled()
         {
             var existingKey = SettingsKeyInfoProvider.GetSettingsKeyInfo(KEY_INDEXING_ENABLED);
             if (existingKey == null)
@@ -153,7 +154,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
+        public List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
         {
             var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
             foreach (var prop in searchableProperties)

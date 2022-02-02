@@ -15,20 +15,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(AlgoliaConnection), typeof(DefaultAlgoliaConnection), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(IAlgoliaConnection), typeof(DefaultAlgoliaConnection), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="AlgoliaConnection"/>.
+    /// Default implementation of <see cref="IAlgoliaConnection"/>.
     /// </summary>
-    public class DefaultAlgoliaConnection : AlgoliaConnection
+    public class DefaultAlgoliaConnection : IAlgoliaConnection
     {
         private string indexName;
         private Type searchModelType;
         private SearchIndex searchIndex;
         private readonly ISearchClient searchClient;
         private readonly IEventLogService eventLogService;
-        private readonly AlgoliaRegistrationService algoliaRegistrationService;
+        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
 
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         public DefaultAlgoliaConnection(ISearchClient searchClient,
             IEventLogService eventLogService,
-            AlgoliaRegistrationService algoliaRegistrationService)
+            IAlgoliaRegistrationService algoliaRegistrationService)
         {
             this.searchClient = searchClient;
             this.eventLogService = eventLogService;
@@ -44,7 +44,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
         
-        public override void Initialize(string indexName)
+        public void Initialize(string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -67,7 +67,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override int DeleteRecords(IEnumerable<string> objectIds)
+        public int DeleteRecords(IEnumerable<string> objectIds)
         {
             var deletedCount = 0;
             if (objectIds == null || objectIds.Count() == 0)
@@ -85,7 +85,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override int UpsertRecords(IEnumerable<JObject> dataObjects)
+        public int UpsertRecords(IEnumerable<JObject> dataObjects)
         {
             var upsertedCount = 0;
             if (dataObjects == null || dataObjects.Count() == 0)
@@ -111,7 +111,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void Rebuild()
+        public void Rebuild()
         {
             if (searchModelType == null)
             {

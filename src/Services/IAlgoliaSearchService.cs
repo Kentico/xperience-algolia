@@ -13,16 +13,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Contains methods for common Algolia tasks.
     /// </summary>
-    public abstract class AlgoliaSearchService
+    public interface IAlgoliaSearchService
     {
-        protected const string KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
-
-
         /// <summary>
         /// Gets the indices of the Algolia application with basic statistics.
         /// </summary>
         /// <remarks>See <see href="https://www.algolia.com/doc/api-reference/api-methods/list-indices/#response"/></remarks>
-        public abstract List<IndicesResponse> GetStatistics();
+        public List<IndicesResponse> GetStatistics();
 
 
         /// <summary>
@@ -36,7 +33,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// to the returned list with a count of zero.</param>
         /// <returns>A new list of <see cref="AlgoliaFacetedAttribute"/>s that are available to filter search
         /// results.</returns>
-        public abstract AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true);
+        public AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true);
 
 
         /// <summary>
@@ -48,13 +45,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <exception cref="InvalidOperationException">Thrown if the <see cref="FacetableAttribute"/>
         /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
         /// set to true.</exception>
-        public abstract string GetFilterablePropertyName(PropertyInfo property);
+        public string GetFilterablePropertyName(PropertyInfo property);
 
 
         /// <summary>
         /// Returns true if Algolia indexing is enabled, or if the settings key doesn't exist.
         /// </summary>
-        public abstract bool IsIndexingEnabled();
+        public bool IsIndexingEnabled();
 
 
         /// <summary>
@@ -65,6 +62,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="searchableProperties">The properties of the search model to be ordered.</param>
         /// <returns>A list of strings appropriate for setting Algolia searchable attributes (see
         /// <see href="https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/"/>).</returns>
-        public abstract List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties);
+        public List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties);
     }
 }

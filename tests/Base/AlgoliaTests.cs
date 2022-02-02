@@ -1,18 +1,7 @@
-﻿using Algolia.Search.Clients;
-
-using CMS.Core;
-using CMS.DocumentEngine;
+﻿using CMS.DocumentEngine;
 using CMS.Tests;
 
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Services;
-
-using Microsoft.Extensions.Configuration;
-
 using NUnit.Framework;
-
-using System.Collections.Generic;
-using System.Reflection;
 
 using Tests.DocumentEngine;
 
@@ -21,52 +10,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class AlgoliaTests : UnitTests
     {
-        protected AlgoliaRegistrationService algoliaRegistrationService;
-        protected AlgoliaIndexingService algoliaIndexingService;
-        protected AlgoliaSearchService algoliaSearchService;
-        protected IEventLogService eventLogService;
-
-        public const string APPLICATION_ID = "my-app";
-        public const string API_KEY = "my-key";
-
-
-        private Dictionary<string, string> keys = new Dictionary<string, string>
-        {
-            {"xperience.algolia:applicationId", APPLICATION_ID},
-            {"xperience.algolia:apiKey", API_KEY}
-        };
-
-
-        protected override void RegisterTestServices()
-        {
-            base.RegisterTestServices();
-            
-            var configuration = new ConfigurationBuilder()
-                .AddInMemoryCollection(keys)
-                .Build();
-            var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
-            var searchClient = new SearchClient(new SearchConfig(algoliaOptions.ApplicationId, algoliaOptions.ApiKey), new MockHttpRequester());
-
-            Service.Use<ISearchClient>(searchClient);
-            Service.Use<IEventLogService, MockEventLogService>();
-        }
-
-
         [SetUp]
         public void SetUp()
         {
-            algoliaRegistrationService = Service.Resolve<AlgoliaRegistrationService>();
-            algoliaIndexingService = Service.Resolve<AlgoliaIndexingService>();
-            algoliaSearchService = Service.Resolve<AlgoliaSearchService>();
-            eventLogService = Service.Resolve<IEventLogService>();
-
-            // Register Algolia indexes
-            var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-            foreach (var attribute in attributes)
-            {
-                algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
-            }
-
             // Register document types for faking
             DocumentGenerator.RegisterDocumentType<TreeNode>(FakeNodes.DOCTYPE_ARTICLE);
             DocumentGenerator.RegisterDocumentType<TreeNode>(FakeNodes.DOCTYPE_PRODUCT);

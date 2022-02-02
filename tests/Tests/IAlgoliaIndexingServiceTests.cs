@@ -2,27 +2,42 @@
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
+
+using Newtonsoft.Json.Linq;
+
+using NSubstitute;
 
 using NUnit.Framework;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class AlgoliaIndexingServiceTests
+    internal class IAlgoliaIndexingServiceTests
     {
         [TestFixture]
         internal class GetTreeNodeDataTests : AlgoliaTests
         {
+            private IAlgoliaIndexingService algoliaIndexingService;
+
+
+            [SetUp]
+            public void GetTreeNodeDataTests_SetUp()
+            {
+                algoliaIndexingService = new DefaultAlgoliaIndexingService(Substitute.For<IAlgoliaRegistrationService>(), Substitute.For<IAlgoliaConnection>(), new MockEventLogService());
+            }
+
+
             [Test]
             public void GetTreeNodeData_UnscheduledNode_ContainsMinMaxPublishingDates()
             {
                 var unscheduledNode = FakeNodes.GetNode("/Articles/1");
-                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
-                var nodeData = algoliaIndexingService.GetTreeNodeData(unscheduledNode, searchModelType);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(unscheduledNode, typeof(Model1));
 
                 Assert.Multiple(() => {
                     Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), 0);
@@ -40,8 +55,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     p.SetValue(nameof(AlgoliaSearchModel.DocumentPublishTo), new DateTime(2023, 1, 1));
                 });
 
-                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
-                var nodeData = algoliaIndexingService.GetTreeNodeData(scheduledNode, searchModelType);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(scheduledNode, typeof(Model1));
 
                 Assert.Multiple(() => {
                     Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), scheduledNode.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
@@ -54,8 +68,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_PropertiesFromModel_MatchNodeValue()
             {
                 var node = FakeNodes.GetNode("/Articles/1");
-                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model1.IndexName);
-                var nodeData = algoliaIndexingService.GetTreeNodeData(node, searchModelType);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, typeof(Model1));
 
                 Assert.AreEqual(nodeData.Value<DateTime>(nameof(Model1.DocumentCreatedWhen)), new DateTime(2022, 1, 1));
             }
@@ -66,8 +79,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var nodeAliasPath = "/Articles/1";
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                var searchModelType = algoliaRegistrationService.GetModelByIndexName(Model4.IndexName);
-                var nodeData = algoliaIndexingService.GetTreeNodeData(node, searchModelType);
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, typeof(Model4));
 
                 Assert.AreEqual(nodeData.Value<string>(nameof(Model4.Prop1)), nodeAliasPath);
             }
@@ -104,6 +116,26 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         [TestFixture]
         internal class ProcessAlgoliaTasksTests : AlgoliaTests
         {
+            private IAlgoliaIndexingService algoliaIndexingService;
+
+
+            [SetUp]
+            public void ProcessAlgoliaTasksTests_SetUp()
+            {
+                var mockRegistrationService = Substitute.For<IAlgoliaRegistrationService>();
+                mockRegistrationService.GetModelByIndexName(Model1.IndexName).Returns(typeof(Model1));
+                mockRegistrationService.GetModelByIndexName(Model2.IndexName).Returns(typeof(Model2));
+                mockRegistrationService.GetModelByIndexName(Model3.IndexName).Returns(typeof(Model3));
+                mockRegistrationService.GetModelByIndexName(Model4.IndexName).Returns(typeof(Model4));
+
+                var mockAlgoliaConnection = Substitute.For<IAlgoliaConnection>();
+                mockAlgoliaConnection.UpsertRecords(Arg.Any<IEnumerable<JObject>>()).Returns(args => args.Arg<IEnumerable<JObject>>().Count());
+                mockAlgoliaConnection.DeleteRecords(Arg.Any<IEnumerable<string>>()).Returns(args => args.Arg<IEnumerable<string>>().Count());
+
+                algoliaIndexingService = new DefaultAlgoliaIndexingService(mockRegistrationService, mockAlgoliaConnection, new MockEventLogService());
+            }
+
+
             [Test]
             public void ProcessAlgoliaTasks_ListOfValidQueueItems_ReturnsProcessedCount()
             {
@@ -137,6 +169,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 };
 
                 var successfulOperations = algoliaIndexingService.ProcessAlgoliaTasks(testQueueItems);
+
                 Assert.AreEqual(testQueueItems.Count, successfulOperations);
             }
 
@@ -144,7 +177,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void ProcessAlgoliaTasks_ListOfQueueItems_WithInvalidIndex_ReturnsProcessedCount()
             {
-                var indexName = "FAKE_NAME";
                 var node1 = FakeNodes.GetNode("/Articles/1");
                 var node2 = FakeNodes.GetNode("/CZ/Articles/1");
                 var testQueueItems = new List<AlgoliaQueueItem>() {
@@ -156,19 +188,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     },
                     new AlgoliaQueueItem
                     {
-                        IndexName = indexName,
+                        IndexName = "FAKE_NAME",
                         Deleted = false,
                         Node = node2
                     }
                 };
 
                 var successfulOperations = algoliaIndexingService.ProcessAlgoliaTasks(testQueueItems);
-                var loggedEvent = (eventLogService as MockEventLogService).LoggedEvent;
 
-                Assert.Multiple(() => {
-                    Assert.AreEqual(successfulOperations, 1);
-                    Assert.AreEqual(loggedEvent.EventDescription, $"Unable to load search model class for index '{indexName}.'");
-                });
+                Assert.AreEqual(successfulOperations, 1);
             }
         }
     }

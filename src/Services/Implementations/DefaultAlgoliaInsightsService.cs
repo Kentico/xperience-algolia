@@ -6,6 +6,7 @@ using CMS.ContactManagement;
 using CMS.Core;
 using CMS.Helpers;
 
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
@@ -13,27 +14,27 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-[assembly: RegisterImplementation(typeof(AlgoliaInsightsService), typeof(DefaultAlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(IAlgoliaInsightsService), typeof(DefaultAlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="AlgoliaInsightsService"/> which logs
+    /// Default implementation of <see cref="IAlgoliaInsightsService"/> which logs
     /// Algolia Insights events using the <see cref="ContactInfo.ContactGUID"/>
     /// as the user's identifier.
     /// </summary>
-    public class DefaultAlgoliaInsightsService : AlgoliaInsightsService
+    public class DefaultAlgoliaInsightsService : IAlgoliaInsightsService
     {
-        private readonly AlgoliaRegistrationService algoliaRegistrationService;
+        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
         private readonly IInsightsClient insightsClient;
 
 
-        protected override string ParameterNameObjectId => "object";
+        public string ParameterNameObjectId => "object";
 
 
-        protected override string ParameterNameQueryId => "query";
+        public string ParameterNameQueryId => "query";
 
 
-        protected override string ParameterNamePosition => "pos";
+        public string ParameterNamePosition => "pos";
 
 
         private string ContactGUID
@@ -81,14 +82,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaInsightsService"/> class.
         /// </summary>
-        public DefaultAlgoliaInsightsService(AlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
+        public DefaultAlgoliaInsightsService(IAlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
         {
             this.algoliaRegistrationService = algoliaRegistrationService;
             this.insightsClient = insightsClient;
         }
 
 
-        public override void LogSearchResultClicked(string eventName, string indexName)
+        public void LogSearchResultClicked(string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(ObjectId) || String.IsNullOrEmpty(QueryId) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || Position <= 0)
             {
@@ -99,7 +100,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogSearchResultConversion(string conversionName, string indexName)
+        public void LogSearchResultConversion(string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(ObjectId) || String.IsNullOrEmpty(QueryId) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(conversionName))
             {
@@ -110,7 +111,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogPageViewed(int documentId, string eventName, string indexName)
+        public void LogPageViewed(int documentId, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || documentId <= 0)
             {
@@ -121,7 +122,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogPageConversion(int documentId, string conversionName, string indexName)
+        public void LogPageConversion(int documentId, string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(conversionName) || documentId <= 0)
             {
@@ -132,7 +133,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName)
+        public void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || facets == null)
             {
@@ -152,7 +153,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogFacetClicked(string facet, string eventName, string indexName)
+        public void LogFacetClicked(string facet, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(facet) || String.IsNullOrEmpty(eventName) || String.IsNullOrEmpty(indexName))
             {
@@ -163,7 +164,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void LogFacetConverted(string facet, string conversionName, string indexName)
+        public void LogFacetConverted(string facet, string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(facet) || String.IsNullOrEmpty(conversionName) || String.IsNullOrEmpty(indexName))
             {
@@ -174,7 +175,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse)
+        public void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel
         {
             for (var i = 0; i < searchResponse.Hits.Count; i++)
             {
@@ -184,7 +185,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        protected override string GetInsightsUrl<TModel>(TModel hit, int position, string queryId)
+        public string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel
         {
             var indexName = "";
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)

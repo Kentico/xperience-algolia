@@ -1,6 +1,11 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
+﻿using Algolia.Search.Clients;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.AlgoliaSearch.Services;
 using Kentico.Xperience.AlgoliaSearch.Test;
+
+using NSubstitute;
 
 using NUnit.Framework;
 
@@ -12,11 +17,21 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Tests
 {
-    internal class AlgoliaSearchServiceTests
+    internal class IAlgoliaSearchServiceTests
     {
         [TestFixture]
         internal class GetFacetedAttributesTests : AlgoliaTests
         {
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void GetFacetedAttributesTests_SetUp()
+            {
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+            }
+
+
             private Dictionary<string, Dictionary<string, long>> facetsFromResponse = new Dictionary<string, Dictionary<string, long>>()
             {
                 {
@@ -129,6 +144,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
         [TestFixture]
         internal class GetFilterablePropertyNameTests : AlgoliaTests
         {
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void GetFilterablePropertyNameTests_SetUp()
+            {
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+            }
+
+
             [TestCase(typeof(Model1), nameof(Model1.DocumentCreatedWhen), ExpectedResult = "DocumentCreatedWhen")]
             [TestCase(typeof(Model2), nameof(Model2.Prop1), ExpectedResult = "filterOnly(Prop1)")]
             [TestCase(typeof(Model2), nameof(Model2.Prop2), ExpectedResult = "searchable(Prop2)")]
@@ -154,6 +179,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
         [TestFixture]
         internal class OrderSearchablePropertiesTests : AlgoliaTests
         {
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void OrderSearchablePropertiesTests_SetUp()
+            {
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+            }
+
+
             [TestCase(typeof(Model1), ExpectedResult = new string[] { "DocumentCreatedWhen" })]
             [TestCase(typeof(Model2), ExpectedResult = new string[] { "unordered(Prop1)", "Prop2" })]
             public string[] OrderSearchableProperties_ConvertedToAlgoliaFormat(Type searchModelType)

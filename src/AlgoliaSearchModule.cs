@@ -19,14 +19,14 @@ namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
     /// Initializes the Algolia integration by scanning assemblies for custom models containing the
-    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="AlgoliaRegistrationService.RegisteredIndexes"/>.
+    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="IAlgoliaRegistrationService.RegisteredIndexes"/>.
     /// Also registers event handlers required for indexing content.
     /// </summary>
     public class AlgoliaSearchModule : CMS.DataEngine.Module
     {
-        private AlgoliaIndexingService algoliaIndexingService;
-        private AlgoliaRegistrationService algoliaRegistrationService;
-        private AlgoliaSearchService algoliaSearchService;
+        private IAlgoliaIndexingService algoliaIndexingService;
+        private IAlgoliaRegistrationService algoliaRegistrationService;
+        private IAlgoliaSearchService algoliaSearchService;
 
 
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
@@ -59,9 +59,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             base.OnInit();
 
-            algoliaIndexingService = Service.Resolve<AlgoliaIndexingService>();
-            algoliaRegistrationService = Service.Resolve<AlgoliaRegistrationService>();
-            algoliaSearchService = Service.Resolve<AlgoliaSearchService>();
+            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
+            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
             algoliaRegistrationService.RegisterAlgoliaIndexes();
 
             DocumentEvents.Update.Before += LogTreeNodeUpdate;

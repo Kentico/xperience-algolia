@@ -104,7 +104,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 case "rebuild":
                     try
                     {
-                        var conn = Service.Resolve<AlgoliaConnection>();
+                        var conn = Service.Resolve<IAlgoliaConnection>();
                         conn.Initialize(indexName);
                         conn.Rebuild();
                         ShowInformation("Index is rebuilding.");

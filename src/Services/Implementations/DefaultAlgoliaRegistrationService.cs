@@ -14,15 +14,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(AlgoliaRegistrationService), typeof(DefaultAlgoliaRegistrationService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(IAlgoliaRegistrationService), typeof(DefaultAlgoliaRegistrationService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="AlgoliaRegistrationService"/>.
     /// </summary>
-    public class DefaultAlgoliaRegistrationService : AlgoliaRegistrationService
+    public class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
     {
-        private readonly AlgoliaSearchService algoliaSearchService;
+        private readonly IAlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
         private readonly ISearchClient searchClient;
         private Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
@@ -33,7 +33,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         };
 
 
-        public override Dictionary<string, Type> RegisteredIndexes
+        public Dictionary<string, Type> RegisteredIndexes
         {
             get
             {
@@ -45,7 +45,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaRegistrationService"/> class.
         /// </summary>
-        public DefaultAlgoliaRegistrationService(AlgoliaSearchService algoliaSearchService,
+        public DefaultAlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
             IEventLogService eventLogService,
             ISearchClient searchClient)
         {
@@ -55,7 +55,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
+        public IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
         {
             var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
 
@@ -73,7 +73,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override IndexSettings GetIndexSettings(string indexName)
+        public IndexSettings GetIndexSettings(string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -99,7 +99,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override Type GetModelByIndexName(string indexName)
+        public Type GetModelByIndexName(string indexName)
         {
             var records = mRegisteredIndexes.Where(i => i.Key == indexName);
             if (records.Count() == 0)
@@ -111,7 +111,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override string[] GetIndexedColumnNames(string indexName)
+        public string[] GetIndexedColumnNames(string indexName)
         {
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
@@ -142,7 +142,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override bool IsNodeAlgoliaIndexed(TreeNode node)
+        public bool IsNodeAlgoliaIndexed(TreeNode node)
         {
             if (node == null)
             {
@@ -161,7 +161,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override bool IsNodeIndexedByIndex(TreeNode node, string indexName)
+        public bool IsNodeIndexedByIndex(TreeNode node, string indexName)
         {
             if (String.IsNullOrEmpty(indexName))
             {
@@ -207,7 +207,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void RegisterAlgoliaIndexes()
+        public void RegisterAlgoliaIndexes()
         {
             var attributes = new List<RegisterAlgoliaIndexAttribute>();
             var assemblies = AssemblyDiscoveryHelper.GetAssemblies(discoverableOnly: true);
@@ -235,7 +235,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void RegisterIndex(string indexName, Type searchModelType)
+        public void RegisterIndex(string indexName, Type searchModelType)
         {
             if (String.IsNullOrEmpty(indexName))
             {

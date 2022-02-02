@@ -12,7 +12,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Creates a connection to the Algolia services and provides methods for updating an Algolia index.
     /// </summary>
-    public abstract class AlgoliaConnection
+    public interface IAlgoliaConnection
     {
         /// <summary>
         /// Initializes the inner Algolia <see cref="SearchIndex"/> for performing indexing
@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// or null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the search model is configured
         /// incorrectly or index settings cannot be loaded.</exception>
-        public abstract void Initialize(string indexName);
+        public void Initialize(string indexName);
 
 
         /// <summary>
@@ -33,18 +33,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="objectIds">The Algolia internal IDs of the records to delete.</param>
         /// <returns>The number of records deleted.</returns>
-        public abstract int DeleteRecords(IEnumerable<string> objectIds);
+        public int DeleteRecords(IEnumerable<string> objectIds);
 
 
         /// <summary>
         /// Updates the Algolia index with the dynamic data in each object of the passed
         /// <paramref name="dataObjects"/>. To generate the dynamic objects based on the values
-        /// of a <see cref="TreeNode"/>, use <see cref="AlgoliaIndexingService.GetTreeNodeData"/>.
+        /// of a <see cref="TreeNode"/>, use <see cref="IAlgoliaIndexingService.GetTreeNodeData"/>.
         /// </summary>
         /// <remarks>Logs an error if there are issues loading the node data.</remarks>
         /// <param name="dataObjects">The objects to upsert into Algolia.</param>
         /// <returns>The number of objects processed.</returns>
-        public abstract int UpsertRecords(IEnumerable<JObject> dataObjects);
+        public int UpsertRecords(IEnumerable<JObject> dataObjects);
 
 
         /// <summary>
@@ -53,6 +53,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if a search model class is not
         /// found for the index.</exception>
-        public abstract void Rebuild();
+        public void Rebuild();
     }
 }

@@ -15,15 +15,15 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaUIPage : CMSPage
     {
-        protected AlgoliaRegistrationService algoliaRegistrationService;
-        protected AlgoliaSearchService algoliaSearchService;
+        protected IAlgoliaRegistrationService algoliaRegistrationService;
+        protected IAlgoliaSearchService algoliaSearchService;
 
 
         protected override void OnInit(EventArgs e)
         {
             base.OnInit(e);
-            algoliaRegistrationService = Service.Resolve<AlgoliaRegistrationService>();
-            algoliaSearchService = Service.Resolve<AlgoliaSearchService>();
+            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
         }
 
 

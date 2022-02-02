@@ -14,7 +14,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Contains methods used during the indexing of content in an Algolia index.
     /// </summary>
-    public abstract class AlgoliaIndexingService
+    public interface IAlgoliaIndexingService
     {
         /// <summary>
         /// Loops through all registered Algolia indexes and logs a task if the passed
@@ -25,7 +25,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
         /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
         /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
-        public abstract void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew);
+        public void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew);
 
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <returns>A <see cref="JObject"/> with its properties and values set.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="node"/> or
         /// <paramref name="searchModelType"/> are null.</exception>
-        public abstract JObject GetTreeNodeData(TreeNode node, Type searchModelType);
+        public JObject GetTreeNodeData(TreeNode node, Type searchModelType);
 
 
         /// <summary>
@@ -46,10 +46,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// automatically applies batching in multiples of 1,000 when using their API,
         /// so all queue items are forwarded to the API.
         /// </summary>
-        /// <remarks>Logs errors if there are issues initializing the <see cref="AlgoliaConnection"/>.</remarks>
+        /// <remarks>Logs errors if there are issues initializing the <see cref="IAlgoliaConnection"/>.</remarks>
         /// <param name="items">The items to process.</param>
         /// <returns>The number of items processed.</returns>
-        public abstract int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items);
+        public int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items);
 
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="nodeValue">The original value of the column.</param>
         /// <param name="columnName">The name of the column the value was loaded from.</param>
         /// <returns>An absolute URL, or null if it couldn't be converted.</returns>
-        protected abstract string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName);
+        public string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName);
 
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The <see cref="TreeNode"/> to load a value from.</param>
         /// <param name="property">The Algolia search model property.</param>
         /// <param name="searchModelType">The Algolia search model.</param>
-        protected abstract object GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType);
+        public object GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType);
 
 
         /// <summary>
@@ -82,7 +82,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
         /// <param name="data">The dynamic data that will be passed to Algolia.</param>
         /// <param name="searchModelType">The class of the Algolia search model.</param>
-        protected abstract void MapTreeNodeProperties(TreeNode node, JObject data, Type searchModelType);
+        public void MapTreeNodeProperties(TreeNode node, JObject data, Type searchModelType);
 
 
         /// <summary>
@@ -91,6 +91,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to load values from.</param>
         /// <param name="data">The dynamic data that will be passed to Algolia.</param>
-        protected abstract void MapCommonProperties(TreeNode node, JObject data);
+        public void MapCommonProperties(TreeNode node, JObject data);
     }
 }

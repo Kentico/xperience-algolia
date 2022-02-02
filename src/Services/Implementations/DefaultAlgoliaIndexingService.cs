@@ -17,24 +17,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(AlgoliaIndexingService), typeof(DefaultAlgoliaIndexingService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
+[assembly: RegisterImplementation(typeof(IAlgoliaIndexingService), typeof(DefaultAlgoliaIndexingService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="AlgoliaIndexingService"/>.
     /// </summary>
-    public class DefaultAlgoliaIndexingService : AlgoliaIndexingService
+    public class DefaultAlgoliaIndexingService : IAlgoliaIndexingService
     {
-        private readonly AlgoliaConnection algoliaConnection;
-        private readonly AlgoliaRegistrationService algoliaRegistrationService;
+        private readonly IAlgoliaConnection algoliaConnection;
+        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
         private readonly IEventLogService eventLogService;
 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaInsightsService"/> class.
         /// </summary>
-        public DefaultAlgoliaIndexingService(AlgoliaRegistrationService algoliaRegistrationService,
-            AlgoliaConnection algoliaConnection,
+        public DefaultAlgoliaIndexingService(IAlgoliaRegistrationService algoliaRegistrationService,
+            IAlgoliaConnection algoliaConnection,
             IEventLogService eventLogService)
         {
             this.algoliaRegistrationService = algoliaRegistrationService;
@@ -43,7 +43,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
+        public void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
         {
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
@@ -74,7 +74,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override JObject GetTreeNodeData(TreeNode node, Type searchModelType)
+        public JObject GetTreeNodeData(TreeNode node, Type searchModelType)
         {
             if (node == null)
             {
@@ -94,7 +94,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public override int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items)
+        public int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items)
         {
             var successfulOperations = 0;
 
@@ -129,7 +129,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        protected override string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName)
+        public string GetAbsoluteUrlForColumn(TreeNode node, object nodeValue, string columnName)
         {
             var strValue = ValidationHelper.GetString(nodeValue, "");
             if (String.IsNullOrEmpty(strValue))
@@ -164,7 +164,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        protected override object GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType)
+        public object GetNodeValue(TreeNode node, PropertyInfo property, Type searchModelType)
         {
             object nodeValue = null;
             string usedColumn = null;
@@ -200,7 +200,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        protected override void MapTreeNodeProperties(TreeNode node, JObject data, Type searchModelType)
+        public void MapTreeNodeProperties(TreeNode node, JObject data, Type searchModelType)
         {
             var serializer = new JsonSerializer();
             serializer.Converters.Add(new DecimalPrecisionConverter());
@@ -225,7 +225,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        protected override void MapCommonProperties(TreeNode node, JObject data)
+        public void MapCommonProperties(TreeNode node, JObject data)
         {
             data["objectID"] = node.DocumentID.ToString();
             data[nameof(AlgoliaSearchModel.ClassName)] = node.ClassName;

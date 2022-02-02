@@ -1,19 +1,18 @@
 ﻿using CMS.Core;
 using CMS.EventLog;
 
+using System.Collections.Generic;
+
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class MockEventLogService : EventLogService
     {
-        public EventLogData LoggedEvent {
-            get;
-            set;
-        }
+        public List<EventLogData> LoggedEvents => new List<EventLogData>();
 
 
         public override void LogEvent(EventLogData eventLogData)
         {
-            LoggedEvent = eventLogData;
+            LoggedEvents.Add(eventLogData);
         }
     }
 }
