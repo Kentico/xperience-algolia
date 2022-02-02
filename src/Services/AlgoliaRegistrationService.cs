@@ -14,7 +14,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Stores the registered Algolia indexes in memory and contains methods for retrieving information
     /// about the registered indexes.
     /// </summary>
-    public abstract class IAlgoliaRegistrationService
+    public abstract class AlgoliaRegistrationService
     {
         /// <summary>
         /// A collection of Algolia index names and the object type which represents the columns

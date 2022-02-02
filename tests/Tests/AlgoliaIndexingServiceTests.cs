@@ -12,7 +12,7 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class AlgoliaIndexingHelperTests
+    internal class AlgoliaIndexingServiceTests
     {
         [TestFixture]
         internal class GetTreeNodeDataTests : AlgoliaTests

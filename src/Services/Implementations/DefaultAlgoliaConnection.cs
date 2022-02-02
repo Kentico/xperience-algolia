@@ -15,30 +15,28 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaConnection), typeof(AlgoliaConnection), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+[assembly: RegisterImplementation(typeof(AlgoliaConnection), typeof(DefaultAlgoliaConnection), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaConnection"/>.
+    /// Default implementation of <see cref="AlgoliaConnection"/>.
     /// </summary>
-    public class AlgoliaConnection : IAlgoliaConnection
+    public class DefaultAlgoliaConnection : AlgoliaConnection
     {
         private string indexName;
         private Type searchModelType;
         private SearchIndex searchIndex;
         private readonly ISearchClient searchClient;
         private readonly IEventLogService eventLogService;
-        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
+        private readonly AlgoliaRegistrationService algoliaRegistrationService;
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgoliaConnection"/> class.
-        /// Should not be called directly- use Dependency Injection to obtain an instance
-        /// of this class.
+        /// Initializes a new instance of the <see cref="DefaultAlgoliaConnection"/> class.
         /// </summary>
-        public AlgoliaConnection(ISearchClient searchClient,
+        public DefaultAlgoliaConnection(ISearchClient searchClient,
             IEventLogService eventLogService,
-            IAlgoliaRegistrationService algoliaRegistrationService)
+            AlgoliaRegistrationService algoliaRegistrationService)
         {
             this.searchClient = searchClient;
             this.eventLogService = eventLogService;
@@ -107,7 +105,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             }
             catch (ArgumentNullException ex)
             {
-                eventLogService.LogError(nameof(AlgoliaConnection), nameof(UpsertRecords), ex.Message);
+                eventLogService.LogError(nameof(DefaultAlgoliaConnection), nameof(UpsertRecords), ex.Message);
                 return upsertedCount;
             }
         }

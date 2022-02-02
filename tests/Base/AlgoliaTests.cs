@@ -21,9 +21,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class AlgoliaTests : UnitTests
     {
-        protected IAlgoliaRegistrationService algoliaRegistrationService;
-        protected IAlgoliaIndexingService algoliaIndexingService;
-        protected IAlgoliaSearchService algoliaSearchService;
+        protected AlgoliaRegistrationService algoliaRegistrationService;
+        protected AlgoliaIndexingService algoliaIndexingService;
+        protected AlgoliaSearchService algoliaSearchService;
         protected IEventLogService eventLogService;
 
         public const string APPLICATION_ID = "my-app";
@@ -55,9 +55,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
         [SetUp]
         public void SetUp()
         {
-            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
-            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
-            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
+            algoliaRegistrationService = Service.Resolve<AlgoliaRegistrationService>();
+            algoliaIndexingService = Service.Resolve<AlgoliaIndexingService>();
+            algoliaSearchService = Service.Resolve<AlgoliaSearchService>();
             eventLogService = Service.Resolve<IEventLogService>();
 
             // Register Algolia indexes

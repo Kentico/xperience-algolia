@@ -24,9 +24,9 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaSearchModule : CMS.DataEngine.Module
     {
-        private IAlgoliaIndexingService algoliaIndexingService;
-        private IAlgoliaRegistrationService algoliaRegistrationService;
-        private IAlgoliaSearchService algoliaSearchService;
+        private AlgoliaIndexingService algoliaIndexingService;
+        private AlgoliaRegistrationService algoliaRegistrationService;
+        private AlgoliaSearchService algoliaSearchService;
 
 
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
@@ -59,9 +59,9 @@ namespace Kentico.Xperience.AlgoliaSearch
         {
             base.OnInit();
 
-            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
-            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
-            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
+            algoliaIndexingService = Service.Resolve<AlgoliaIndexingService>();
+            algoliaRegistrationService = Service.Resolve<AlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<AlgoliaSearchService>();
             algoliaRegistrationService.RegisterAlgoliaIndexes();
 
             DocumentEvents.Update.Before += LogTreeNodeUpdate;

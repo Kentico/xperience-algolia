@@ -16,23 +16,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaSearchService), typeof(AlgoliaSearchService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+[assembly: RegisterImplementation(typeof(AlgoliaSearchService), typeof(DefaultAlgoliaSearchService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaSearchService"/>.
+    /// Default implementation of <see cref="AlgoliaSearchService"/>.
     /// </summary>
-    internal class AlgoliaSearchService : IAlgoliaSearchService
+    public class DefaultAlgoliaSearchService : AlgoliaSearchService
     {
         private readonly ISearchClient searchClient;
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgoliaSearchService"/> class.
-        /// Should not be called directly- use Dependency Injection to obtain an instance
-        /// of this class.
+        /// Initializes a new instance of the <see cref="DefaultAlgoliaSearchService"/> class.
         /// </summary>
-        public AlgoliaSearchService(ISearchClient searchClient)
+        public DefaultAlgoliaSearchService(ISearchClient searchClient)
         {
             this.searchClient = searchClient;
         }

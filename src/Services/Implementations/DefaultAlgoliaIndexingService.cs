@@ -17,26 +17,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaIndexingService), typeof(AlgoliaIndexingService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+[assembly: RegisterImplementation(typeof(AlgoliaIndexingService), typeof(DefaultAlgoliaIndexingService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaIndexingService"/>.
+    /// Default implementation of <see cref="AlgoliaIndexingService"/>.
     /// </summary>
-    internal class AlgoliaIndexingService : IAlgoliaIndexingService
+    public class DefaultAlgoliaIndexingService : AlgoliaIndexingService
     {
-        private readonly IAlgoliaConnection algoliaConnection;
-        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
+        private readonly AlgoliaConnection algoliaConnection;
+        private readonly AlgoliaRegistrationService algoliaRegistrationService;
         private readonly IEventLogService eventLogService;
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgoliaInsightsService"/> class.
-        /// Should not be called directly- use Dependency Injection to obtain an instance
-        /// of this class.
+        /// Initializes a new instance of the <see cref="DefaultAlgoliaInsightsService"/> class.
         /// </summary>
-        public AlgoliaIndexingService(IAlgoliaRegistrationService algoliaRegistrationService,
-            IAlgoliaConnection algoliaConnection,
+        public DefaultAlgoliaIndexingService(AlgoliaRegistrationService algoliaRegistrationService,
+            AlgoliaConnection algoliaConnection,
             IEventLogService eventLogService)
         {
             this.algoliaRegistrationService = algoliaRegistrationService;
@@ -57,7 +55,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 var indexedColumns = algoliaRegistrationService.GetIndexedColumnNames(index.Key);
                 if (indexedColumns.Length == 0)
                 {
-                    eventLogService.LogError(nameof(AlgoliaIndexingService), nameof(EnqueueAlgoliaItems), $"Unable to enqueue node change: Error loading indexed columns.");
+                    eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(EnqueueAlgoliaItems), $"Unable to enqueue node change: Error loading indexed columns.");
                     continue;
                 }
 
@@ -119,11 +117,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 }
                 catch (InvalidOperationException ex)
                 {
-                    eventLogService.LogError(nameof(AlgoliaIndexingService), nameof(ProcessAlgoliaTasks), ex.Message);
+                    eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(ProcessAlgoliaTasks), ex.Message);
                 }
                 catch (ArgumentNullException ex)
                 {
-                    eventLogService.LogError(nameof(AlgoliaIndexingService), nameof(ProcessAlgoliaTasks), ex.Message);
+                    eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(ProcessAlgoliaTasks), ex.Message);
                 }
             }
 
@@ -148,7 +146,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
                 if (field == null)
                 {
-                    eventLogService.LogError(nameof(AlgoliaIndexingService), nameof(GetAbsoluteUrlForColumn), $"Unable to load field definition for page type '{node.ClassName}' column name '{columnName}.'");
+                    eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(GetAbsoluteUrlForColumn), $"Unable to load field definition for page type '{node.ClassName}' column name '{columnName}.'");
                     return null;
                 }
 

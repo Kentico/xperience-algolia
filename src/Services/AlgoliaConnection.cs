@@ -2,8 +2,6 @@
 
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-
 using Newtonsoft.Json.Linq;
 
 using System;
@@ -14,7 +12,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Creates a connection to the Algolia services and provides methods for updating an Algolia index.
     /// </summary>
-    public abstract class IAlgoliaConnection
+    public abstract class AlgoliaConnection
     {
         /// <summary>
         /// Initializes the inner Algolia <see cref="SearchIndex"/> for performing indexing
@@ -41,7 +39,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Updates the Algolia index with the dynamic data in each object of the passed
         /// <paramref name="dataObjects"/>. To generate the dynamic objects based on the values
-        /// of a <see cref="TreeNode"/>, use <see cref="IAlgoliaIndexingService.GetTreeNodeData"/>.
+        /// of a <see cref="TreeNode"/>, use <see cref="AlgoliaIndexingService.GetTreeNodeData"/>.
         /// </summary>
         /// <remarks>Logs an error if there are issues loading the node data.</remarks>
         /// <param name="dataObjects">The objects to upsert into Algolia.</param>

@@ -104,10 +104,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 case "rebuild":
                     try
                     {
-                        var conn = Service.Resolve<IAlgoliaConnection>();
+                        var conn = Service.Resolve<AlgoliaConnection>();
                         conn.Initialize(indexName);
                         conn.Rebuild();
-                        ShowInformation("Index is rebuilding. Please refresh the page after a few moments.");
+                        ShowInformation("Index is rebuilding.");
                     }
                     catch (InvalidOperationException ex)
                     {

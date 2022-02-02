@@ -14,15 +14,15 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaRegistrationService), typeof(AlgoliaRegistrationService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+[assembly: RegisterImplementation(typeof(AlgoliaRegistrationService), typeof(DefaultAlgoliaRegistrationService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaRegistrationService"/>.
+    /// Default implementation of <see cref="AlgoliaRegistrationService"/>.
     /// </summary>
-    internal class AlgoliaRegistrationService : IAlgoliaRegistrationService
+    public class DefaultAlgoliaRegistrationService : AlgoliaRegistrationService
     {
-        private readonly IAlgoliaSearchService algoliaSearchService;
+        private readonly AlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
         private readonly ISearchClient searchClient;
         private Dictionary<string, Type> mRegisteredIndexes = new Dictionary<string, Type>();
@@ -43,11 +43,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgoliaRegistrationService"/> class.
-        /// Should not be called directly- use Dependency Injection to obtain an instance
-        /// of this class.
+        /// Initializes a new instance of the <see cref="DefaultAlgoliaRegistrationService"/> class.
         /// </summary>
-        public AlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
+        public DefaultAlgoliaRegistrationService(AlgoliaSearchService algoliaSearchService,
             IEventLogService eventLogService,
             ISearchClient searchClient)
         {
@@ -68,7 +66,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             }
             catch (Exception exception)
             {
-                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
             }
 
             return attributes;
@@ -177,7 +175,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var searchModelType = GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
-                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
                 return false;
             }
 
@@ -228,7 +226,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 var indexSettings = GetIndexSettings(attribute.IndexName);
                 if (indexSettings == null)
                 {
-                    eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
+                    eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
                     continue;
                 }
 
@@ -241,19 +239,19 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         {
             if (String.IsNullOrEmpty(indexName))
             {
-                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
                 return;
             }
 
             if (searchModelType == null)
             {
-                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
                 return;
             }
 
             if (mRegisteredIndexes.ContainsKey(indexName))
             {
-                eventLogService.LogError(nameof(AlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
                 return;
             }
 

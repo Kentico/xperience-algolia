@@ -1,5 +1,6 @@
 ﻿using CMS.DocumentEngine;
 
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
 
 using Newtonsoft.Json.Linq;
@@ -13,7 +14,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Contains methods used during the indexing of content in an Algolia index.
     /// </summary>
-    public abstract class IAlgoliaIndexingService
+    public abstract class AlgoliaIndexingService
     {
         /// <summary>
         /// Loops through all registered Algolia indexes and logs a task if the passed

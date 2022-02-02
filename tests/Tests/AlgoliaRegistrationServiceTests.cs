@@ -8,7 +8,7 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class AlgoliaRegistrationHelperTests
+    internal class AlgoliaRegistrationServiceTests
     {
         [TestFixture]
         internal class GetIndexSettingsTests : AlgoliaTests

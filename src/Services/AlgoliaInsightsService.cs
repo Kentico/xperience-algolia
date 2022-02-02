@@ -13,11 +13,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Contains methods for logging Algolia Insights events.
     /// </summary>
     /// <remarks>See <see href="https://www.algolia.com/doc/guides/getting-analytics/search-analytics/advanced-analytics/"/></remarks>
-    public abstract class IAlgoliaInsightsService
+    public abstract class AlgoliaInsightsService
     {
         /// <summary>
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.ObjectID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
+        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
         /// </summary>
         protected abstract string ParameterNameObjectId
         {
@@ -27,7 +27,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         /// <summary>
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.QueryID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
+        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
         /// </summary>
         protected abstract string ParameterNameQueryId
         {
@@ -37,7 +37,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         /// <summary>
         /// The parameter name used to store the <see cref="AlgoliaSearchModel.Position"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
+        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
         /// </summary>
         protected abstract string ParameterNamePosition
         {
@@ -109,8 +109,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         /// <summary>
         /// Updates the <see cref="AlgoliaSearchModel.Url"/> property of all search results
-        /// with the query parameters needed to track search result click and conversion events
-        /// via the <see cref="AlgoliaInsightsService"/>.
+        /// with the query parameters needed to track search result click and conversion events.
         /// </summary>
         /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
         /// <param name="searchResponse">The full response of an Algolia search.</param>

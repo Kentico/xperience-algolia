@@ -13,17 +13,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaInsightsService), typeof(AlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.Fallback)]
+[assembly: RegisterImplementation(typeof(AlgoliaInsightsService), typeof(DefaultAlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaInsightsService"/> which logs
+    /// Default implementation of <see cref="AlgoliaInsightsService"/> which logs
     /// Algolia Insights events using the <see cref="ContactInfo.ContactGUID"/>
     /// as the user's identifier.
     /// </summary>
-    public class AlgoliaInsightsService : IAlgoliaInsightsService
+    public class DefaultAlgoliaInsightsService : AlgoliaInsightsService
     {
-        private readonly IAlgoliaRegistrationService algoliaRegistrationService;
+        private readonly AlgoliaRegistrationService algoliaRegistrationService;
         private readonly IInsightsClient insightsClient;
 
 
@@ -79,11 +79,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AlgoliaInsightsService"/> class.
-        /// Should not be called directly- use Dependency Injection to obtain an instance
-        /// of this class.
+        /// Initializes a new instance of the <see cref="DefaultAlgoliaInsightsService"/> class.
         /// </summary>
-        public AlgoliaInsightsService(IAlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
+        public DefaultAlgoliaInsightsService(AlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
         {
             this.algoliaRegistrationService = algoliaRegistrationService;
             this.insightsClient = insightsClient;
