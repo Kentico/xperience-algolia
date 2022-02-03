@@ -494,7 +494,7 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
 
-1. Inject an instance of `SearchClient` into the `CoffeesController` as shown in [this section](#mag_right-searching-the-index).
+1. Inject `ISearchClient` into the `CoffeesController` as shown in [this section](#mag_right-searching-the-index).
 
 2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
@@ -648,7 +648,7 @@ You can change this behavior by setting the [`UseAndCondition`](#facetable-attri
 public IAlgoliaFacetFilter AlgoliaFacetFilter { get; set; }
 ```
 
-3. Inject an instance of `IAlgoliaSearchService` into your search controller:
+3. Inject `IAlgoliaSearchService` into your search controller:
 
 ```cs
 public CoffeesController(IAlgoliaSearchService algoliaSearchService)
@@ -749,7 +749,7 @@ We're done! Now, when you check one of the facets our javascript will cause the 
 
 ### Localizing facet names and values
 
-Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Caffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Decaffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
 
 1. Inject `IStringLocalizer<SharedResources>` into the __CoffeeController__.
 2. Call `filterViewModel.Localize()` in the `Index()` method after constructing the facet filter view model.
@@ -805,7 +805,7 @@ var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
 _algoliaInsightsService.SetInsightsUrls(results);
 ```
 
-Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject an instance of `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. _\_Layout.cshtml_. Call `LogSearchResultClicked()`, `LogSearchResultConversion()`, or both methods of the service:
+Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. _\_Layout.cshtml_. Call `LogSearchResultClicked()`, `LogSearchResultConversion()`, or both methods of the service:
 
 ```cshtml
 @inject IAlgoliaInsightsService _insightsService
@@ -1017,7 +1017,7 @@ endpoints.MapControllerRoute(
 </div>
 ```
 
-3. At the bottom of your view, add a `scripts` section which loads the InstantSearch.js scripts, initializes the search widget, three facet widget, the results widget, and pagination widget:
+3. At the bottom of your view, add a `scripts` section which loads the InstantSearch.js scripts, initializes the search widget, three faceting widgets, the results widget, and pagination widget:
 
 ```cshtml
 @section scripts {
@@ -1174,11 +1174,13 @@ When you run the site and visit your new page, you'll see that you have a fully 
 
 While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
 
-After importing, perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project.
+After importing, perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project. The module also includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
 
-![Algolia module grid](/img/index-grid.png)
+### Custom module features
 
 The newly-imported __Algolia search__ module will provide a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point- only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
+
+![Algolia module grid](/img/index-grid.png)
 
 To view details about an index, click the eye icon:
 
