@@ -16,36 +16,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     public interface IAlgoliaInsightsService
     {
         /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.ObjectID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
-        /// </summary>
-        public string ParameterNameObjectId
-        {
-            get;
-        }
-
-
-        /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.QueryID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
-        /// </summary>
-        public string ParameterNameQueryId
-        {
-            get;
-        }
-
-
-        /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.Position"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="SetInsightsUrls"/>.
-        /// </summary>
-        public string ParameterNamePosition
-        {
-            get;
-        }
-
-
-        /// <summary>
         /// Logs a search result click event. Required query parameters must be present in the
         /// request, or no event is logged.
         /// </summary>
@@ -114,17 +84,5 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
         /// <param name="searchResponse">The full response of an Algolia search.</param>
         public void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel;
-
-
-        /// <summary>
-        /// Gets the Algolia hit's absolute URL with the appropriate query string parameters
-        /// populated to log search result click events.
-        /// </summary>
-        /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
-        /// <param name="hit">The Aloglia hit to retrieve the URL for.</param>
-        /// <param name="position">The position the <paramref name="hit"/> appeared in the
-        /// search results.</param>
-        /// <param name="queryId">The unique identifier of the Algolia query.</param>
-        public string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel;
     }
 }

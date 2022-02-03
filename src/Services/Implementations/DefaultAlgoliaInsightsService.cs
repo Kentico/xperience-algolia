@@ -26,15 +26,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     {
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
         private readonly IInsightsClient insightsClient;
-
-
-        public string ParameterNameObjectId => "object";
-
-
-        public string ParameterNameQueryId => "query";
-
-
-        public string ParameterNamePosition => "pos";
+        private const string parameterNameObjectId = "object";
+        private const string parameterNameQueryId = "query";
+        private const string parameterNamePosition = "pos";
 
 
         private string ContactGUID
@@ -56,7 +50,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         {
             get
             {
-                return QueryHelper.GetString(ParameterNameObjectId, "");
+                return QueryHelper.GetString(parameterNameObjectId, "");
             }
         }
 
@@ -65,7 +59,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         {
             get
             {
-                return QueryHelper.GetString(ParameterNameQueryId, "");
+                return QueryHelper.GetString(parameterNameQueryId, "");
             }
         }
 
@@ -74,7 +68,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         {
             get
             {
-                return (uint)QueryHelper.GetInteger(ParameterNamePosition, 0);
+                return (uint)QueryHelper.GetInteger(parameterNamePosition, 0);
             }
         }
 
@@ -185,7 +179,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel
+        /// <summary>
+        /// Gets the Algolia hit's absolute URL with the appropriate query string parameters
+        /// populated to log search result click events.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
+        /// <param name="hit">The Aloglia hit to retrieve the URL for.</param>
+        /// <param name="position">The position the <paramref name="hit"/> appeared in the
+        /// search results.</param>
+        /// <param name="queryId">The unique identifier of the Algolia query.</param>
+        protected string GetInsightsUrl<TModel>(TModel hit, int position, string queryId) where TModel : AlgoliaSearchModel
         {
             var indexName = "";
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
@@ -202,9 +205,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             }
 
             var url = hit.Url;
-            url = URLHelper.AddParameterToUrl(url, ParameterNameObjectId, hit.ObjectID);
-            url = URLHelper.AddParameterToUrl(url, ParameterNamePosition, position.ToString());
-            url = URLHelper.AddParameterToUrl(url, ParameterNameQueryId, queryId);
+            url = URLHelper.AddParameterToUrl(url, parameterNameObjectId, hit.ObjectID);
+            url = URLHelper.AddParameterToUrl(url, parameterNamePosition, position.ToString());
+            url = URLHelper.AddParameterToUrl(url, parameterNameQueryId, queryId);
 
             return url;
         }
