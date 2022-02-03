@@ -1,6 +1,7 @@
-﻿using CMS.DocumentEngine;
+﻿using Algolia.Search.Models.Search;
 
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using CMS.DocumentEngine;
+
 using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 
@@ -12,50 +13,20 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Contains methods for logging Algolia Insights events.
     /// </summary>
     /// <remarks>See <see href="https://www.algolia.com/doc/guides/getting-analytics/search-analytics/advanced-analytics/"/></remarks>
-    public abstract class IAlgoliaInsightsService
+    public interface IAlgoliaInsightsService
     {
-        /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.ObjectID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
-        /// </summary>
-        public abstract string ParameterNameObjectId
-        {
-            get;
-        }
-
-
-        /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.QueryID"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
-        /// </summary>
-        public abstract string ParameterNameQueryId
-        {
-            get;
-        }
-
-
-        /// <summary>
-        /// The parameter name used to store the <see cref="AlgoliaSearchModel.Position"/> that
-        /// is added to <see cref="AlgoliaSearchModel.Url"/> by <see cref="AlgoliaInsightsHelper.UpdateInsightsProperties"/>.
-        /// </summary>
-        public abstract string ParameterNamePosition
-        {
-            get;
-        }
-
-
         /// <summary>
         /// Logs a search result click event. Required query parameters must be present in the
         /// request, or no event is logged.
         /// </summary>
-        public abstract void LogSearchResultClicked(string eventName, string indexName);
+        public void LogSearchResultClicked(string eventName, string indexName);
 
 
         /// <summary>
         /// Logs a search result click conversion. Required query parameters must be present in the
         /// request, or no event is logged.
         /// </summary>
-        public abstract void LogSearchResultConversion(string conversionName, string indexName);
+        public void LogSearchResultConversion(string conversionName, string indexName);
 
 
         /// <summary>
@@ -65,7 +36,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// occurred on.</param>
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public abstract void LogPageConversion(int documentId, string conversionName, string indexName);
+        public void LogPageConversion(int documentId, string conversionName, string indexName);
 
 
         /// <summary>
@@ -76,7 +47,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// occurred on.</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public abstract void LogPageViewed(int documentId, string eventName, string indexName);
+        public void LogPageViewed(int documentId, string eventName, string indexName);
 
 
         /// <summary>
@@ -85,7 +56,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facets">The facets that were displayed to the visitor.</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public abstract void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
+        public void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
 
 
         /// <summary>
@@ -94,7 +65,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public abstract void LogFacetClicked(string facet, string eventName, string indexName);
+        public void LogFacetClicked(string facet, string eventName, string indexName);
 
 
         /// <summary>
@@ -103,6 +74,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public abstract void LogFacetConverted(string facet, string conversionName, string indexName);
+        public void LogFacetConverted(string facet, string conversionName, string indexName);
+
+
+        /// <summary>
+        /// Updates the <see cref="AlgoliaSearchModel.Url"/> property of all search results
+        /// with the query parameters needed to track search result click and conversion events.
+        /// </summary>
+        /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
+        /// <param name="searchResponse">The full response of an Algolia search.</param>
+        public void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel;
     }
 }

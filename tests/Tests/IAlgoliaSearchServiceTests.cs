@@ -1,14 +1,11 @@
 ﻿using Algolia.Search.Clients;
 
-using CMS.Core;
-
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Helpers;
-using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.AlgoliaSearch.Services;
 using Kentico.Xperience.AlgoliaSearch.Test;
 
-using Microsoft.Extensions.Configuration;
+using NSubstitute;
 
 using NUnit.Framework;
 
@@ -20,41 +17,21 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 namespace Kentico.Xperience.AlgoliaSearch.Tests
 {
-    [TestFixture]
-    internal class AlgoliaSearchHelperTests
+    internal class IAlgoliaSearchServiceTests
     {
-        internal class GetAlgoliaOptionsTests : AlgoliaTest
+        [TestFixture]
+        internal class GetFacetedAttributesTests : AlgoliaTests
         {
-            [Test]
-            public void GetAlgoliaOptions_ReturnsAlgoliaOptions()
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void GetFacetedAttributesTests_SetUp()
             {
-                var configuration = Service.Resolve<IConfiguration>();
-                var algoliaOptions = AlgoliaSearchHelper.GetAlgoliaOptions(configuration);
-
-                Assert.Multiple(() => {
-                    Assert.IsInstanceOf<AlgoliaOptions>(algoliaOptions);
-                    Assert.AreEqual(APPLICATION_ID, algoliaOptions.ApplicationId);
-                    Assert.AreEqual(API_KEY, algoliaOptions.ApiKey);
-                });
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
             }
-        }
 
 
-        internal class GetSearchClientTests : AlgoliaTest
-        {
-            [Test]
-            public void GetSearchClient_WithConfiguration_ReturnsClient()
-            {
-                var configuration = Service.Resolve<IConfiguration>();
-                var client = AlgoliaSearchHelper.GetSearchClient(configuration);
-
-                Assert.IsInstanceOf<SearchClient>(client);
-            }
-        }
-
-
-        internal class GetFacetedAttributesTests : AlgoliaTest
-        {
             private Dictionary<string, Dictionary<string, long>> facetsFromResponse = new Dictionary<string, Dictionary<string, long>>()
             {
                 {
@@ -90,7 +67,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             public void GetFacetedAttributes_NewFilter_ReturnsNewFacets()
             {
                 var filter = new AlgoliaFacetFilterViewModel();
-                var facets = AlgoliaSearchHelper.GetFacetedAttributes(facetsFromResponse, filter);
+                var facets = algoliaSearchService.GetFacetedAttributes(facetsFromResponse, filter);
 
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
@@ -109,7 +86,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             public void GetFacetedAttributes_ExistingFilter_ReturnsEmptyFacets()
             {
                 var filter = new AlgoliaFacetFilterViewModel(facetsFromFilter);
-                var facets = AlgoliaSearchHelper.GetFacetedAttributes(facetsFromResponse, filter);
+                var facets = algoliaSearchService.GetFacetedAttributes(facetsFromResponse, filter);
 
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
@@ -130,7 +107,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             public void GetFacetedAttributes_ExistingFilter_ExcludeEmptyFacets_DoesntContainEmptyFacet()
             {
                 var filter = new AlgoliaFacetFilterViewModel(facetsFromFilter);
-                var facets = AlgoliaSearchHelper.GetFacetedAttributes(facetsFromResponse, filter, false);
+                var facets = algoliaSearchService.GetFacetedAttributes(facetsFromResponse, filter, false);
 
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
@@ -151,7 +128,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             public void GetFacetedAttributes_ExistingFilter_RetainsCheckedState()
             {
                 var filter = new AlgoliaFacetFilterViewModel(facetsFromFilter);
-                var facets = AlgoliaSearchHelper.GetFacetedAttributes(facetsFromResponse, filter);
+                var facets = algoliaSearchService.GetFacetedAttributes(facetsFromResponse, filter);
 
                 Assert.Multiple(() => {
                     Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet1").FirstOrDefault().IsChecked);
@@ -163,8 +140,20 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             }
         }
 
-        internal class GetFilterablePropertyNameTests : AlgoliaTest
+
+        [TestFixture]
+        internal class GetFilterablePropertyNameTests : AlgoliaTests
         {
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void GetFilterablePropertyNameTests_SetUp()
+            {
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+            }
+
+
             [TestCase(typeof(Model1), nameof(Model1.DocumentCreatedWhen), ExpectedResult = "DocumentCreatedWhen")]
             [TestCase(typeof(Model2), nameof(Model2.Prop1), ExpectedResult = "filterOnly(Prop1)")]
             [TestCase(typeof(Model2), nameof(Model2.Prop2), ExpectedResult = "searchable(Prop2)")]
@@ -172,7 +161,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             {
                 var property = searchModelType.GetProperty(propertyName);
 
-                return AlgoliaSearchHelper.GetFilterablePropertyName(property);
+                return algoliaSearchService.GetFilterablePropertyName(property);
             }
 
 
@@ -182,20 +171,31 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
                 var searchModelType = typeof(Model6);
                 var property = searchModelType.GetProperty(nameof(Model6.Prop1));
 
-                Assert.Throws<InvalidOperationException>(() => AlgoliaSearchHelper.GetFilterablePropertyName(property));
+                Assert.Throws<InvalidOperationException>(() => algoliaSearchService.GetFilterablePropertyName(property));
             }
         }
 
 
-        internal class OrderSearchablePropertiesTests : AlgoliaTest
+        [TestFixture]
+        internal class OrderSearchablePropertiesTests : AlgoliaTests
         {
+            private IAlgoliaSearchService algoliaSearchService;
+
+
+            [SetUp]
+            public void OrderSearchablePropertiesTests_SetUp()
+            {
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+            }
+
+
             [TestCase(typeof(Model1), ExpectedResult = new string[] { "DocumentCreatedWhen" })]
             [TestCase(typeof(Model2), ExpectedResult = new string[] { "unordered(Prop1)", "Prop2" })]
             public string[] OrderSearchableProperties_ConvertedToAlgoliaFormat(Type searchModelType)
             {
                 var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
 
-                return AlgoliaSearchHelper.OrderSearchableProperties(searchableProperties).ToArray();
+                return algoliaSearchService.OrderSearchableProperties(searchableProperties).ToArray();
             }
 
 
@@ -204,7 +204,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Tests
             {
                 var searchModelType = typeof(Model3);
                 var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-                var converted = AlgoliaSearchHelper.OrderSearchableProperties(searchableProperties);
+                var converted = algoliaSearchService.OrderSearchableProperties(searchableProperties);
 
                 Assert.Multiple(() =>
                 {

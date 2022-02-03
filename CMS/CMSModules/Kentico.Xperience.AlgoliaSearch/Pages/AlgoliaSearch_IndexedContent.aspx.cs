@@ -1,7 +1,7 @@
 ﻿using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
@@ -26,7 +26,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 return;
             }
 
-            searchModelType = AlgoliaRegistrationHelper.GetModelByIndexName(indexName);
+            searchModelType = algoliaRegistrationService.GetModelByIndexName(indexName);
             if (searchModelType == null)
             {
                 ShowError("Unable to load index search model class.");

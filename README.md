@@ -18,14 +18,24 @@ This integration enables the creating of [Algolia](https://www.algolia.com/) sea
 }
 ```
 
-4. In your CMS project's `web.config` `appSettings` section, add the following keys:
+4. In the live-site project's startup code, call the `AddAlgolia()` extension method:
+
+```cs
+// Startup.cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddAlgolia(Configuration);
+}
+```
+
+5. In your CMS project's `web.config` `appSettings` section, add the following keys:
 
 ```xml
 <add key="AlgoliaApplicationId" value="<your application ID>"/>
 <add key="AlgoliaApiKey" value="<your Admin API key>"/>
 ```
 
-5. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-xperience-algolia-module) in your Xperience website.
+6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-xperience-algolia-module) in your Xperience website.
 
 ## :computer: How it works
 
@@ -250,17 +260,7 @@ public string Thumbnail { get; set; }
 
 ## :mag_right: Searching the index
 
-You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. If you are developing the search functionality using .NET Core, you can use the `AddAlgolia()` extension method to inject `ISearchClient` as well as other classes into your Controllers/Views:
-
-```cs
-// Startup.cs
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddAlgolia(Configuration);
-}
-```
-
-In your Controllers, you can get a `SearchIndex` object by calling `InitIndex()` on the search client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. The following example will help guide you in creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting `ISearchClient` and calling `InitIndex()` on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
 
 ```cs
 private readonly ISearchClient _searchClient;
@@ -388,7 +388,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 @inject IConfiguration configuration
 
 @{
-    var algoliaOptions = AlgoliaSearchHelper.GetAlgoliaOptions(configuration);
+    var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
 ```
 
@@ -494,7 +494,7 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
 
-1. Inject an instance of `SearchClient` into the `CoffeesController` as described in [this section](#mag_right-searching-the-index).
+1. Inject an instance of `SearchClient` into the `CoffeesController` as shown in [this section](#mag_right-searching-the-index).
 
 2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
 
@@ -601,7 +601,7 @@ public ActionResult Index()
 
 In the `Search()` method, we retrieved the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
 
-This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `AlgoliaSearchHelper.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet`s.
+This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `IAlgoliaSearchService.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet`s.
 
 Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
 
@@ -648,7 +648,16 @@ You can change this behavior by setting the [`UseAndCondition`](#facetable-attri
 public IAlgoliaFacetFilter AlgoliaFacetFilter { get; set; }
 ```
 
-3. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel`, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
+3. Inject an instance of `IAlgoliaSearchService` into your search controller:
+
+```cs
+public CoffeesController(IAlgoliaSearchService algoliaSearchService)
+{
+    _searchService = algoliaSearchService;
+}
+```
+
+4. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel`, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
 
 ```cs
 [HttpGet]
@@ -662,7 +671,7 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
         hit => new AlgoliaStoreModel(hit)
     );
 
-    var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+    var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
     var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
 
     var model = new ProductListViewModel
@@ -749,7 +758,7 @@ Without localization, your view will display your facet attribute names (e.g. "C
 public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 {
     ...
-    var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+    var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
     var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
     filterViewModel.Localize(_localizer);
     ...
@@ -766,14 +775,6 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 
 Algolia offers search result [Personalization](https://www.algolia.com/doc/guides/personalization/what-is-personalization/) to offer more relevant results to each individual visitor on your website. To begin personalizing search results, you first need to send [events](https://www.algolia.com/doc/guides/sending-events/planning/) to Algolia which detail the visitor's activity. As with much of the Algolia functionality, sending events is very flexible depending on your API of choice and how your search is implemented. You can choose to use any of the approaches in the Algolia documentation (e.g. [Google Tag Manager](https://www.algolia.com/doc/guides/sending-events/implementing/connectors/google-tag-manager/)). The following section details how to send events using C# with the assistance of some classes from this repository.
 
-In order to begin using the Algolia Insights functionality detailed below, ensure that the `AddAlgolia()` extension method is called during startup. This allows you to inject the `IAlgoliaInsightsService` into your Controllers/Views to log events and conversions.
-
-```cs
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddAlgolia();
-}
-```
 
 If you do not already have a basic search interface set up, check out [this section](#mag_right-searching-the-index) to set one up first.
 
@@ -790,11 +791,18 @@ var query = new Query(searchText)
 };
 ```
 
-This repository uses query string parameters to track the required data for submitting search result clicks and conversion to Algolia. As all search models extend `AlgoliaSearchModel` and contain a `Url` property, you can call `AlgoliaInsightsHelper.SetInsightsUrls()` to update the URL of your results with all the necessary data:
+This repository uses query string parameters to track the required data for submitting search result clicks and conversion to Algolia. As all search models extend `AlgoliaSearchModel` and contain a `Url` property, you can call `IAlgoliaInsightsService.SetInsightsUrls()` to update the URL of your results with all the necessary data:
 
 ```cs
+// Inject IAlgoliaInsightsService
+public SearchController(IAlgoliaInsightsService algoliaInsightsService)
+{
+    _algoliaInsightsService = algoliaInsightsService;
+}
+
+// In your search method, call SetInsightsUrls
 var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
-AlgoliaInsightsHelper.SetInsightsUrls(results);
+_algoliaInsightsService.SetInsightsUrls(results);
 ```
 
 Now, when you display the search results using the `Url` property, it will look something like _https://mysite.com/store/brewers/aeropress/?object=88&pos=2&query=d057994ba21f0a56c75511c2c005f49f_. To submit the event to Algolia when your visitor clicks this link, inject an instance of `IAlgoliaInsightsService` into the view that renders the linked page. Or, you can inject it into the view which renders all pages, e.g. _\_Layout.cshtml_. Call `LogSearchResultClicked()`, `LogSearchResultConversion()`, or both methods of the service:
@@ -876,11 +884,11 @@ Or, in the _\_Details.cshtml_ view for products, we can log a "Product viewed" e
 
 ### Logging facet-related events/conversions
 
-You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `AlgoliaSearchHelper.GetFacetedAttributes()` call:
+You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `IAlgoliaSearchService.GetFacetedAttributes()` call:
 
 ```cs
 var searchResponse = Search(filter);
-var facetedAttributes = AlgoliaSearchHelper.GetFacetedAttributes(searchResponse.Facets, filter);
+var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
 _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
 ```
 
@@ -980,7 +988,7 @@ endpoints.MapControllerRoute(
 @inject IConfiguration configuration
 
 @{
-    var algoliaOptions = AlgoliaSearchHelper.GetAlgoliaOptions(configuration);
+    var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
 
 @section styles {

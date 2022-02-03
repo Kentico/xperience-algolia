@@ -1,10 +1,17 @@
-﻿using CMS;
+﻿using Algolia.Search.Clients;
+
+using CMS;
 using CMS.Base;
+using CMS.Core;
 using CMS.DocumentEngine;
+using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch;
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Helpers;
+using Kentico.Xperience.AlgoliaSearch.Services;
+
+using System;
+using System.Configuration;
 
 [assembly: AssemblyDiscoverable]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
@@ -12,13 +19,35 @@ namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
     /// Initializes the Algolia integration by scanning assemblies for custom models containing the
-    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="AlgoliaRegistrationHelper.RegisteredIndexes"/>.
+    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="IAlgoliaRegistrationService.RegisteredIndexes"/>.
     /// Also registers event handlers required for indexing content.
     /// </summary>
     public class AlgoliaSearchModule : CMS.DataEngine.Module
     {
+        private IAlgoliaIndexingService algoliaIndexingService;
+        private IAlgoliaRegistrationService algoliaRegistrationService;
+        private IAlgoliaSearchService algoliaSearchService;
+
+
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
         {
+            
+        }
+
+
+        protected override void OnPreInit()
+        {
+            base.OnPreInit();
+
+            // Register ISearchClient for CMS application
+            if (SystemContext.IsCMSRunningAsMainApplication)
+            {
+                var applicationId = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApplicationId"], String.Empty);
+                var apiKey = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApiKey"], String.Empty);
+                var client = new SearchClient(applicationId, apiKey);
+
+                Service.Use<ISearchClient>(client);
+            }
         }
 
 
@@ -29,7 +58,12 @@ namespace Kentico.Xperience.AlgoliaSearch
         protected override void OnInit()
         {
             base.OnInit();
-            AlgoliaRegistrationHelper.RegisterAlgoliaIndexes();
+
+            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
+            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
+            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
+            algoliaRegistrationService.RegisterAlgoliaIndexes();
+
             DocumentEvents.Update.Before += LogTreeNodeUpdate;
             DocumentEvents.Insert.After += LogTreeNodeInsert;
             DocumentEvents.Delete.After += LogTreeNodeDelete;
@@ -47,7 +81,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, true, false);
+            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, true, false);
         }
 
 
@@ -61,7 +95,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, false, true);
+            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, false, true);
         }
 
 
@@ -75,7 +109,7 @@ namespace Kentico.Xperience.AlgoliaSearch
                 return;
             }
 
-            AlgoliaIndexingHelper.EnqueueAlgoliaItems(e.Node, false, false);
+            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, false, false);
         }
 
 
@@ -89,7 +123,8 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <returns></returns>
         private bool EventShouldCancel(TreeNode node, bool wasDeleted)
         {
-            return !AlgoliaRegistrationHelper.IsNodeAlgoliaIndexed(node) ||
+            return !algoliaSearchService.IsIndexingEnabled() ||
+                !algoliaRegistrationService.IsNodeAlgoliaIndexed(node) ||
                 (!wasDeleted && !node.PublishedVersionExists);
         }
     }
