@@ -3,7 +3,6 @@
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 using Kentico.Xperience.AlgoliaSearch.Services;
-using Kentico.Xperience.AlgoliaSearch.Test;
 
 using NSubstitute;
 
@@ -15,7 +14,7 @@ using System.Linq;
 
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
-namespace Kentico.Xperience.AlgoliaSearch.Tests
+namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class IAlgoliaSearchServiceTests
     {
