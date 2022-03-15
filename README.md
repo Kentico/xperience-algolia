@@ -8,7 +8,7 @@ A single class (created by your developers) contains the Algolia index attribute
 
 We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) Class Library project to contain the Algolia search models they will create. This project can be referenced by both the CMS and .NET Core projects, allowing developers to reference the stongly-typed search models in each application. As a result, your developers can utilize Algolia's [POCO philosophy](https://www.algolia.com/doc/api-client/getting-started/install/csharp/?client=csharp#poco-types-and-jsonnet) while creating the search interface.
 
-> :warning: When developing the .NET Standard Class Library project, remember to add `[assembly: CMS.AssemblyDiscoverable]` to your code! See [Adding custom assemblies](https://docs.xperience.io/custom-development/adding-custom-assemblies).
+> :warning: When developing the .NET Standard Class Library project, remember to add `[assembly: CMS.AssemblyDiscoverable]` to your code! See [Adding custom assemblies](https://docs.xperience.io/x/ERXfBw).
 
 ## :rocket: Installation
 
@@ -341,7 +341,7 @@ In the display template, reference your the properties of your search model to d
 
 ### Working with scheduled content
 
-Pages which use the __Publish From__ and __Publish To__ fields remain in the Algolia index after they are [unpublished](https://docs.xperience.io/configuring-xperience/setting-up-search-on-your-website/using-azure-cognitive-search#UsingAzureCognitiveSearch-Indexingpageswithsetpublishingintervals). If you want to filter them out of your search results, you must add a condition in your search code.
+Pages which use the __Publish From__ and __Publish To__ fields remain in the Algolia index after they are [unpublished](https://docs.xperience.io/x/8A6RBg#UsingAzureCognitiveSearch-Indexingpageswithsetpublishingintervals). If you want to filter them out of your search results, you must add a condition in your search code.
 
 This repository automatically indexes the `DocumentPublishFrom` and `DocumentPublishTo` columns and converts them to a Unix timestamp in UTC as [recommended by Algolia](https://www.algolia.com/doc/guides/managing-results/refine-results/filtering/how-to/filter-by-date/). To remove pages that have not reached their publish date or have been unpublished, get the current Unix timestamp in UTC and use the following condition:
 
