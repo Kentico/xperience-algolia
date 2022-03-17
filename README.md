@@ -174,31 +174,41 @@ public override object OnIndexingProperty(TreeNode node, string propertyName, st
 {
     if (propertyName == nameof(Content))
     {
-        var crawler = new SearchCrawler();
-        crawler.CrawlerUser = UserInfoProvider.AdministratorUserName; // Or, set your own user
-        var contentProcessor = Service.Resolve<ISearchCrawlerContentProcessor>();
-        var url = DocumentURLProvider.GetAbsoluteUrl(node);
-        try
-        {
-            var html = crawler.DownloadHtmlContent(url);
-            if (!String.IsNullOrEmpty(html))
-            {
-                var plainText = contentProcessor.Process(html);
-                var bytes = plainText.Length * sizeof(Char);
-                // Consider trimming if text is too large..
-
-                return plainText;
-            }
-
-            return String.Empty;
-        }
-        catch (Exception ex)
-        {
-            // Handle errors..
-        }
+        return GetCrawlerContent(node);
     }
 
     return foundValue;
+}
+
+private string GetCrawlerContent(TreeNode node)
+{
+    var crawler = new SearchCrawler();
+    crawler.CrawlerUser = UserInfoProvider.AdministratorUserName; // Or, set your own user
+    var contentProcessor = Service.Resolve<ISearchCrawlerContentProcessor>();
+    var url = DocumentURLProvider.GetAbsoluteUrl(node);
+    if (String.IsNullOrEmpty(url))
+    {
+        return String.Empty;
+    }
+
+    try
+    {
+        var html = crawler.DownloadHtmlContent(url);
+        if (!String.IsNullOrEmpty(html))
+        {
+            var plainText = contentProcessor.Process(html);
+            var bytes = plainText.Length * sizeof(Char);
+            // Consider trimming if text is too large..
+
+            return plainText;
+        }
+    }
+    catch (Exception ex)
+    {
+        // Handle errors..
+    }
+
+    return String.Empty;
 }
 ```
 
