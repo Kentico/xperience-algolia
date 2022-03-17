@@ -212,7 +212,7 @@ private string GetCrawlerContent(TreeNode node)
 }
 ```
 
-It's important to note that Algolia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records, so you may want to check the size of the crawled text and trim it if necessary. Also, this integration will only re-index an updated page if one of the indexed columns is modified. In the case that you have a "Content" property and the page does _not_ contain a "Content" field, you should use the [`SourceAttribute`](#source-attribute) to indicate which page type fields are considered part of the page content:
+It's important to note that Algolia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records, so you may want to check the size of the crawled text and trim it if necessary. Also, this integration will only re-index an updated page if one of the indexed columns is modified. In the case that your search model has a "Content" property, but the page type fields like "ArticleText" aren't included in the search model, you should use the [`SourceAttribute`](#source-attribute) to indicate which page type fields are considered part of the page content:
 
 ```cs
 // The page will be crawled when either "ArticlePostDate" or "ArticleText" are updated (or, on a full rebuild and new page creation)
