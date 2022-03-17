@@ -197,9 +197,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var indexName = "";
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
-                if (index.Value == typeof(TModel))
+                if (index.Type == typeof(TModel))
                 {
-                    indexName = index.Key;
+                    indexName = index.IndexName;
                 }
             }
 

@@ -49,13 +49,13 @@ We recommend that your developers create a new [.NET Standard 2.0](https://docs.
 
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs). Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
-The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index:
+The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index. Optionally, you can provide a list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included.
 
 ```cs
 using Kentico.Xperience.AlgoliaSearch.Models;
 using System;
 
-[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName)]
+[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName, SiteNames = new string[] { "DancingGoatCore" })]
 namespace DancingGoat
 {
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
@@ -1234,7 +1234,7 @@ After importing, perform the [necessary steps](https://docs.xperience.io/deployi
 
 ### Custom module features
 
-The newly-imported __Algolia search__ module will provide a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point- only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
+The newly-imported __Algolia search__ module will provide a listing of all registered Algolia indexes assigned to the current site, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point- only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
 
 ![Algolia module grid](/img/index-grid.png)
 

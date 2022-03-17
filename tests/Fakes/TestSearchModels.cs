@@ -2,11 +2,12 @@
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Test;
 
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
 [assembly: RegisterAlgoliaIndex(typeof(Model1), Model1.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model2), Model2.IndexName)]
+[assembly: RegisterAlgoliaIndex(typeof(Model2), Model2.IndexName, SiteNames = new string[] { AlgoliaTests.DEFAULT_SITE })]
 [assembly: RegisterAlgoliaIndex(typeof(Model3), Model3.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model4), Model4.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model5), Model5.IndexName)]

@@ -17,10 +17,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     public interface IAlgoliaRegistrationService
     {
         /// <summary>
-        /// A collection of Algolia index names and the object type which represents the columns
-        /// included in the index.
+        /// A collection of registered Algolia indexes as identified by the
+        /// <see cref="RegisterAlgoliaIndexAttribute"/> in the search model class.
         /// </summary>
-        public Dictionary<string, Type> RegisteredIndexes
+        public List<RegisterAlgoliaIndexAttribute> RegisteredIndexes
         {
             get;
         }
@@ -92,11 +92,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Saves an Algolia index code name and its search model to the <see cref="RegisteredIndexes"/>.
+        /// Saves an Algolia index's configuration to <see cref="RegisteredIndexes"/>.
         /// </summary>
         /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
-        /// <param name="indexName">The Algolia index code name.</param>
-        /// <param name="searchModelType">The search model type.</param>
-        public void RegisterIndex(string indexName, Type searchModelType);
+        /// <param name="registerAlgoliaIndexAttribute">The <see cref="RegisterAlgoliaIndexAttribute"/> defined
+        /// in the search model code file.</param>
+        public void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute);
     }
 }
