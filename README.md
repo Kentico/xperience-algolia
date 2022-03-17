@@ -1183,3 +1183,7 @@ Switch to the __Search preview__ tab to perform a basic Algolia query:
 ![Algolia index preview](/img/index-preview.png)
 
 This view displays the `objectID` and `ClassName` attributes, plus any other searchable attributes which contained the matching search term.
+
+## Questions & Support
+
+See the [Kentico home repository](https://github.com/Kentico/Home/blob/master/README.md) for more information about the product(s) and general advice on submitting questions.
