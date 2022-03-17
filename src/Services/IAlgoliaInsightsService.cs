@@ -1,4 +1,5 @@
-﻿using Algolia.Search.Models.Search;
+﻿using Algolia.Search.Models.Insights;
+using Algolia.Search.Models.Search;
 
 using CMS.DocumentEngine;
 
@@ -6,6 +7,7 @@ using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
@@ -19,14 +21,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// Logs a search result click event. Required query parameters must be present in the
         /// request, or no event is logged.
         /// </summary>
-        public void LogSearchResultClicked(string eventName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogSearchResultClicked(string eventName, string indexName);
 
 
         /// <summary>
         /// Logs a search result click conversion. Required query parameters must be present in the
         /// request, or no event is logged.
         /// </summary>
-        public void LogSearchResultConversion(string conversionName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogSearchResultConversion(string conversionName, string indexName);
 
 
         /// <summary>
@@ -36,7 +40,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// occurred on.</param>
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public void LogPageConversion(int documentId, string conversionName, string indexName);
+        /// <returns>The response frm Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogPageConversion(int documentId, string conversionName, string indexName);
 
 
         /// <summary>
@@ -47,7 +52,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// occurred on.</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public void LogPageViewed(int documentId, string eventName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogPageViewed(int documentId, string eventName, string indexName);
 
 
         /// <summary>
@@ -56,7 +62,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facets">The facets that were displayed to the visitor.</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
 
 
         /// <summary>
@@ -65,7 +72,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="eventName">The name of the event.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public void LogFacetClicked(string facet, string eventName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogFacetClicked(string facet, string eventName, string indexName);
 
 
         /// <summary>
@@ -74,7 +82,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="facet">The facet name and value, e.g. "CoffeeIsDecaf:true."</param>
         /// <param name="conversionName">The name of the conversion.</param>
         /// <param name="indexName">The code name of the Algolia index.</param>
-        public void LogFacetConverted(string facet, string conversionName, string indexName);
+        /// <returns>The response from Algolia, or null if the request was skipped.</returns>
+        public Task<InsightsResponse> LogFacetConverted(string facet, string conversionName, string indexName);
 
 
         /// <summary>

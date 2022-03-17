@@ -64,7 +64,7 @@ namespace DancingGoat
 
         public string DocumentName { get; set; }
 
-        public decimal? SKUPrice { get; set; }
+        public decimal SKUPrice { get; set; }
 
         public string ArticleText { get; set; }
     }
@@ -811,8 +811,8 @@ Now, when you display the search results using the `Url` property, it will look 
 @inject IAlgoliaInsightsService _insightsService
 
 @{
-    _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
-    _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
 }
 ```
 
@@ -825,7 +825,7 @@ Aside from search result related events/conversions, there are many more generic
 For a conversion, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a "Product added to cart" conversion in the __CheckoutController__:
 
 ```cs
-public ActionResult AddItem(CartItemUpdateModel item)
+public async Task<ActionResult> AddItem(CartItemUpdateModel item)
 {
     if (ModelState.IsValid)
     {
@@ -847,7 +847,7 @@ public ActionResult AddItem(CartItemUpdateModel item)
         // Log Algolia Insights conversion
         if (page != null)
         {
-            _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
+            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
         }
         
     }
@@ -859,10 +859,10 @@ public ActionResult AddItem(CartItemUpdateModel item)
 We can also log an event when a visitor simply views a page with the `LogPageViewed()` method. For example, in the __ArticlesController__ we can log an "Article viewed" event:
 
 ```cs
-public IActionResult Detail([FromServices] ArticleRepository articleRepository)
+public async Task<IActionResult> Detail([FromServices] ArticleRepository articleRepository)
 {
     var article = articleRepository.GetCurrent();
-    _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
 
     return new TemplateResult(article);
 }
@@ -877,7 +877,7 @@ Or, in the _\_Details.cshtml_ view for products, we can log a "Product viewed" e
 @{
     if(_pageDataContextRetriever.TryRetrieve<TreeNode>(out var context))
     {
-        _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
+        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
     }
 }
 ```
@@ -889,7 +889,7 @@ You can log events and conversions when facets are displayed to a visitor, or wh
 ```cs
 var searchResponse = Search(filter);
 var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-_insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
+await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
 ```
 
 To log an event or conversion when a facet is clicked, we need to use a little AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
@@ -931,15 +931,15 @@ Now, create the action in the appropriate controller which accepts the facet par
 
 ```cs
 [HttpPost]
-public ActionResult FacetClicked(string facet)
+public Task<ActionResult> FacetClicked(string facet)
 {
     if (String.IsNullOrEmpty(facet))
     {
         return BadRequest();
     }
 
-    _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
-    _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
     return Ok();
 }
 ```
