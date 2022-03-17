@@ -165,6 +165,52 @@ public override object OnIndexingProperty(TreeNode node, string propertyName, st
 }
 ```
 
+### Creating a page crawler
+
+The default behavior of the integration is to index structured content from your Xperience website. However, you can also "crawl" your pages to retrieve the text that your visitors see on the front-end, and index that text in an Algolia attribute. Use the `OnIndexingProperty` method mentioned above to crawl your pages. For example, if your search model has a property named "Content," you can set the value like this:
+
+```cs
+public override object OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
+{
+    if (propertyName == nameof(Content))
+    {
+        var crawler = new SearchCrawler();
+        crawler.CrawlerUser = UserInfoProvider.AdministratorUserName; // Or, set your own user
+        var contentProcessor = Service.Resolve<ISearchCrawlerContentProcessor>();
+        var url = DocumentURLProvider.GetAbsoluteUrl(node);
+        try
+        {
+            var html = crawler.DownloadHtmlContent(url);
+            if (!String.IsNullOrEmpty(html))
+            {
+                var plainText = contentProcessor.Process(html);
+                var bytes = plainText.Length * sizeof(Char);
+                // Consider trimming if text is too large..
+
+                return plainText;
+            }
+
+            return String.Empty;
+        }
+        catch (Exception ex)
+        {
+            // Handle errors..
+        }
+    }
+
+    return foundValue;
+}
+```
+
+It's important to note that Aloglia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records, so you may want to check the size of the crawled text and trim it if necessary. Also, this integration will only re-index an updated page if one of the indexed columns is modified. In the case that you have a "Content" property and the page does _not_ contain a "Content" field, you should use the [`SourceAttribute`](#source-attribute) to indicate which page type fields are considered part of the page content:
+
+```cs
+// The page will be crawled when either "ArticlePostDate" or "ArticleText" are updated (or, on a full rebuild and new page creation)
+[Searchable]
+[Source(new string[] { nameof(Article.ArticlePostDate), nameof(Article.ArticleText) })]
+public string Content { get; set; }
+```
+
 ## :memo: Configuring Algolia attributes
 
 This package includes five attributes which can be applied to each individual Algolia attribute to further configure the Algolia index:
