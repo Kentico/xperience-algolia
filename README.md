@@ -41,7 +41,7 @@ public void ConfigureServices(IServiceCollection services)
 <add key="AlgoliaApiKey" value="<your Admin API key>"/>
 ```
 
-6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-xperience-algolia-module) in your Xperience website.
+6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-algolia-search-application-for-administration-interface) in your Xperience website.
 
 ## :gear: Creating and registering an Algolia index
 
@@ -1220,7 +1220,7 @@ When you run the site and visit your new page, you'll see that you have a fully 
 
 ## :chart_with_upwards_trend: _Algolia search_ application for administration interface
 
-While the Xperience Algolia integration works without any changes to the Xperience administration interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/x/VAeRBg).
+While the Xperience Algolia integration works without any changes to the Xperience administration interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/x/VAeRBg).
 
 After importing, perform the [necessary steps](https://docs.xperience.io/x/VAeRBg#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project. The module also includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
 

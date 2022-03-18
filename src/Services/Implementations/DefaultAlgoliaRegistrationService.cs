@@ -18,7 +18,7 @@ using System.Reflection;
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="AlgoliaRegistrationService"/>.
+    /// Default implementation of <see cref="IAlgoliaRegistrationService"/>.
     /// </summary>
     public class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
     {
