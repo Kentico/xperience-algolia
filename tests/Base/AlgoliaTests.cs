@@ -1,4 +1,5 @@
 ﻿using CMS.DocumentEngine;
+using CMS.SiteProvider;
 using CMS.Tests;
 
 using NUnit.Framework;
@@ -10,9 +11,24 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class AlgoliaTests : UnitTests
     {
+        public const string DEFAULT_SITE = "TestSite";
+        public const string FAKE_SITE = "FAKE_SITE";
+
+
         [SetUp]
         public void SetUp()
         {
+            Fake<SiteInfo, SiteInfoProvider>().WithData(
+            new SiteInfo
+            {
+                SiteName = DEFAULT_SITE
+            },
+            new SiteInfo
+            {
+                SiteName = FAKE_SITE
+            }
+            );
+
             // Register document types for faking
             DocumentGenerator.RegisterDocumentType<TreeNode>(FakeNodes.DOCTYPE_ARTICLE);
             DocumentGenerator.RegisterDocumentType<TreeNode>(FakeNodes.DOCTYPE_PRODUCT);

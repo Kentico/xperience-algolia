@@ -1,5 +1,6 @@
 ﻿using CMS.DataEngine;
 using CMS.DocumentEngine;
+using CMS.SiteProvider;
 
 using System;
 using System.Collections.Generic;
@@ -17,9 +18,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
         public static void MakeNode(string nodeAliasPath, string pageType, string culture = "en-US")
         {
+            var site = SiteInfo.Provider.Get(AlgoliaTests.DEFAULT_SITE);
             var node = TreeNode.New(pageType).With(p =>
             {
                 p.DocumentCulture = culture;
+                p.SetValue("NodeSiteID", site.SiteID);
                 p.SetValue("DocumentName", "name");
                 p.SetValue("DocumentCreatedWhen", new DateTime(2022, 1, 1));
                 p.SetValue("NodeAliasPath", nodeAliasPath);

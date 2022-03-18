@@ -4,6 +4,7 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
@@ -19,13 +20,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         {
             ShowTaskCount();
 
-            if (algoliaRegistrationService.RegisteredIndexes.Count == 0)
+            var siteIndexes = algoliaRegistrationService.RegisteredIndexes.Where(i => i.SiteNames == null || i.SiteNames.Contains(CurrentSiteName));
+            if (siteIndexes.Count() == 0)
             {
                 ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
                 return;
             }
 
-            LoadIndexes();
+            LoadIndexes(siteIndexes);
         }
 
 
@@ -40,23 +42,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         }
 
 
-        private void LoadIndexes()
+        private void LoadIndexes(IEnumerable<RegisterAlgoliaIndexAttribute> indexes)
         {
             var indexesToList = new List<IndicesResponse>();
             var indexStatistics = algoliaSearchService.GetStatistics();
-            foreach (var index in algoliaRegistrationService.RegisteredIndexes)
+            foreach (var index in indexes)
             {
                 // Find statistics with matching name
-                var matchingStatistics = indexStatistics.Where(i => i.Name == index.Key);
-                if (matchingStatistics.Count() > 0)
+                var matchingStatistics = indexStatistics.FirstOrDefault(i => i.Name == index.IndexName);
+                if (matchingStatistics != null)
                 {
-                    indexesToList.Add(matchingStatistics.FirstOrDefault());
+                    indexesToList.Add(matchingStatistics);
                 }
                 else
                 {
                     // The index has not been created in Algolia, list index with blank statistics
                     indexesToList.Add(new IndicesResponse() {
-                        Name = index.Key,
+                        Name = index.IndexName,
                         Entries = 0,
                         UpdatedAt = DateTime.MinValue,
                         CreatedAt = DateTime.MinValue,

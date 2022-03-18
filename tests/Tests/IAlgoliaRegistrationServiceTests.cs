@@ -1,5 +1,10 @@
 ﻿using Algolia.Search.Clients;
 
+using CMS.DataEngine;
+using CMS.DocumentEngine;
+using CMS.SiteProvider;
+
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
@@ -31,7 +36,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
                 {
-                    algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
+                    algoliaRegistrationService.RegisterIndex(attribute);
                 }
             }
 
@@ -114,7 +119,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
                 {
-                    algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
+                    algoliaRegistrationService.RegisterIndex(attribute);
                 }
             }
 
@@ -153,7 +158,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
                 {
-                    algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
+                    algoliaRegistrationService.RegisterIndex(attribute);
                 }
             }
 
@@ -189,6 +194,28 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
                 Assert.False(algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName));
             }
+
+
+            [Test]
+            public void IsNodeIndexedByIndex_CorrectSiteName_ReturnsTrue()
+            {
+                var node = FakeNodes.GetNode("/CZ/Articles/1");
+
+                Assert.True(algoliaRegistrationService.IsNodeIndexedByIndex(node, Model2.IndexName));
+            }
+
+
+            [Test]
+            public void IsNodeIndexedByIndex_NodeOnDifferentSite_ReturnsFalse()
+            {
+                var nonDefaultSite = SiteInfo.Provider.Get(FAKE_SITE);
+                var nodeOnDifferentSite = TreeNode.New(FakeNodes.DOCTYPE_ARTICLE).With(p =>
+                {
+                    p.SetValue("NodeSiteID", nonDefaultSite.SiteID);
+                });
+
+                Assert.False(algoliaRegistrationService.IsNodeIndexedByIndex(nodeOnDifferentSite, Model2.IndexName));
+            }
         }
 
 
@@ -206,7 +233,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
                 {
-                    algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
+                    algoliaRegistrationService.RegisterIndex(attribute);
                 }
             }
 
@@ -240,7 +267,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
                 {
-                    algoliaRegistrationService.RegisterIndex(attribute.IndexName, attribute.Type);
+                    algoliaRegistrationService.RegisterIndex(attribute);
                 }
             }
 
@@ -282,9 +309,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_ValidIndexes_AreRegistered()
             {
-                algoliaRegistrationService.RegisterIndex(Model1.IndexName, typeof(Model1));
-                algoliaRegistrationService.RegisterIndex(Model2.IndexName, typeof(Model2));
-                algoliaRegistrationService.RegisterIndex(Model3.IndexName, typeof(Model3));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model2), Model2.IndexName));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model3), Model3.IndexName));
 
                 Assert.AreEqual(3, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -293,7 +320,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_EmptyIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(String.Empty, typeof(Model1));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), String.Empty));
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -302,7 +329,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_NullSearchModel_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex("FAKE_NAME", null);
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(null, "FAKE_NAME"));
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -311,8 +338,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_DuplicateIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(Model1.IndexName, typeof(Model1));
-                algoliaRegistrationService.RegisterIndex(Model1.IndexName, typeof(Model1));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
+                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
 
                 Assert.AreEqual(1, algoliaRegistrationService.RegisteredIndexes.Count);
             }

@@ -1,4 +1,4 @@
-![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.AlgoliaSearch)](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) ![Kentico.Xperience.Libraries 13.0.0](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.0-orange)
+![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.AlgoliaSearch)](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) ![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.16-orange)
 
 # Xperience Algolia Search Integration
 
@@ -47,13 +47,13 @@ public void ConfigureServices(IServiceCollection services)
 
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends the [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs) class. Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
-The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index:
+The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index. Optionally, you can provide a list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included.
 
 ```cs
 using Kentico.Xperience.AlgoliaSearch.Models;
 using System;
 
-[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName)]
+[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName, SiteNames = new string[] { "DancingGoatCore" })]
 namespace DancingGoat
 {
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
@@ -62,7 +62,7 @@ namespace DancingGoat
 
         public string DocumentName { get; set; }
 
-        public decimal? SKUPrice { get; set; }
+        public decimal SKUPrice { get; set; }
 
         public string ArticleText { get; set; }
     }
@@ -163,7 +163,63 @@ public override object OnIndexingProperty(TreeNode node, string propertyName, st
 }
 ```
 
-## :memo: Configuring indexed Algolia attributes
+### Creating a page crawler
+
+The default behavior of the integration is to index structured content from your Xperience website. However, you can also "crawl" your pages to retrieve the text that your visitors see on the front-end, and index that text in an Algolia attribute. Use the `OnIndexingProperty` method mentioned above to crawl your pages. For example, if your search model has a property named "Content," you can set the value like this:
+
+```cs
+public override object OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
+{
+    if (propertyName == nameof(Content))
+    {
+        return GetCrawlerContent(node);
+    }
+
+    return foundValue;
+}
+
+private string GetCrawlerContent(TreeNode node)
+{
+    var crawler = new SearchCrawler();
+    crawler.CrawlerUser = UserInfoProvider.AdministratorUserName; // Or, set your own user
+    var contentProcessor = Service.Resolve<ISearchCrawlerContentProcessor>();
+    var url = DocumentURLProvider.GetAbsoluteUrl(node);
+    if (String.IsNullOrEmpty(url))
+    {
+        return String.Empty;
+    }
+
+    try
+    {
+        var html = crawler.DownloadHtmlContent(url);
+        if (!String.IsNullOrEmpty(html))
+        {
+            var plainText = contentProcessor.Process(html);
+            var bytes = plainText.Length * sizeof(Char);
+            // Consider trimming if text is too large..
+
+            return plainText;
+        }
+    }
+    catch (Exception ex)
+    {
+        // Handle errors..
+    }
+
+    return String.Empty;
+}
+```
+
+It's important to note that Algolia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records, so you may want to check the size of the crawled text and trim it if necessary. Also, this integration will only re-index an updated page if one of the indexed columns is modified. In the case that your search model has a "Content" property, but the page type fields like "ArticleText" aren't included in the search model, you should use the [`SourceAttribute`](#source-attribute) to indicate which page type fields are considered part of the page content:
+
+```cs
+// The page will be crawled when either "ArticlePostDate" or "ArticleText" are updated (or, on a full rebuild and new page creation)
+[Searchable]
+[Source(new string[] { nameof(Article.ArticlePostDate), nameof(Article.ArticleText) })]
+public string Content { get; set; }
+```
+
+## :memo: Configuring Algolia attributes
 
 This package includes five attributes which can be applied to each individual Algolia attribute to further configure the Algolia index:
 
@@ -803,8 +859,8 @@ Now, when you display the search results using the `Url` property, it will look 
 @inject IAlgoliaInsightsService _insightsService
 
 @{
-    _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
-    _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
 }
 ```
 
@@ -817,7 +873,7 @@ Aside from search result related events/conversions, there are many more generic
 For a conversion, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a _Product added to cart_ conversion in the __CheckoutController__:
 
 ```cs
-public ActionResult AddItem(CartItemUpdateModel item)
+public async Task<ActionResult> AddItem(CartItemUpdateModel item)
 {
     if (ModelState.IsValid)
     {
@@ -839,7 +895,7 @@ public ActionResult AddItem(CartItemUpdateModel item)
         // Log Algolia Insights conversion
         if (page != null)
         {
-            _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
+            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
         }
         
     }
@@ -851,10 +907,10 @@ public ActionResult AddItem(CartItemUpdateModel item)
 You can also log an event when a visitor simply views a page with the `LogPageViewed()` method. For example, in the __ArticlesController__ you can log an _Article viewed_ event:
 
 ```cs
-public IActionResult Detail([FromServices] ArticleRepository articleRepository)
+public async Task<IActionResult> Detail([FromServices] ArticleRepository articleRepository)
 {
     var article = articleRepository.GetCurrent();
-    _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
 
     return new TemplateResult(article);
 }
@@ -869,7 +925,7 @@ Or, in the _\_Details.cshtml_ view for products, you can log a _Product viewed_ 
 @{
     if(_pageDataContextRetriever.TryRetrieve<TreeNode>(out var context))
     {
-        _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
+        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
     }
 }
 ```
@@ -881,7 +937,7 @@ You can log events and conversions when facets are displayed to a visitor, or wh
 ```cs
 var searchResponse = Search(filter);
 var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-_insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
+await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
 ```
 
 To log an event or conversion when a facet is clicked, you need to use AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
@@ -923,15 +979,15 @@ In the appropriate controller, create the action which accepts the facet paramet
 
 ```cs
 [HttpPost]
-public ActionResult FacetClicked(string facet)
+public Task<ActionResult> FacetClicked(string facet)
 {
     if (String.IsNullOrEmpty(facet))
     {
         return BadRequest();
     }
 
-    _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
-    _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
     return Ok();
 }
 ```

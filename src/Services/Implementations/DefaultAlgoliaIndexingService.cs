@@ -47,12 +47,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         {
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
-                if (!algoliaRegistrationService.IsNodeIndexedByIndex(node, index.Key))
+                if (!algoliaRegistrationService.IsNodeIndexedByIndex(node, index.IndexName))
                 {
                     continue;
                 }
 
-                var indexedColumns = algoliaRegistrationService.GetIndexedColumnNames(index.Key);
+                var indexedColumns = algoliaRegistrationService.GetIndexedColumnNames(index.IndexName);
                 if (indexedColumns.Length == 0)
                 {
                     eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(EnqueueAlgoliaItems), $"Unable to enqueue node change: Error loading indexed columns.");
@@ -68,7 +68,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     Node = node,
                     Deleted = wasDeleted,
-                    IndexName = index.Key
+                    IndexName = index.IndexName
                 });
             }
         }

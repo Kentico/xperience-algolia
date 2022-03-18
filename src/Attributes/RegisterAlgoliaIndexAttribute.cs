@@ -30,6 +30,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
 
 
         /// <summary>
+        /// The code names of the sites whose pages will be included in the index. If empty, all sites
+        /// are included.
+        /// </summary>
+        public string[] SiteNames
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="RegisterAlgoliaIndexAttribute"/> class.
         /// </summary>
         /// <param name="type">The type of the class which extends <see cref="AlgoliaSearchModel"/>.</param>

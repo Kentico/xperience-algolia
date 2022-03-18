@@ -1,4 +1,5 @@
 ﻿using Algolia.Search.Clients;
+using Algolia.Search.Models.Insights;
 using Algolia.Search.Models.Search;
 
 using CMS;
@@ -13,6 +14,7 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaInsightsService), typeof(DefaultAlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
 namespace Kentico.Xperience.AlgoliaSearch.Services
@@ -83,55 +85,55 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public void LogSearchResultClicked(string eventName, string indexName)
+        public async Task<InsightsResponse> LogSearchResultClicked(string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(ObjectId) || String.IsNullOrEmpty(QueryId) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || Position <= 0)
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ClickedObjectIDsAfterSearch(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
+            return await insightsClient.User(ContactGUID).ClickedObjectIDsAfterSearchAsync(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
         }
 
 
-        public void LogSearchResultConversion(string conversionName, string indexName)
+        public async Task<InsightsResponse> LogSearchResultConversion(string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(ObjectId) || String.IsNullOrEmpty(QueryId) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(conversionName))
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearch(conversionName, indexName, new string[] { ObjectId }, QueryId);
+            return await insightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearchAsync(conversionName, indexName, new string[] { ObjectId }, QueryId);
         }
 
 
-        public void LogPageViewed(int documentId, string eventName, string indexName)
+        public async Task<InsightsResponse> LogPageViewed(int documentId, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(eventName) || documentId <= 0)
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ViewedObjectIDs(eventName, indexName, new string[] { documentId.ToString() });
+            return await insightsClient.User(ContactGUID).ViewedObjectIDsAsync(eventName, indexName, new string[] { documentId.ToString() });
         }
 
 
-        public void LogPageConversion(int documentId, string conversionName, string indexName)
+        public async Task<InsightsResponse> LogPageConversion(int documentId, string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(indexName) || String.IsNullOrEmpty(conversionName) || documentId <= 0)
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ConvertedObjectIDs(conversionName, indexName, new string[] { documentId.ToString() });
+            return await insightsClient.User(ContactGUID).ConvertedObjectIDsAsync(conversionName, indexName, new string[] { documentId.ToString() });
         }
 
 
-        public void LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName)
+        public async Task<InsightsResponse> LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || facets == null)
             {
-                return;
+                return null;
             }
 
             var viewedFacets = new List<string>();
@@ -142,30 +144,32 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             if (viewedFacets.Count > 0)
             {
-                insightsClient.User(ContactGUID).ViewedFilters(eventName, indexName, viewedFacets);
+                return await insightsClient.User(ContactGUID).ViewedFiltersAsync(eventName, indexName, viewedFacets);
             }
+
+            return null;
         }
 
 
-        public void LogFacetClicked(string facet, string eventName, string indexName)
+        public async Task<InsightsResponse> LogFacetClicked(string facet, string eventName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(facet) || String.IsNullOrEmpty(eventName) || String.IsNullOrEmpty(indexName))
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ClickedFilters(eventName, indexName, new string[] { facet });
+            return await insightsClient.User(ContactGUID).ClickedFiltersAsync(eventName, indexName, new string[] { facet });
         }
 
 
-        public void LogFacetConverted(string facet, string conversionName, string indexName)
+        public async Task<InsightsResponse> LogFacetConverted(string facet, string conversionName, string indexName)
         {
             if (String.IsNullOrEmpty(ContactGUID) || String.IsNullOrEmpty(facet) || String.IsNullOrEmpty(conversionName) || String.IsNullOrEmpty(indexName))
             {
-                return;
+                return null;
             }
 
-            insightsClient.User(ContactGUID).ConvertedFilters(conversionName, indexName, new string[] { facet });
+            return await insightsClient.User(ContactGUID).ConvertedFiltersAsync(conversionName, indexName, new string[] { facet });
         }
 
 
@@ -193,9 +197,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var indexName = "";
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
-                if (index.Value == typeof(TModel))
+                if (index.Type == typeof(TModel))
                 {
-                    indexName = index.Key;
+                    indexName = index.IndexName;
                 }
             }
 
