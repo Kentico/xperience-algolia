@@ -1,13 +1,19 @@
 ![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.AlgoliaSearch)](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) ![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.16-orange)
 
-# Algolia Search Xperience Integration
+# Xperience Algolia Search Integration
 
 This integration enables the creating of [Algolia](https://www.algolia.com/) search indexes and the indexing of Xperience content tree pages using a code-first approach. Developers can use the [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to provide a search interface on their live site.
 
+A single class (created by your developers) contains the Algolia index attributes, the individual attribute configurations, and automatically registers the Algolia index on application startup.
+
+We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) Class Library project to contain the Algolia search models they will create. This project can be referenced by both the CMS and .NET Core projects, allowing developers to reference the stongly-typed search models in each application. As a result, your developers can utilize Algolia's [POCO philosophy](https://www.algolia.com/doc/api-client/getting-started/install/csharp/?client=csharp#poco-types-and-jsonnet) while creating the search interface.
+
+> :warning: When developing the .NET Standard Class Library project, remember to add `[assembly: CMS.AssemblyDiscoverable]` to your code! See [Adding custom assemblies](https://docs.xperience.io/x/ERXfBw).
+
 ## :rocket: Installation
 
-1. Install the [Kentico.Xperience.AlgoliaSearch](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) NuGet package in both the CMS and .NET Core applications.
-2. From the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and click "API keys" to find your keys.
+1. Install the [Kentico.Xperience.AlgoliaSearch](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) NuGet package in both the administration and the live-site project.
+2. On the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and select "API keys" to find and note the application ID, admin API key and the search API key.
 3. In your live-site project's `appsettings.json`, add the following section:
 
 ```json
@@ -28,7 +34,7 @@ public void ConfigureServices(IServiceCollection services)
 }
 ```
 
-5. In your CMS project's `web.config` `appSettings` section, add the following keys:
+5. In your administration project's `web.config` files's `appSettings` section, add the following keys:
 
 ```xml
 <add key="AlgoliaApplicationId" value="<your application ID>"/>
@@ -37,17 +43,9 @@ public void ConfigureServices(IServiceCollection services)
 
 6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-xperience-algolia-module) in your Xperience website.
 
-## :computer: How it works
-
-This integration uses a code-first approach to define Algolia indexes. A single class (created by your developers) contains the Algolia index attributes, the individual attribute configurations, and automatically registers the Algolia index on application startup.
-
-We recommend that your developers create a new [.NET Standard 2.0](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) Class Library project to contain the Algolia search models they will create. This project can be referenced by both the CMS and .NET Core projects, allowing developers to reference the stongly-typed search models in each application. As a result, your developers can utilize Algolia's [POCO philosophy](https://www.algolia.com/doc/api-client/getting-started/install/csharp/?client=csharp#poco-types-and-jsonnet) while creating the search interface.
-
-> :warning: When developing the .NET Standard Class Library project, remember to add `[assembly: CMS.AssemblyDiscoverable]` your code! See [Adding custom assemblies](https://docs.xperience.io/custom-development/adding-custom-assemblies).
-
 ## :gear: Creating and registering an Algolia index
 
-An Algolia index and its attributes are defined within a single class file, in which your custom class extends [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs). Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
+An Algolia index and its attributes are defined within a single class file, in which your custom class extends the [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs) class. Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
 The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index. Optionally, you can provide a list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included.
 
@@ -71,20 +69,20 @@ namespace DancingGoat
 }
 ```
 
-### Determining the pages to index
+### Determining which pages to index
 
 While the above sample code will create an Algolia index, pages in the content tree will not be indexed until one or more [`IncludedPathAttribute`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/IncludedPathAttribute.cs) attributes are applied to the class. The `IncludedPathAttribute` has three properties to configure:
 
-- __AliasPath__: The path of the content tree to index. Use "/%" to index all children of a page.
+- __AliasPath__: The path of the content tree to index. Use wildcard "/%"  to index all children of a page.
 - __PageTypes__ (optional): The code names of the page types under the specified `AliasPath` to index. If not provided, all page types are indexed.
 - __Cultures__ (optional): The culture codes of the page language versions to include in the index. If not provided, all culture versions are indexed.
 
-> :bulb: We recommend using the generated [Xperience page type code](https://docs.xperience.io/developing-websites/generating-classes-for-xperience-objects) to reference page type class names.
+> :bulb: We recommend using the generated [Xperience page type code](https://docs.xperience.io/x/Qw6RBg) to reference page type class names.
 
-All pages under the specified __AliasPath__ will be indexed regardless of their [permissions](https://docs.xperience.io/managing-users/configuring-permissions/configuring-page-permissions/page-level-permissions-acls). This means that if there are publicly-accessible pages and secured pages (e.g. articles only meant for partners), they will be added to your index together. If you need to separate this content in your search functionality, you can either:
+All pages under the specified __AliasPath__ will be indexed regardless of the [permissions](https://docs.xperience.io/x/mgmRBg). This means that if there are publicly-accessible pages and secured pages (e.g. articles only meant for partners), they will all be indexed. If you need to separate this content in your search functionality, you can either:
 
 - Create different sections in your content tree for public and secured pages, and use multiple Algolia indexes to store the information.
-- Store the content in the same Algolia index and filter your search results to display the appropriate content to the user. To check whether a user has __Read__ permissions for a page, you can use `DocumentSecurityHelper.IsAuthorizedPerDocument()`.
+- Store the content in the same Algolia index and filter your search results to display the appropriate content to the user. To check whether a user has __Read__ permissions for a page, you can use the  `DocumentSecurityHelper.IsAuthorizedPerDocument()` method.
 
 Below is an example of an Algolia index which includes multiple paths and page types:
 
@@ -136,9 +134,9 @@ namespace DancingGoat
 
 ### Customizing the indexing process
 
-In some cases, you may want to customize the values that are sent to Algolia during page indexing. For example, in the search model above we have a `Content` property which retrieves its value from the _DocumentSKUDescription_ or _ArticleText_ columns. However, if we are indexing the "About Us" page in Dancing Goat, the content of the page actually comes from the child pages.
+In some cases, you may want to customize the values that are sent to Algolia during page indexing. For example, in the search model above there is a `Content` property which retrieves its value from the `DocumentSKUDescription` or `ArticleText` columns. However, if we are indexing the "About Us" page in Dancing Goat, the content of the page actually comes from the child pages.
 
-To customize the indexing process, you can override the `OnIndexingProperty()` that is defined in the search model base class `AlgoliaSearchModel`. This method is called during the indexing of a page, for each property defined in your search model. When called, you are provided useful information such as the page being indexed, the value that would be indexed, the search model property name, and the name of the database column the value was retrieved from.
+To customize the indexing process, you can override the `OnIndexingProperty()` that is defined in the search model base class `AlgoliaSearchModel`. This method is called during the indexing of a page for each property defined in your search model. You can use the function parameters such as the page being indexed, the value that would be indexed, the search model property name, and the name of the database column the value was retrieved from.
 
 To index the data from the child pages and store it in the "About Us" record in Algolia, we can use this method to loop through the child pages and retrieve text from their fields:
 
@@ -225,20 +223,19 @@ public string Content { get; set; }
 
 This package includes five attributes which can be applied to each individual Algolia attribute to further configure the Algolia index:
 
-- [__Searchable__](#searchable-attribute)
-- [__Facetable__](#facetable-attribute)
-- [__Retrievable__](#retrievable-attribute)
-- [__Source__](#source-attribute)
-- [__Url__](#url-attribute)
+- [`Searchable`](#searchable-attribute)
+- [`Facetable`](#facetable-attribute)
+- [`Retrievable`](#retrievable-attribute)
+- [`Source`](#source-attribute)
+- [`Url`](#url-attribute)
 
-### Searchable attribute
+### __Searchable__ attribute
 
-This attribute indicates that an Algolia attribute is [searchable](https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/#how-to-use). Optional attribute properties be defined to fine-tune the performance of your searchable attributes:
+This attribute indicates that an Algolia attribute is [searchable](https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/#how-to-use). You can define optional attribute properties to adjust the performance of your searchable attributes:
 
 - __Order__ (optional): Attributes with lower `Order` will be given priority when searching for text. Attributes without `Order` set will be added to the end of the list (making them lower priority), while attributes with the same `Order` will be added with the same priority and are automatically `Unordered`.
-- __Unordered__ (optional): By default, matches at the beginning of an attribute are more relevant than matches at the end of the text. If `true`, the position of the matched text in the attribute is irrelevant.
+- __Unordered__ (optional): By default, matches at the beginning of a text are more relevant than matches at the end of the text. If set to `true`, the position of the matched text in the attribute content is irrelevant.
 
-Usage:
 ```cs
 [Searchable]
 public string DocumentName { get; set; }
@@ -250,19 +247,18 @@ public string DocumentName { get; set; }
 public string DocumentName { get; set; }
 ```
 
-### Facetable attribute
+### __Facetable__ attribute
 
-This attribute indicates an Algolia attribute is a [facet or filter](https://www.algolia.com/doc/api-reference/api-parameters/attributesForFaceting/#how-to-use). By creating facets, your developers are able to create a [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) interface on the front-end application. Optional attribute properties can be defined to change the functionality of your faceted attributes:
+This attribute indicates that an Algolia attribute is a [facet or filter](https://www.algolia.com/doc/api-reference/api-parameters/attributesForFaceting/#how-to-use). By creating facets, your developers are able to create a [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) interface on the front-end application. Optional attribute properties can be defined to change the functionality of your faceted attributes:
 
-- __FilterOnly__ (optional): Defines the attribute as a filter and not a facet. If you do not need facets, defining a attribute as a filter reduces the size of the index and improves the speed of the search.
+- __FilterOnly__ (optional): Defines the attribute as a filter and not a facet. If you do not need facets, defining an attribute as a filter reduces the size of the index and improves the speed of the search.
 
 - __Searchable__ (optional): Allows developers to search for values within a facet, e.g. via the [`SearchForFacetValues()`](https://www.algolia.com/doc/api-reference/api-methods/search-for-facet-values/) method.
 
-- __UseAndCondition__ (optional): When using the sample code in this repository and the `AlgoliaFacetFilterViewModel` class, facet conditions of the same attribute are joined by "OR" by default. For example, _"(CoffeProcessing:washed OR CoffeeProcessing:natural)."_ You may set this property to __true__ to join them by "AND" instead.
+- __UseAndCondition__ (optional): When using the sample code in this repository and the `AlgoliaFacetFilterViewModel` class, facet conditions of the same properties are joined by "OR" by default. For example, `(CoffeProcessing:washed OR CoffeeProcessing:natural)`. You may set this property to __true__ to join them by "AND" instead.
 
-> :warning: An attribute cannot be both `FilterOnly` and `Searchable`, or an exception will be thrown.
+> :warning: A property cannot be both `FilterOnly` and `Searchable`, otherwise an exception will be thrown.
 
-Usage:
 ```cs
 [Facetable]
 public decimal? SKUPrice { get; set; }
@@ -274,11 +270,10 @@ public decimal? SKUPrice { get; set; }
 public decimal? SKUPrice { get; set; }
 ```
 
-### Retrievable attribute
+### __Retrievable__ attribute
 
-This attribute determines which attributes to [retrieve when searching](https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/#how-to-use). Reducing the amount of attributes retrieved will help improve the speed of your searches, without impacting the search functionality.
+This attribute determines which Algolia attributes to [retrieve when searching](https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/#how-to-use). Reducing the amount of attributes retrieved will help improve the speed of your searches, without impacting the search functionality.
 
-Usage:
 ```cs
 [Searchable, Retrievable] // Used during searching and retrieved
 public string DocumentName { get; set; }
@@ -287,24 +282,22 @@ public string DocumentName { get; set; }
 public string ArticleText { get; set; }
 ```
 
-### Source attribute
+### __Source__ attribute
 
 This attribute can be used to alter the page field that the attribute value is retrieved from. This can be useful in indexes which include multiple page types, but the different page type fields should be stored in the same Algolia attribute. For example, your index should contain a "Thumbnail" attribute containing the URL to an image, but the image for each page type is stored in different page fields.
 
-Columns specified in the `SourceAttribute` are parsed in the order they appear, until a non-empty string and non-null value is found, which is then indexed. We recommend referencing standard page fields and custom page type fields using `nameof()` to avoid typos.
+Columns specified in the `Source` attribute are parsed in the order they appear, until a non-empty string and non-null value is found, which is then indexed. We recommend referencing standard page fields and custom page type fields using `nameof()` to avoid typos.
 
-Usage:
 ```cs
 [Url, Retrievable]
 [Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
 public string Thumbnail { get; set; }
 ```
 
-### Url attribute
+### __Url__ attribute
 
-This attribute indicates that the value of the page field should be converted into an absolute live-site URL before indexing. This can be useful when configuring the [Display Preferences](https://www.algolia.com/doc/guides/managing-results/rules/merchandising-and-promoting/how-to/how-to-configure-and-use-the-visual-editor-with-category-pages/#configure-the-visual-editor) in Algolia, for example. This attribute can be used on a page type field which stores a URL as a relative URL (_~/getmedia_) or one that stores an Xperience attachment.
+This attribute indicates that the value of the page field should be converted into an absolute live-site URL before indexing. This can be useful when configuring the [Display Preferences](https://www.algolia.com/doc/guides/managing-results/rules/merchandising-and-promoting/how-to/how-to-configure-and-use-the-visual-editor-with-category-pages/#configure-the-visual-editor) in Algolia, for example. This attribute can be used on a page type field which stores a URL as a relative URL (`~/getmedia`) or one that stores an Xperience attachment.
 
-Usage:
 ```cs
 [Url, Retrievable] // Attachment field
 public string ArticleTeaser { get; set; }
@@ -314,9 +307,9 @@ public string ArticleTeaser { get; set; }
 public string Thumbnail { get; set; }
 ```
 
-## :mag_right: Searching the index
+## :mag_right: Implementing the search interface
 
-You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to develop a search interface on your live site. The following example will help guide you in creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting `ISearchClient` and calling `InitIndex()` on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to implement a search interface on your live site. The following example will help you with creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting the `ISearchClient` interface and calling the `InitIndex()` method on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
 
 ```cs
 private readonly ISearchClient _searchClient;
@@ -338,12 +331,12 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
     };
 
     var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
-    ...
+}
 ```
 
 The `Hits` object of the [search response](https://www.algolia.com/doc/api-reference/api-methods/search/?client=csharp#response) will be a list of the strongly typed objects defined by your search model (`AlgoliaSiteSearchModel` in the above example). Other helpful properties of the results are `NbPages` and `NbHits`.
 
-The properties of each hit will be populated from the Algolia index, but be sure to check for `null` values! For example, a property that does _not_ have the [`Retrievable`](#retrievable-attribute) attribute will not be returned, and custom page type fields will only be present for results of that type. That is, a property named "ArticleText" will most likely be `null` for products on your site. You can reference the [`AlgoliaSearchModel.ClassName`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs#L27) property present on all indexes to check the type of the returned hit.
+The properties of each hit will be populated from the Algolia index, but be sure to check for `null` values! For example, a property that does _not_ have the [`Retrievable`](#retrievable-attribute) attribute will not be returned and custom page type fields will only be present for results of that type. That is, a property named "ArticleText" will most likely be `null` for products on your site. You can reference the [`AlgoliaSearchModel.ClassName`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs#L27) property present on all indexes to check the type of the returned hit.
 
 Once the search is performed, pass the `Hits` and paging information to your view:
 
@@ -357,7 +350,7 @@ return View(new SearchResultsModel()
 });
 ```
 
-In the view, loop through the `Hits` and display the results using a [display template](https://docs.microsoft.com/en-us/dotnet/api/system.web.mvc.html.displayextensions.displayfor?view=aspnet-mvc-5.2#System_Web_Mvc_Html_DisplayExtensions_DisplayFor__2_System_Web_Mvc_HtmlHelper___0__System_Linq_Expressions_Expression_System_Func___0___1___System_String_System_String_). You can define separate display templates for products or each page type if you'd like:
+In the view, loop through the `Hits` and display the results using a [display template](https://docs.microsoft.com/en-us/dotnet/api/system.web.mvc.html.displayextensions.displayfor?view=aspnet-mvc-5.2). You can define separate display templates for products or each page type:
 
 ```cshtml
 foreach (var item in Model.Items)
@@ -377,7 +370,7 @@ foreach (var item in Model.Items)
 }
 ```
 
-In the display template, reference your search model's properties to display the result:
+In the display template, reference your the properties of your search model to display the result:
 
 ```cshtml
 @model DancingGoat.AlgoliaSiteSearchModel
@@ -404,7 +397,7 @@ In the display template, reference your search model's properties to display the
 
 ### Working with scheduled content
 
-Content indexed in Algolia follow the same caveats as described in our [Azure search documentation](https://docs.xperience.io/configuring-xperience/setting-up-search-on-your-website/using-azure-cognitive-search#UsingAzureCognitiveSearch-Indexingpageswithsetpublishingintervals). That is, pages which use the __Publish From__ and __Publish To__ fields remain in the Algolia index after they are unpublished. If you want to filter them out of your search results, you must add a condition in your search code.
+Pages which use the __Publish From__ and __Publish To__ fields remain in the Algolia index after they are [unpublished](https://docs.xperience.io/x/8A6RBg#UsingAzureCognitiveSearch-Indexingpageswithsetpublishingintervals). If you want to filter them out of your search results, you must add a condition in your search code.
 
 This repository automatically indexes the `DocumentPublishFrom` and `DocumentPublishTo` columns and converts them to a Unix timestamp in UTC as [recommended by Algolia](https://www.algolia.com/doc/guides/managing-results/refine-results/filtering/how-to/filter-by-date/). To remove pages that have not reached their publish date or have been unpublished, get the current Unix timestamp in UTC and use the following condition:
 
@@ -418,9 +411,9 @@ var query = new Query(searchText)
 
 ### Creating an autocomplete search box
 
-Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/what-is-autocomplete/) functionality via javascript which you can [install](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#installation) and set up any way you'd like. Below is an example of how we added autocomplete functionality to the Dancing Goat demo site's main search box in the top-right of every page.
+Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/what-is-autocomplete/) functionality via javascript which you can [install](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#installation) and set up any way you'd like. Below is an example of how to add autocomplete functionality to the Dancing Goat demo site's main search box.
 
-1. In the _\_Layout.cshtml_ view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
+1. In the `/_Layout.cshtml` view which is rendered for every page, add a reference to Algolia's scripts and the default theme for autocomplete:
 
 ```cshtml
 <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
@@ -448,7 +441,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 }
 ```
 
-4. Add javascript near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+4. Add a script near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
 
 ```js
 <script type="text/javascript">
@@ -457,7 +450,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 </script>
 ```
 
-5. Initialize the autocomplete search box, then create a handler for when users click on autocomplete suggestions, and when the _Enter_ button is pushed:
+5. Initialize the autocomplete search box, then create a handler for when users click on autocomplete suggestions, and when the _Enter_ button is used:
 
 ```js
 var autocompleteBox = autocomplete('#search-input', {hint: false}, [
@@ -478,15 +471,15 @@ document.querySelector("#search-input").addEventListener("keyup", (e) => {
 });
 ```
 
-When you run the Dancing Goat website and start typing into the search box, records from the Algolia index will be suggested:
+When you build and run the Dancing Goat website and start typing into the search box, records from the Algolia index will be suggested:
 
 ![Autocomplete default theme](/img/autocomplete-default-theme.png)
 
-### Customizing the autocomplete search box
+#### Customizing the autocomplete search box
 
-In our sample implementation of the Algolia autocomplete search box we used the standard [Autocomplete classic theme](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#install-the-autocomplete-classic-theme) for basic styling of the search box and the autocomplete suggestion layout. You can reference the theme's [CSS classes and variables](https://www.algolia.com/doc/ui-libraries/autocomplete/api-reference/autocomplete-theme-classic/) to customize the appearance of the search box to match the design of your website.
+In our sample implementation of the Algolia autocomplete search box,the standard [Autocomplete classic theme](https://www.algolia.com/doc/ui-libraries/autocomplete/introduction/getting-started/#install-the-autocomplete-classic-theme) was used for basic styling of the search box and the autocomplete suggestion layout. You can reference the theme's [CSS classes and variables](https://www.algolia.com/doc/ui-libraries/autocomplete/api-reference/autocomplete-theme-classic/) to customize the appearance of the search box to match the design of your website.
 
-In the Dancing Goat website, we added the following to the CSS which styles the search box and suggestions to match the Dancing Goat theme:
+In the Dancing Goat website, you can add the following to the CSS which styles the search box and suggestions to match the Dancing Goat theme:
 
 ```css
 /*# Algolia search box #*/
@@ -522,8 +515,7 @@ In the Dancing Goat website, we added the following to the CSS which styles the 
 }
 ```
 
-The layout of each individual suggestion can be customized by providing a [custom template](https://www.algolia.com/doc/ui-libraries/autocomplete/core-concepts/templates/) in the `autocomplete()` function. In the Dancing Goat website, we can add an image to each suggestion and highlight the matching search term by adding the following to our javascript:
-
+The layout of each individual suggestion can be customized by providing a [custom template](https://www.algolia.com/doc/ui-libraries/autocomplete/core-concepts/templates/) in the `autocomplete()` function. In the Dancing Goat website, you can add an image to each suggestion and highlight the matching search term by adding the following to your script:
 
 ```js
 var autocompleteBox = autocomplete('#search-input', {hint: false}, [
@@ -536,7 +528,7 @@ var autocompleteBox = autocomplete('#search-input', {hint: false}, [
 }
 ```
 
-> :warning: The attributes `DocumentName` and `Thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using attributes present in your index. See the [sample search model](#determining-the-pages-to-index) to find out how these attributes were defined.
+> :warning: The attributes `DocumentName` and `Thumbnail` used in this example are not present in all Algolia indexes! If you follow this example, make sure you are using attributes present in your index. See the [sample search model](#determining-which-pages-to-index) to find out how these attributes were defined.
 
 This is the final result of adding our custom CSS and template:
 
@@ -544,15 +536,15 @@ This is the final result of adding our custom CSS and template:
 
 ## :ballot_box_with_check: Faceted search
 
-As the search interface can be designed in multiple languages using Algolia's APIs, your developers can implement [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/) in any way they'd like. However, this repository contains some helpful classes to develop faceted search using C#. The following is an example of creating a faceted search interface within the Dancing Goat sample site's store.
+As the search interface can be designed in multiple languages using Algolia's APIs, your developers can implement [faceted search](https://www.algolia.com/doc/guides/managing-results/refine-results/faceting/). However, this repository contains some helpful classes to develop faceted search using C#. The following is an example of creating a faceted search interface within the Dancing Goat sample site's store.
 
 ### Setting up basic search
 
-The Dancing Goat store doesn't use search out-of-the-box, so first we need to hook it up to Algolia. In this example, we will be using the search model seen in [Determining the pages to index](#determining-the-pages-to-index).
+The Dancing Goat store doesn't use search out-of-the-box, so first you need to hook it up to Algolia. In this example, the search model seen in [Determining which pages to index](#determining-which-pages-to-index) will be used.
 
-1. Inject `ISearchClient` into the `CoffeesController` as shown in [this section](#mag_right-searching-the-index).
+1. Inject `ISearchClient` into the `CoffeesController` as shown in [this section](#mag_right-implementing-the-search-interface).
 
-2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is "DancingGoatCore.Coffee." We'll also specify which `Facets` we want to retrieve, but we're not using them yet.
+2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is `DancingGoatCore.Coffee.` You also specify which `Facets` you want to retrieve, but they are not used yet.
 
 ```cs
 private SearchResponse<AlgoliaSiteSearchModel> Search()
@@ -624,7 +616,7 @@ namespace DancingGoat.Models.Store
 
 ```
 
-4. In __ProductListViewModel.cs__, change the `Items` property to be a list of our new `AlgoliaStoreModel` items:
+4. In __ProductListViewModel.cs__, change the `Items` property to be a list of the new `AlgoliaStoreModel` items:
 
 ```cs
 public IEnumerable<AlgoliaStoreModel> Items { get; set; }
@@ -651,15 +643,15 @@ public ActionResult Index()
 }
 ```
 
-6. Modify the views _Index.cshtml_, _CoffeeList.cshtml_, and _ProductListItem.cshtml_ to display your Algolia products.
+6. Modify the _Index.cshtml_, _CoffeeList.cshtml_, and _ProductListItem.cshtml_ views to display your Algolia products.
 
 ### Filtering your search with facets
 
-In the `Search()` method, we retrieved the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets from Algolia, but they are not used yet. In the following steps we will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold our facets and the current state of the faceted search interface.
+In the `Search()` method, the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets are retrieved from Algolia, but they are not used yet. In the following steps you will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold the facets and the current state of the faceted search interface.
 
-This repository contains several classes which we can use to strongly-type the `SearchResponse.Facets` result of an AlgoliaSearch. The `IAlgoliaSearchService.GetFacetedAttributes()` helps us convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet`s.
+This repository contains several classes which can be used to strongly-type the `SearchResponse.Facets` result of an Algolia search. The `IAlgoliaSearchService.GetFacetedAttributes()` allows you convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet` objects.
 
-Each `AlgoliaFacet` represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` will contain 3 `AlgoliaFacet`s in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
+Each `AlgoliaFacet` object represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` contains 3 `AlgoliaFacet` objects in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
 
 1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter`. Then, check whether the `filter` is non-null and call the `GetFilter()` method to generate the facet filters:
 
@@ -692,13 +684,13 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
 }
 ```
 
-The `GetFilter()` method will return a condition for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. Facets with the same attribute name are grouped within an "OR" condition. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" and "natural" processing type, the filter will look like this:
+The `GetFilter()` method returns a condition for each facet in the `IAlgoliaFacetFilter` which has the `IsChecked` property set to true. Facets with the same attribute name are grouped within an "OR" condition. For example, if a visitor on your store listing checked the boxes for decaf coffee with the "washed" and "natural" processing type, the filter will look like this:
 
 > "CoffeeIsDecaf:true" AND ("CoffeeProcessing:washed" OR "CoffeeProcessing:natural")
 
 You can change this behavior by setting the [`UseAndCondition`](#facetable-attribute) property of your faceted attributes, or by registering your own implementation of `IAlgoliaFacetFilter`.
 
-2. In `ProductListViewModel.cs`, add another property which will contain our facet filter:
+2. In `ProductListViewModel.cs`, add another property which contains the facet filter:
 
 ```cs
 public IAlgoliaFacetFilter AlgoliaFacetFilter { get; set; }
@@ -713,7 +705,7 @@ public CoffeesController(IAlgoliaSearchService algoliaSearchService)
 }
 ```
 
-4. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel`, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
+4. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel` parameter, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
 
 ```cs
 [HttpGet]
@@ -744,9 +736,9 @@ Here, the `GetFacetedAttributes()` method accepts the facets returned from Algol
 
 ### Displaying the facets
 
-If you've been following each section of this guide, the Dancing Goat store listing now uses Algolia search, and we have a filter which contains our Algolia facets and properly filters the search results. The final step is to display the facets in the store listing and handle user interaction with the facets.
+The Dancing Goat store listing now uses Algolia search, and you have a filter which contains Algolia facets and properly filters the search results. The final step is to display the facets in the store listing and handle user interaction with the facets.
 
-1. In _Index.cshtml_, replace the existing filter with our own custom view and set the form action to "Index" as we will be reloading the entire layout:
+1. In _Index.cshtml_, replace the existing filter with custom view and set the form action to "Index" as we will be reloading the entire layout:
 
 ```html
 <aside class="col-md-4 col-lg-3 product-filter">
@@ -756,7 +748,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 </aside>
 ```
 
-2. In the `Scripts` section of the view, remove the existing javascript and add a script that will post the form when a checkbox is toggled:
+2. In the `Scripts` section of the view, remove the existing script and add a script that will post the form when a checkbox is toggled:
 
 ```html
 <script>
@@ -768,7 +760,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 </script>
 ```
 
-3. Create the _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and should loop through each `AlogliaFacetedAttribute` it contains:
+3. Create a _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and loops through each `AlogliaFacetedAttribute` it contains:
 
 ```cshtml
 @using Kentico.Xperience.AlgoliaSearch.Models.Facets
@@ -781,7 +773,7 @@ If you've been following each section of this guide, the Dancing Goat store list
 }
 ```
 
-4. For each `AlgoliaFacetedAttribute` we now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create the _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
+4. For each `AlgoliaFacetedAttribute` you now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create a _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
 
 ```cshtml
 @using Kentico.Xperience.AlgoliaSearch.Models.Facets
@@ -799,13 +791,13 @@ If you've been following each section of this guide, the Dancing Goat store list
 }
 ```
 
-We're done! Now, when you check one of the facets our javascript will cause the form to post back to the `Index()` action. The `filter` parameter will contain the facets that were displayed on the page, with the `IsChecked` property of each facet set accordingly. The filter is passed to our `Search()` method which uses `GetFilter()` to filter the search results, and a new `AlgoliaFacetFilterViewModel` is created with the results of the query.
+Now, when you check one of the facets your JavaScript code will cause the form to post back to the `Index()` action. The `filter` parameter will contain the facets that were displayed on the page, with the `IsChecked` property of each facet set accordingly. The filter is passed to our `Search()` method which uses `GetFilter()` to filter the search results, and a new `AlgoliaFacetFilterViewModel` is created with the results of the query.
 
 ![Dancing goat facet example](/img/dg-facets.png)
 
 ### Localizing facet names and values
 
-Without localization, your view will display your facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable header like "Decaffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+Without localization, the view will display facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable title like "Decaffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
 
 1. Inject `IStringLocalizer<SharedResources>` into the __CoffeeController__.
 2. Call `filterViewModel.Localize()` in the `Index()` method after constructing the facet filter view model.
@@ -829,14 +821,14 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 
 ## :bulb: Personalizing search results
 
-Algolia offers search result [Personalization](https://www.algolia.com/doc/guides/personalization/what-is-personalization/) to offer more relevant results to each individual visitor on your website. To begin personalizing search results, you first need to send [events](https://www.algolia.com/doc/guides/sending-events/planning/) to Algolia which detail the visitor's activity. As with much of the Algolia functionality, sending events is very flexible depending on your API of choice and how your search is implemented. You can choose to use any of the approaches in the Algolia documentation (e.g. [Google Tag Manager](https://www.algolia.com/doc/guides/sending-events/implementing/connectors/google-tag-manager/)). The following section details how to send events using C# with the assistance of some classes from this repository.
+Algolia offers search result [personalization](https://www.algolia.com/doc/guides/personalization/what-is-personalization/) to offer more relevant results to each individual visitor on your website. To begin personalizing search results, you first need to send [events](https://www.algolia.com/doc/guides/sending-events/planning/) to Algolia which detail the visitor's activity. As with much of the Algolia functionality, sending events is very flexible depending on your API of choice and how your search is implemented. You can choose to use any of the approaches in the Algolia documentation (e.g. [Google Tag Manager](https://www.algolia.com/doc/guides/sending-events/implementing/connectors/google-tag-manager/)). The following section showcases how to send events using C# with the assistance of some classes from this repository.
 
 
-If you do not already have a basic search interface set up, check out [this section](#mag_right-searching-the-index) to set one up first.
+If you do not already have a basic search interface set up, you need to [implement a search interface](#mag_right-implementing-the-search-interface).
 
 ### Sending search result click events/conversions
 
-To track these types of events, the `ClickAnalytics` property must be enabled while creating your search query:
+To track these types of events, the `ClickAnalytics` property must be enabled when creating your search query:
 
 ```cs
 var query = new Query(searchText)
@@ -876,9 +868,9 @@ When a visitor lands on a page after clicking a search result, these methods use
 
 ### Sending generic page-related events/conversions
 
-Aside from search result related events/conversions, there are many more generic events you may want to send to Algolia. For example, a very important conversion on E-commerce websites could be "Product added to cart." For sites that produce blog posts or articles, you may want to send an "Article viewed" event.
+Aside from search result related events/conversions, there are many more generic events you can send to Algolia. For example, a very important conversion on E-commerce websites could be _Product added to cart_. For sites that produce blog posts or articles, you may want to send an _Article viewed_ event.
 
-For a conversion, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a "Product added to cart" conversion in the __CheckoutController__:
+For a conversion, you can use the `IAlgoliaInsightsService.LogPageConversion()` method in your controllers or views. In the Dancing Goat sample site, we can log a _Product added to cart_ conversion in the __CheckoutController__:
 
 ```cs
 public async Task<ActionResult> AddItem(CartItemUpdateModel item)
@@ -912,7 +904,7 @@ public async Task<ActionResult> AddItem(CartItemUpdateModel item)
 }
 ```
 
-We can also log an event when a visitor simply views a page with the `LogPageViewed()` method. For example, in the __ArticlesController__ we can log an "Article viewed" event:
+You can also log an event when a visitor simply views a page with the `LogPageViewed()` method. For example, in the __ArticlesController__ you can log an _Article viewed_ event:
 
 ```cs
 public async Task<IActionResult> Detail([FromServices] ArticleRepository articleRepository)
@@ -924,7 +916,7 @@ public async Task<IActionResult> Detail([FromServices] ArticleRepository article
 }
 ```
 
-Or, in the _\_Details.cshtml_ view for products, we can log a "Product viewed" event:
+Or, in the _\_Details.cshtml_ view for products, you can log a _Product viewed_ event:
 
 ```cshtml
 @inject IAlgoliaInsightsService _insightsService
@@ -940,7 +932,7 @@ Or, in the _\_Details.cshtml_ view for products, we can log a "Product viewed" e
 
 ### Logging facet-related events/conversions
 
-You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, we will be using the code from our Dancing Goat faceted search example [here](#filtering-your-search-with-facets). Logging a "Search facets viewed" event can easily be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which we already have from the `IAlgoliaSearchService.GetFacetedAttributes()` call:
+You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, the code from our Dancing Goat faceted search [example](#filtering-your-search-with-facets) will be used. Logging a _Search facets viewed_ event can be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which you already have from the `IAlgoliaSearchService.GetFacetedAttributes()` call:
 
 ```cs
 var searchResponse = Search(filter);
@@ -948,13 +940,13 @@ var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facet
 await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
 ```
 
-To log an event or conversion when a facet is clicked, we need to use a little AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
+To log an event or conversion when a facet is clicked, you need to use AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
 
 ```cshtml
 <input data-facet="@(Model.Attribute):@Model.Facets[i].Value" asp-for="@Model.Facets[i].IsChecked" />
 ```
 
-In the _Index.cshtml_ view for the coffee listing, we already use the `change()` function to run some javascript when a facet is checked or unchecked. Let's add some code that runs only if the facet has been checked which gets the value of the new `data` attribute and sends a POST request:
+In the _Index.cshtml_ view for the coffee listing, the `change()` function is already used to run some javascript when a facet is checked or unchecked. Let's add some code that runs only if the facet has been checked which gets the value of the new `data` attribute and sends a POST request:
 
 ```js
 <script>
@@ -973,7 +965,7 @@ In the _Index.cshtml_ view for the coffee listing, we already use the `change()`
 </script>
 ```
 
-This will send the request to the __StoreController__ `FacetClicked()` action, but you can send the request anywhere you'd like. Check the __Startup.cs__ to make sure your application can handle this request:
+This sends the request to the __StoreController__ `FacetClicked()` action, but you can send the request anywhere else. Check the __Startup.cs__ to make sure your application can handle this request:
 
 ```cs
 endpoints.MapControllerRoute(
@@ -983,7 +975,7 @@ endpoints.MapControllerRoute(
 );
 ```
 
-Now, create the action in the appropriate controller which accepts the facet parameter and logs the event, conversion, or both:
+In the appropriate controller, create the action which accepts the facet parameter and logs the event, conversion, or both:
 
 ```cs
 [HttpPost]
@@ -1002,7 +994,7 @@ public Task<ActionResult> FacetClicked(string facet)
 
 ### Configuring Personalization
 
-Once you've begun to track events using the examples in the previous sections, you can configure a [Personalization strategy](https://www.algolia.com/doc/guides/personalization/personalizing-results/in-depth/configuring-personalization/). This is done directly in the Algolia interface, in your application's __Personalization__ menu.
+Once you've begun to track events using the examples in the previous sections, you can configure a [personalization strategy](https://www.algolia.com/doc/guides/personalization/personalizing-results/in-depth/configuring-personalization/). This is done directly in the Algolia interface, in your application's __Personalization__ menu.
 
 After your Personalization strategy is configured, you must set certain properties during your search queries to retrieve personalized results:
 
@@ -1143,7 +1135,7 @@ endpoints.MapControllerRoute(
 }
 ```
 
-4. Finally, create the _/wwwroot/Content/Styles/instantsearch.css_ stylesheet which overrides some default InstantSearch.js styling to fit the Dancing Goat theme:
+4. Create the _/wwwroot/Content/Styles/instantsearch.css_ stylesheet which overrides some default _InstantSearch.js_ styling to fit the Dancing Goat theme:
 
 ```css
 .instantsearch-container {
@@ -1222,19 +1214,19 @@ endpoints.MapControllerRoute(
 }
 ```
 
-When you run the site and visit your new page, you'll see that you have a fully functioning search interface with faceting, created with only three new files! See Algolia's [InstantSearch documentation](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) for more detailed walkthroughs on designing the search interface and customizing widgets.
+When you run the site and visit your new page, you'll see that you have a fully functioning search interface with faceting. See Algolia's [InstantSearch documentation](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) for more detailed walkthroughs on designing the search interface and customizing widgets.
 
 ![InstantSearch example](/img/instantsearch-example.png)
 
-## :chart_with_upwards_trend: Xperience Algolia module
+## :chart_with_upwards_trend: _Algolia search_ application for administration interface
 
-While the Xperience Algolia integration works without an Xperience interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects).
+While the Xperience Algolia integration works without any changes to the Xperience administration interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/x/VAeRBg).
 
-After importing, perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project. The module also includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
+After importing, perform the [necessary steps](https://docs.xperience.io/x/VAeRBg#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project. The module also includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
 
 ### Custom module features
 
-The newly-imported __Algolia search__ module will provide a listing of all registered Algolia indexes assigned to the current site, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point- only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
+The __Algolia search__ application provides a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point - only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
 
 ![Algolia module grid](/img/index-grid.png)
 
@@ -1246,4 +1238,8 @@ Switch to the __Search preview__ tab to perform a basic Algolia query:
 
 ![Algolia index preview](/img/index-preview.png)
 
-This view will display the `objectID` and `ClassName` attributes, plus any other searchable attributes which contained the matching search term.
+This view displays the `objectID` and `ClassName` attributes, plus any other searchable attributes which contained the matching search term.
+
+## Questions & Support
+
+See the [Kentico home repository](https://github.com/Kentico/Home/blob/master/README.md) for more information about the product(s) and general advice on submitting questions.
