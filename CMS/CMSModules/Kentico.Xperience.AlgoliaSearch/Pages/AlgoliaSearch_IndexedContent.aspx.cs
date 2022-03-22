@@ -5,6 +5,7 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch.Pages
@@ -26,14 +27,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 return;
             }
 
-            searchModelType = algoliaRegistrationService.GetModelByIndexName(indexName);
-            if (searchModelType == null)
+            var registerIndexAttribute = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
             {
                 ShowError("Unable to load index search model class.");
                 return;
             }
 
-            ShowInformation($"The indexed columns and pages are defined in the class <b>{searchModelType}</b>. To modify them, please contact your developer.");
+            ShowInformation($"The indexed columns and pages are defined in the class <b>{registerIndexAttribute.Type}</b>. To modify them, please contact your developer.");
 
             LoadProperties();
             LoadPaths();

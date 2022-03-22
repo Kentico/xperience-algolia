@@ -254,46 +254,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
         [TestFixture]
-        internal class GetModelByIndexNameTests : AlgoliaTests
-        {
-            private IAlgoliaRegistrationService algoliaRegistrationService;
-
-
-            [SetUp]
-            public void GetModelByIndexNameTests_SetUp()
-            {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>());
-
-                var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-                foreach (var attribute in attributes)
-                {
-                    algoliaRegistrationService.RegisterIndex(attribute);
-                }
-            }
-
-
-            [TestCase(Model1.IndexName, ExpectedResult = typeof(Model1))]
-            [TestCase(Model2.IndexName, ExpectedResult = typeof(Model2))]
-            [TestCase(Model3.IndexName, ExpectedResult = typeof(Model3))]
-            [TestCase(Model4.IndexName, ExpectedResult = typeof(Model4))]
-            [TestCase(Model5.IndexName, ExpectedResult = typeof(Model5))]
-            [TestCase(Model6.IndexName, ExpectedResult = typeof(Model6))]
-            public Type GetModelByIndexName_IndexWithRegisteredName_ReturnsRegisteredClass(string indexName)
-            {
-                return algoliaRegistrationService.GetModelByIndexName(indexName);
-            }
-
-
-            [Test]
-            public void GetModelByIndexName_InvalidIndexName_ReturnsNull()
-            {
-                var searchModel = algoliaRegistrationService.GetModelByIndexName("FAKE_NAME");
-                Assert.IsNull(searchModel);
-            }
-        }
-
-
-        [TestFixture]
         internal class RegisterIndexTests : AlgoliaTests
         {
             private IAlgoliaRegistrationService algoliaRegistrationService;

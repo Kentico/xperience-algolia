@@ -80,15 +80,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(indexName));
             }
 
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
+            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
             {
                 return null;
             }
 
-            var searchableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-            var retrievablProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
-            var facetableProperties = searchModelType.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            var searchableProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievablProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
             ;
             return new IndexSettings()
             {
@@ -99,30 +99,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public Type GetModelByIndexName(string indexName)
-        {
-            var records = mRegisteredIndexes.Where(i => i.IndexName == indexName);
-            if (records.Count() == 0)
-            {
-                return null;
-            }
-
-            return records.FirstOrDefault().Type;
-        }
-
-
         public string[] GetIndexedColumnNames(string indexName)
         {
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
+            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
             {
                 return new string[] { };
             }
 
             // Don't include properties with SourceAttribute at first, check the sources and add to list after
-            var indexedColumnNames = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var indexedColumnNames = registerIndexAttribute.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
-            var propertiesWithSourceAttribute = searchModelType.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            var propertiesWithSourceAttribute = registerIndexAttribute.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
             foreach (var property in propertiesWithSourceAttribute)
             {
@@ -172,8 +160,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(node));
             }
 
-            var searchModelType = GetModelByIndexName(indexName);
-            if (searchModelType == null)
+            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
             {
                 eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
                 return false;
@@ -188,7 +176,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 }
             }
 
-            var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
+            var includedPathAttributes = registerIndexAttribute.Type.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var path = includedPathAttribute.AliasPath;

@@ -106,11 +106,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     algoliaConnection.Initialize(group.Key);
 
-                    var searchModelType = algoliaRegistrationService.GetModelByIndexName(group.Key);
+                    var registerIndexAttribute = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == group.Key);
+                    if (registerIndexAttribute == null)
+                    {
+                        eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(ProcessAlgoliaTasks), $"Attempted to process tasks for index '{group.Key},' but the index is not registered.");
+                        continue;
+                    }
+
                     var deleteTasks = group.Where(queueItem => queueItem.Deleted);
                     var updateTasks = group.Where(queueItem => !queueItem.Deleted);
-                    var upsertData = updateTasks.Select(queueItem => GetTreeNodeData(queueItem.Node, searchModelType));
-                    var deleteData = deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString());
+                    var upsertData = updateTasks.Select(queueItem => GetTreeNodeData(queueItem.Node, registerIndexAttribute.Type)).ToList();
+                    var deleteData = deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString()).ToList();
 
                     successfulOperations += algoliaConnection.UpsertRecords(upsertData);
                     successfulOperations += algoliaConnection.DeleteRecords(deleteData);

@@ -23,9 +23,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// </summary>
     public class DefaultAlgoliaConnection : IAlgoliaConnection
     {
-        private string indexName;
-        private Type searchModelType;
         private SearchIndex searchIndex;
+        private RegisterAlgoliaIndexAttribute registerIndexAttribute;
         private readonly ISearchClient searchClient;
         private readonly IEventLogService eventLogService;
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
@@ -51,19 +50,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(indexName);
             }
 
-            this.indexName = indexName;
-            searchIndex = searchClient.InitIndex(indexName);
-            searchModelType = algoliaRegistrationService.GetModelByIndexName(indexName);
-
-            if (searchModelType == null)
+            registerIndexAttribute = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (registerIndexAttribute == null)
             {
-                throw new InvalidOperationException($"Unable to load search model class for index '{indexName}.'");
+                throw new InvalidOperationException($"Unable to load registration attribute for index '{indexName}.'");
             }
 
-            if (!searchModelType.IsSubclassOf(typeof(AlgoliaSearchModel)))
+            if (!registerIndexAttribute.Type.IsSubclassOf(typeof(AlgoliaSearchModel)))
             {
                 throw new InvalidOperationException($"Algolia search models must extend the {nameof(AlgoliaSearchModel)} class.");
             }
+
+            searchIndex = searchClient.InitIndex(indexName);
         }
 
 
@@ -113,7 +111,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public void Rebuild()
         {
-            if (searchModelType == null)
+            if (registerIndexAttribute.Type == null)
             {
                 throw new InvalidOperationException("No registered search model class found for index.");
             }
@@ -121,11 +119,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             searchIndex.ClearObjects();
 
             var indexedNodes = new List<TreeNode>();
-            var includedPathAttributes = searchModelType.GetCustomAttributes<IncludedPathAttribute>(false);
+            var includedPathAttributes = registerIndexAttribute.Type.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var query = new MultiDocumentQuery()
-                    .OnCurrentSite()
                     .Path(includedPathAttribute.AliasPath)
                     .PublishedVersion()
                     .WithCoupledColumns();
@@ -140,13 +137,21 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                     query.Culture(includedPathAttribute.Cultures);
                 }
 
+                if (registerIndexAttribute.SiteNames.Length > 0)
+                {
+                    foreach (var site in registerIndexAttribute.SiteNames)
+                    {
+                        query.OnSite(site).Or();
+                    }
+                }
+
                 indexedNodes.AddRange(query.TypedResult);
             }
 
             AlgoliaQueueWorker.EnqueueAlgoliaQueueItems(indexedNodes.Select(node =>
                 new AlgoliaQueueItem
                 {
-                    IndexName = indexName,
+                    IndexName = registerIndexAttribute.IndexName,
                     Node = node,
                     Deleted = false
                 }

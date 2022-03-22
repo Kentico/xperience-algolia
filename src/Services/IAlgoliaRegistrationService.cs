@@ -44,14 +44,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Gets the registered search model class that is paired with the Algolia index.
-        /// </summary>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <returns>The search model class type, or null if not found.</returns>
-        public Type GetModelByIndexName(string indexName);
-
-
-        /// <summary>
         /// Gets the indexed page columns specified by the the index's search model properties for
         /// use when checking whether an indexed column was updated after a page update. The names
         /// of properties with the <see cref="SourceAttribute"/> are ignored, and instead the array

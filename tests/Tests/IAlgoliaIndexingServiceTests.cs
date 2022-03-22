@@ -1,6 +1,7 @@
 ﻿using CMS.DataEngine;
 using CMS.DocumentEngine;
 
+using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
@@ -123,10 +124,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void ProcessAlgoliaTasksTests_SetUp()
             {
                 var mockRegistrationService = Substitute.For<IAlgoliaRegistrationService>();
-                mockRegistrationService.GetModelByIndexName(Model1.IndexName).Returns(typeof(Model1));
-                mockRegistrationService.GetModelByIndexName(Model2.IndexName).Returns(typeof(Model2));
-                mockRegistrationService.GetModelByIndexName(Model3.IndexName).Returns(typeof(Model3));
-                mockRegistrationService.GetModelByIndexName(Model4.IndexName).Returns(typeof(Model4));
+                mockRegistrationService.RegisteredIndexes.Returns(new List<RegisterAlgoliaIndexAttribute>() {
+                    new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName),
+                    new RegisterAlgoliaIndexAttribute(typeof(Model2), Model2.IndexName),
+                    new RegisterAlgoliaIndexAttribute(typeof(Model3), Model3.IndexName),
+                    new RegisterAlgoliaIndexAttribute(typeof(Model4), Model4.IndexName)
+                });
 
                 var mockAlgoliaConnection = Substitute.For<IAlgoliaConnection>();
                 mockAlgoliaConnection.UpsertRecords(Arg.Any<IEnumerable<JObject>>()).Returns(args => args.Arg<IEnumerable<JObject>>().Count());
