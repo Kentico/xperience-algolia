@@ -28,6 +28,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     {
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
         private readonly IInsightsClient insightsClient;
+        private readonly IEventLogService eventLogService;
         private const string parameterNameObjectId = "object";
         private const string parameterNameQueryId = "query";
         private const string parameterNamePosition = "pos";
@@ -78,10 +79,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaInsightsService"/> class.
         /// </summary>
-        public DefaultAlgoliaInsightsService(IAlgoliaRegistrationService algoliaRegistrationService, IInsightsClient insightsClient)
+        public DefaultAlgoliaInsightsService(IAlgoliaRegistrationService algoliaRegistrationService,
+            IInsightsClient insightsClient, IEventLogService eventLogService)
         {
             this.algoliaRegistrationService = algoliaRegistrationService;
             this.insightsClient = insightsClient;
+            this.eventLogService = eventLogService;
         }
 
 
@@ -92,7 +95,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ClickedObjectIDsAfterSearchAsync(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
+            try
+            {
+                return await insightsClient.User(ContactGUID).ClickedObjectIDsAfterSearchAsync(eventName, indexName, new string[] { ObjectId }, new uint[] { Position }, QueryId);
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogSearchResultClicked), ex);
+            }
+
+            return null;
         }
 
 
@@ -103,7 +115,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearchAsync(conversionName, indexName, new string[] { ObjectId }, QueryId);
+            try
+            {
+                return await insightsClient.User(ContactGUID).ConvertedObjectIDsAfterSearchAsync(conversionName, indexName, new string[] { ObjectId }, QueryId);
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogSearchResultConversion), ex);
+            }
+
+            return null;
         }
 
 
@@ -114,7 +135,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ViewedObjectIDsAsync(eventName, indexName, new string[] { documentId.ToString() });
+            try
+            {
+                return await insightsClient.User(ContactGUID).ViewedObjectIDsAsync(eventName, indexName, new string[] { documentId.ToString() });
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogPageViewed), ex);
+            }
+
+            return null;
         }
 
 
@@ -125,7 +155,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ConvertedObjectIDsAsync(conversionName, indexName, new string[] { documentId.ToString() });
+            try
+            {
+                return await insightsClient.User(ContactGUID).ConvertedObjectIDsAsync(conversionName, indexName, new string[] { documentId.ToString() });
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogPageConversion), ex);
+            }
+
+            return null;
         }
 
 
@@ -144,7 +183,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             if (viewedFacets.Count > 0)
             {
-                return await insightsClient.User(ContactGUID).ViewedFiltersAsync(eventName, indexName, viewedFacets);
+                try
+                {
+                    return await insightsClient.User(ContactGUID).ViewedFiltersAsync(eventName, indexName, viewedFacets);
+                }
+                catch (Exception ex)
+                {
+                    eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogFacetsViewed), ex);
+                }
             }
 
             return null;
@@ -158,7 +204,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ClickedFiltersAsync(eventName, indexName, new string[] { facet });
+            try
+            {
+                return await insightsClient.User(ContactGUID).ClickedFiltersAsync(eventName, indexName, new string[] { facet });
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogFacetClicked), ex);
+            }
+
+            return null;
         }
 
 
@@ -169,7 +224,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 return null;
             }
 
-            return await insightsClient.User(ContactGUID).ConvertedFiltersAsync(conversionName, indexName, new string[] { facet });
+            try
+            {
+                return await insightsClient.User(ContactGUID).ConvertedFiltersAsync(conversionName, indexName, new string[] { facet });
+            }
+            catch (Exception ex)
+            {
+                eventLogService.LogException(nameof(DefaultAlgoliaInsightsService), nameof(LogFacetConverted), ex);
+            }
+
+            return null;
         }
 
 

@@ -1,7 +1,6 @@
 ﻿using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;

@@ -332,7 +332,15 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
         HitsPerPage = PAGE_SIZE
     };
 
-    var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+    try
+    {
+        var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+        //...
+    }
+    catch (Exception e)
+    {
+        //...
+    }
 }
 ```
 
@@ -631,17 +639,28 @@ public IEnumerable<AlgoliaStoreModel> Items { get; set; }
 [HttpPost]
 public ActionResult Index()
 {
-    var searchResponse = Search();
-    var items = searchResponse.Hits.Select(
-        hit => new AlgoliaStoreModel(hit)
-    );
-
-    var model = new ProductListViewModel
+    try
     {
-        Items = items
-    };
+        var searchResponse = Search();
+        var items = searchResponse.Hits.Select(
+            hit => new AlgoliaStoreModel(hit)
+        );
 
-    return View(model);
+        var model = new ProductListViewModel
+        {
+            Items = items
+        };
+
+        return View(model);
+    }
+    catch (Exception ex)
+    {
+        // Log error..
+        return View(new ProductListViewModel
+        {
+            Items = Enumerable.Empty<AlgoliaStoreModel>()
+        });
+    }
 }
 ```
 
@@ -715,22 +734,33 @@ public CoffeesController(IAlgoliaSearchService algoliaSearchService)
 public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 {
     ModelState.Clear();
-
-    var searchResponse = Search(filter);
-    var items = searchResponse.Hits.Select(
-        hit => new AlgoliaStoreModel(hit)
-    );
-
-    var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-    var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
-
-    var model = new ProductListViewModel
+    try
     {
-        Items = items,
-        AlgoliaFacetFilter = filterViewModel
-    };
+        var searchResponse = Search(filter);
+        var items = searchResponse.Hits.Select(
+            hit => new AlgoliaStoreModel(hit)
+        );
 
-    return View(model);
+        var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
+        var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
+
+        var model = new ProductListViewModel
+        {
+            Items = items,
+            AlgoliaFacetFilter = filterViewModel
+        };
+
+        return View(model);
+    }
+    catch (Exception ex)
+    {
+        // Log error..
+        return View(new ProductListViewModel
+        {
+            Items = Enumerable.Empty<AlgoliaStoreModel>(),
+            AlgoliaFacetFilter = filter
+        });
+    }
 }
 ```
 
