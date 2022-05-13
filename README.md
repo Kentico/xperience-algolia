@@ -1222,11 +1222,21 @@ When you run the site and visit your new page, you'll see that you have a fully 
 
 ## :chart_with_upwards_trend: _Algolia search_ application for administration interface
 
-While the Xperience Algolia integration works without any changes to the Xperience administration interface, you may choose to import a custom module into your Xperience website to improve your user's experience. To do so, locate the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory, download it, and [import it into your Xperience website](https://docs.xperience.io/x/VAeRBg).
+While the Xperience Algolia integration works without any changes to the Xperience administration interface, you may choose to import a custom module into your Xperience website to improve your user's experience.
 
-After importing, perform the [necessary steps](https://docs.xperience.io/x/VAeRBg#Importingasiteorobjects-Importingpackageswithfiles) to include the imported folder `/CMSModules/Kentico.Xperience.AlgoliaSearch` in your project. The module also includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
+### Importing the custom module
 
-### Custom module features
+1.  Download the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory
+1. In the Xperience adminstration, open the __Sites__ application.
+1. [Import](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects) the downloaded package with the __Import files__ and __Import code files__ [settings](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Import-Objectselectionsettings) enabled.
+1. Perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the following imported folder in your project:
+   - `/CMSModules/Kentico.Xperience.AlgoliaSearch`
+
+### Enabling indexing
+
+The imported module includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
+
+### Algolia search application
 
 The __Algolia search__ application provides a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point - only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.
 
