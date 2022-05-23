@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Default implementation of <see cref="AlgoliaIndexingService"/>.
     /// </summary>
-    public class DefaultAlgoliaIndexingService : IAlgoliaIndexingService
+    internal class DefaultAlgoliaIndexingService : IAlgoliaIndexingService
     {
         private readonly IAlgoliaConnection algoliaConnection;
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
@@ -270,7 +270,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             {
                 data[nameof(AlgoliaSearchModel.Url)] = DocumentURLProvider.GetAbsoluteUrl(node);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // GetAbsoluteUrl can throw an exception when processing a page update AlgoliaQueueItem
                 // and the page was deleted before the update task has processed. In this case, upsert an

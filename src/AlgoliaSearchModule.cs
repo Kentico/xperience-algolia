@@ -12,8 +12,10 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Configuration;
+using System.Runtime.CompilerServices;
 
 [assembly: AssemblyDiscoverable]
+[assembly: InternalsVisibleTo("Kentico.Xperience.AlgoliaSearch.Tests")]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
 namespace Kentico.Xperience.AlgoliaSearch
 {

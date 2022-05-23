@@ -24,7 +24,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Algolia Insights events using the <see cref="ContactInfo.ContactGUID"/>
     /// as the user's identifier.
     /// </summary>
-    public class DefaultAlgoliaInsightsService : IAlgoliaInsightsService
+    internal class DefaultAlgoliaInsightsService : IAlgoliaInsightsService
     {
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
         private readonly IInsightsClient insightsClient;

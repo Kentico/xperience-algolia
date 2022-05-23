@@ -21,7 +21,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaConnection"/>.
     /// </summary>
-    public class DefaultAlgoliaConnection : IAlgoliaConnection
+    internal class DefaultAlgoliaConnection : IAlgoliaConnection
     {
         private SearchIndex searchIndex;
         private RegisterAlgoliaIndexAttribute registerIndexAttribute;

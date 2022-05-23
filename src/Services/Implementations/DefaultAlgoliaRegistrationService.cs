@@ -20,7 +20,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaRegistrationService"/>.
     /// </summary>
-    public class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
+    internal class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
     {
         private readonly IAlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
