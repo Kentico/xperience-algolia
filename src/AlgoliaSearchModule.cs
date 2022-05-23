@@ -12,8 +12,10 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Configuration;
+using System.Runtime.CompilerServices;
 
 [assembly: AssemblyDiscoverable]
+[assembly: InternalsVisibleTo("Kentico.Xperience.AlgoliaSearch.Tests")]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
 namespace Kentico.Xperience.AlgoliaSearch
 {
@@ -31,7 +33,6 @@ namespace Kentico.Xperience.AlgoliaSearch
 
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
         {
-            
         }
 
 
@@ -44,8 +45,15 @@ namespace Kentico.Xperience.AlgoliaSearch
             {
                 var applicationId = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApplicationId"], String.Empty);
                 var apiKey = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApiKey"], String.Empty);
-                var client = new SearchClient(applicationId, apiKey);
+                if (String.IsNullOrEmpty(applicationId) || String.IsNullOrEmpty(apiKey))
+                {
+                    // Algolia configuration is not valid, but IEventLogService can't be resolved during OnPreInit.
+                    // Set dummy values so that DI is not broken, but errors are still logged later in the initialization
+                    applicationId = "NO_APP";
+                    apiKey = "NO_KEY";
+                }
 
+                var client = new SearchClient(applicationId, apiKey);
                 Service.Use<ISearchClient>(client);
             }
         }

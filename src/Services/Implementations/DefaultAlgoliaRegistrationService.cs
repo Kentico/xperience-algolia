@@ -20,7 +20,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaRegistrationService"/>.
     /// </summary>
-    public class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
+    internal class DefaultAlgoliaRegistrationService : IAlgoliaRegistrationService
     {
         private readonly IAlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
@@ -216,18 +216,26 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             foreach (var attribute in attributes)
             {
-                RegisterIndex(attribute);
-
-                // Set index settings
-                var searchIndex = searchClient.InitIndex(attribute.IndexName);
-                var indexSettings = GetIndexSettings(attribute.IndexName);
-                if (indexSettings == null)
+                try
                 {
-                    eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
-                    continue;
-                }
+                    RegisterIndex(attribute);
 
-                searchIndex.SetSettings(indexSettings);
+                    var searchIndex = searchClient.InitIndex(attribute.IndexName);
+                    var indexSettings = GetIndexSettings(attribute.IndexName);
+                    if (indexSettings == null)
+                    {
+                        eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
+                        continue;
+                    }
+
+                    searchIndex.SetSettings(indexSettings);
+                    
+                }
+                catch (Exception ex)
+                {
+                    mRegisteredIndexes.Remove(attribute);
+                    eventLogService.LogException(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), ex, additionalMessage: $"Cannot register Algolia index '{attribute.IndexName}.'");
+                }
             }
         }
 

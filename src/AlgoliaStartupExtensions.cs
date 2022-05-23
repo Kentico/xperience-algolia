@@ -5,6 +5,8 @@ using Kentico.Xperience.AlgoliaSearch.Models;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
+using System;
+
 namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
@@ -20,6 +22,14 @@ namespace Kentico.Xperience.AlgoliaSearch
         public static IServiceCollection AddAlgolia(this IServiceCollection services, IConfiguration configuration)
         {
             var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
+            if (String.IsNullOrEmpty(algoliaOptions.ApplicationId) || String.IsNullOrEmpty(algoliaOptions.ApiKey))
+            {
+                // Algolia configuration is not valid, but IEventLogService can't be resolved during startup.
+                // Set dummy values so that DI is not broken, but errors can be captured when attempting to use the client
+                algoliaOptions.ApplicationId = "NO_APP";
+                algoliaOptions.ApiKey = "NO_KEY";
+            }
+
             var insightsClient = new InsightsClient(algoliaOptions.ApplicationId, algoliaOptions.ApiKey);
             var searchClient = new SearchClient(algoliaOptions.ApplicationId, algoliaOptions.ApiKey);
 
