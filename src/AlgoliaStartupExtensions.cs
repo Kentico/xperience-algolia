@@ -18,6 +18,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// Registers instances of <see cref="IInsightsClient"/> and <see cref="ISearchClient"/>
         /// with Dependency Injection.
         /// </summary>
+        /// <param name="services"></param>
         /// <param name="configuration">The application configuration.</param>
         public static IServiceCollection AddAlgolia(this IServiceCollection services, IConfiguration configuration)
         {
