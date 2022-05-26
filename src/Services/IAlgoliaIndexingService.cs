@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
         /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
         /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
-        public void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew);
+        void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew);
 
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <returns>A <see cref="JObject"/> with its properties and values set.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="node"/> or
         /// <paramref name="searchModelType"/> are null.</exception>
-        public JObject GetTreeNodeData(TreeNode node, Type searchModelType);
+        JObject GetTreeNodeData(TreeNode node, Type searchModelType);
 
 
         /// <summary>
@@ -47,6 +47,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <remarks>Logs errors if there are issues initializing the <see cref="IAlgoliaConnection"/>.</remarks>
         /// <param name="items">The items to process.</param>
         /// <returns>The number of items processed.</returns>
-        public int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items);
+        int ProcessAlgoliaTasks(IEnumerable<AlgoliaQueueItem> items);
     }
 }

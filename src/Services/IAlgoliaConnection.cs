@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// or null.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the search model is configured
         /// incorrectly or index settings cannot be loaded.</exception>
-        public void Initialize(string indexName);
+        void Initialize(string indexName);
 
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="objectIds">The Algolia internal IDs of the records to delete.</param>
         /// <returns>The number of records deleted.</returns>
-        public int DeleteRecords(IEnumerable<string> objectIds);
+        int DeleteRecords(IEnumerable<string> objectIds);
 
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <remarks>Logs an error if there are issues loading the node data.</remarks>
         /// <param name="dataObjects">The objects to upsert into Algolia.</param>
         /// <returns>The number of objects processed.</returns>
-        public int UpsertRecords(IEnumerable<JObject> dataObjects);
+        int UpsertRecords(IEnumerable<JObject> dataObjects);
 
 
         /// <summary>
@@ -53,6 +53,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <exception cref="InvalidOperationException">Thrown if a search model class is not
         /// found for the index.</exception>
-        public void Rebuild();
+        void Rebuild();
     }
 }
