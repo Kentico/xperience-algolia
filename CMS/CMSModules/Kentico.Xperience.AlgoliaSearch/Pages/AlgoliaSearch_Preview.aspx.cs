@@ -1,5 +1,5 @@
-﻿using Algolia.Search.Clients;
-using Algolia.Search.Models.Search;
+﻿using Algolia.Search.Models.Search;
+
 using CMS.Core;
 using CMS.Helpers;
 
@@ -34,8 +34,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 string searchText = QueryHelper.GetString("searchtext", "");
                 if (!string.IsNullOrEmpty(searchText))
                 {
-                    var client = Service.Resolve<ISearchClient>();
-                    var searchIndex = client.InitIndex(indexName);
+                    var searchIndexService = Service.Resolve<IAlgoliaIndexService>();
+                    var searchIndex = searchIndexService.InitializeIndex(indexName);
                     if (searchIndex == null)
                     {
                         ShowError("Error loading search index. Please check the Event Log for more details.");
