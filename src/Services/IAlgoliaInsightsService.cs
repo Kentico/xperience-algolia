@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogSearchResultClicked(string eventName, string indexName);
+        Task<InsightsResponse> LogSearchResultClicked(string eventName, string indexName);
 
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogSearchResultConversion(string conversionName, string indexName);
+        Task<InsightsResponse> LogSearchResultConversion(string conversionName, string indexName);
 
 
         /// <summary>
@@ -44,7 +44,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogPageConversion(int documentId, string conversionName, string indexName);
+        Task<InsightsResponse> LogPageConversion(int documentId, string conversionName, string indexName);
 
 
         /// <summary>
@@ -57,7 +57,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogPageViewed(int documentId, string eventName, string indexName);
+        Task<InsightsResponse> LogPageViewed(int documentId, string eventName, string indexName);
 
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
+        Task<InsightsResponse> LogFacetsViewed(IEnumerable<AlgoliaFacetedAttribute> facets, string eventName, string indexName);
 
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogFacetClicked(string facet, string eventName, string indexName);
+        Task<InsightsResponse> LogFacetClicked(string facet, string eventName, string indexName);
 
 
         /// <summary>
@@ -90,7 +90,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The response from Algolia, or null if the request was skipped or an error occurred communicating
         /// with Algolia.</returns>
-        public Task<InsightsResponse> LogFacetConverted(string facet, string conversionName, string indexName);
+        Task<InsightsResponse> LogFacetConverted(string facet, string conversionName, string indexName);
 
 
         /// <summary>
@@ -99,6 +99,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <typeparam name="TModel">The type of the Algolia search model.</typeparam>
         /// <param name="searchResponse">The full response of an Algolia search.</param>
-        public void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel;
+        void SetInsightsUrls<TModel>(SearchResponse<TModel> searchResponse) where TModel : AlgoliaSearchModel;
     }
 }

@@ -1,4 +1,5 @@
-﻿using Algolia.Search.Models.Settings;
+﻿using Algolia.Search.Clients;
+using Algolia.Search.Models.Settings;
 
 using CMS.DocumentEngine;
 
@@ -20,7 +21,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// A collection of registered Algolia indexes as identified by the
         /// <see cref="RegisterAlgoliaIndexAttribute"/> in the search model class.
         /// </summary>
-        public List<RegisterAlgoliaIndexAttribute> RegisteredIndexes
+        List<RegisterAlgoliaIndexAttribute> RegisteredIndexes
         {
             get;
         }
@@ -31,7 +32,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <remarks>Logs an error if the were issues scanning the assembly.</remarks>
         /// <param name="assembly">The assembly to scan for attributes.</param>
-        public IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly);
+        IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly);
 
 
         /// <summary>
@@ -40,7 +41,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The Algolia index code name.</param>
         /// <returns>The index settings, or null if not found.</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public IndexSettings GetIndexSettings(string indexName);
+        IndexSettings GetIndexSettings(string indexName);
 
 
         /// <summary>
@@ -51,7 +52,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <returns>The names of the database columns that are indexed, or an empty array.</returns>
-        public string[] GetIndexedColumnNames(string indexName);
+        string[] GetIndexedColumnNames(string indexName);
 
 
         /// <summary>
@@ -59,7 +60,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> to check for indexing.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public bool IsNodeAlgoliaIndexed(TreeNode node);
+        bool IsNodeAlgoliaIndexed(TreeNode node);
 
 
         /// <summary>
@@ -70,7 +71,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="node">The node to check for indexing.</param>
         /// <param name="indexName">The Algolia index code name.</param>
         /// <exception cref="ArgumentNullException"></exception>
-        public bool IsNodeIndexedByIndex(TreeNode node, string indexName);
+        bool IsNodeIndexedByIndex(TreeNode node, string indexName);
 
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// based on the attributes defined in the search model.
         /// </summary>
         /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
-        public void RegisterAlgoliaIndexes();
+        void RegisterAlgoliaIndexes();
 
 
         /// <summary>
@@ -89,6 +90,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
         /// <param name="registerAlgoliaIndexAttribute">The <see cref="RegisterAlgoliaIndexAttribute"/> defined
         /// in the search model code file.</param>
-        public void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute);
+        void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute);
     }
 }

@@ -25,8 +25,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         private readonly IAlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
         private readonly ISearchClient searchClient;
-        private List<RegisterAlgoliaIndexAttribute> mRegisteredIndexes = new List<RegisterAlgoliaIndexAttribute>();
-        private string[] ignoredPropertiesForTrackingChanges = new string[] {
+        private readonly IAlgoliaIndexService algoliaIndexService;
+        private readonly List<RegisterAlgoliaIndexAttribute> mRegisteredIndexes = new List<RegisterAlgoliaIndexAttribute>();
+        private readonly string[] ignoredPropertiesForTrackingChanges = new string[] {
             nameof(AlgoliaSearchModel.ObjectID),
             nameof(AlgoliaSearchModel.Url),
             nameof(AlgoliaSearchModel.ClassName)
@@ -47,11 +48,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         public DefaultAlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
             IEventLogService eventLogService,
-            ISearchClient searchClient)
+            ISearchClient searchClient,
+            IAlgoliaIndexService algoliaIndexService)
         {
             this.algoliaSearchService = algoliaSearchService;
             this.eventLogService = eventLogService;
             this.searchClient = searchClient;
+            this.algoliaIndexService = algoliaIndexService;
         }
 
 
@@ -220,7 +223,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     RegisterIndex(attribute);
 
-                    var searchIndex = searchClient.InitIndex(attribute.IndexName);
+                    var searchIndex = algoliaIndexService.InitializeIndex(attribute.IndexName);
                     var indexSettings = GetIndexSettings(attribute.IndexName);
                     if (indexSettings == null)
                     {

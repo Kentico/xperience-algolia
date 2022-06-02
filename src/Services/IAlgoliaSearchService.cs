@@ -19,7 +19,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// Gets the indices of the Algolia application with basic statistics.
         /// </summary>
         /// <remarks>See <see href="https://www.algolia.com/doc/api-reference/api-methods/list-indices/#response"/></remarks>
-        public List<IndicesResponse> GetStatistics();
+        List<IndicesResponse> GetStatistics();
 
 
         /// <summary>
@@ -33,7 +33,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// to the returned list with a count of zero.</param>
         /// <returns>A new list of <see cref="AlgoliaFacetedAttribute"/>s that are available to filter search
         /// results.</returns>
-        public AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true);
+        AlgoliaFacetedAttribute[] GetFacetedAttributes(Dictionary<string, Dictionary<string, long>> facetsFromResponse, IAlgoliaFacetFilter filter = null, bool displayEmptyFacets = true);
 
 
         /// <summary>
@@ -45,13 +45,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <exception cref="InvalidOperationException">Thrown if the <see cref="FacetableAttribute"/>
         /// has both <see cref="FacetableAttribute.FilterOnly"/> and <see cref="FacetableAttribute.Searchable"/>
         /// set to true.</exception>
-        public string GetFilterablePropertyName(PropertyInfo property);
+        string GetFilterablePropertyName(PropertyInfo property);
 
 
         /// <summary>
         /// Returns true if Algolia indexing is enabled, or if the settings key doesn't exist.
         /// </summary>
-        public bool IsIndexingEnabled();
+        bool IsIndexingEnabled();
 
 
         /// <summary>
@@ -62,6 +62,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="searchableProperties">The properties of the search model to be ordered.</param>
         /// <returns>A list of strings appropriate for setting Algolia searchable attributes (see
         /// <see href="https://www.algolia.com/doc/api-reference/api-parameters/searchableAttributes/"/>).</returns>
-        public List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties);
+        List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties);
     }
 }

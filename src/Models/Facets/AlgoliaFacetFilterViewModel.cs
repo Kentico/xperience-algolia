@@ -1,6 +1,4 @@
-﻿using Algolia.Search.Models.Search;
-
-using Kentico.Xperience.AlgoliaSearch.Attributes;
+﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Localization;
 

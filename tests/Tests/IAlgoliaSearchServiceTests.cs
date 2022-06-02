@@ -31,7 +31,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             }
 
 
-            private Dictionary<string, Dictionary<string, long>> facetsFromResponse = new Dictionary<string, Dictionary<string, long>>()
+            private readonly Dictionary<string, Dictionary<string, long>> facetsFromResponse = new Dictionary<string, Dictionary<string, long>>()
             {
                 {
                     "attr1",
@@ -44,7 +44,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             };
 
 
-            private AlgoliaFacetedAttribute[] facetsFromFilter = new AlgoliaFacetedAttribute[] {
+            private readonly AlgoliaFacetedAttribute[] facetsFromFilter = new AlgoliaFacetedAttribute[] {
                 new AlgoliaFacetedAttribute() {
                     Attribute = "attr1",
                     Facets = new AlgoliaFacet[] {

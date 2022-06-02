@@ -21,7 +21,7 @@ using System.Reflection;
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="AlgoliaIndexingService"/>.
+    /// Default implementation of <see cref="IAlgoliaIndexingService"/>.
     /// </summary>
     internal class DefaultAlgoliaIndexingService : IAlgoliaIndexingService
     {

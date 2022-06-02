@@ -36,7 +36,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <summary>
         /// Adds an <see cref="AlgoliaQueueItem"/> to the worker queue to be processed.
         /// </summary>
-        /// <param name="updatedNode"></param>
+        /// <param name="queueItem">The item to be added to the queue.</param>
         public static void EnqueueAlgoliaQueueItem(AlgoliaQueueItem queueItem)
         {
             if (queueItem == null || queueItem.Node == null || String.IsNullOrEmpty(queueItem.IndexName))

@@ -15,7 +15,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
         /// <summary>
         /// A collection of an Algolia index's faceted attributes and the available facets.
         /// </summary>
-        public abstract AlgoliaFacetedAttribute[] FacetedAttributes
+        AlgoliaFacetedAttribute[] FacetedAttributes
         {
             get;
             set;
@@ -28,7 +28,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
         /// </summary>
         /// <param name="searchModelType">The Algolia search model that is being used in
         /// the current query. If null, all facet filters will use the "OR" condition.</param>
-        public string GetFilter(Type searchModelType = null);
+        string GetFilter(Type searchModelType = null);
 
 
         /// <summary>
