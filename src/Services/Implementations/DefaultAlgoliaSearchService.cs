@@ -22,7 +22,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaSearchService"/>.
     /// </summary>
-    public class DefaultAlgoliaSearchService : IAlgoliaSearchService
+    internal class DefaultAlgoliaSearchService : IAlgoliaSearchService
     {
         private readonly ISearchClient searchClient;
         private readonly IAppSettingsService appSettingsService;

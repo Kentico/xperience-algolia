@@ -311,28 +311,36 @@ public string Thumbnail { get; set; }
 
 ## :mag_right: Implementing the search interface
 
-You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to implement a search interface on your live site. The following example will help you with creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting the `ISearchClient` interface and calling the `InitIndex()` method on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
+You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to implement a search interface on your live site. The following example will help you with creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting the `IAlgoliaIndexService` interface and calling the `InitializeIndex()` method on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
 
 ```cs
-private readonly ISearchClient _searchClient;
+private readonly IAlgoliaIndexService _indexService;
 
-public SearchController(ISearchClient searchClient)
+public SearchController(IAlgoliaIndexService indexService)
 {
-    _searchClient = searchClient;
+    _indexService = indexService;
 }
 
 public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 {
     page = Math.Max(page, DEFAULT_PAGE_NUMBER);
 
-    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
     var query = new Query(searchText)
     {
         Page = page - 1,
         HitsPerPage = PAGE_SIZE
     };
 
-    var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+    try
+    {
+        var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+        //...
+    }
+    catch (Exception e)
+    {
+        //...
+    }
 }
 ```
 
@@ -544,7 +552,7 @@ As the search interface can be designed in multiple languages using Algolia's AP
 
 The Dancing Goat store doesn't use search out-of-the-box, so first you need to hook it up to Algolia. In this example, the search model seen in [Determining which pages to index](#determining-which-pages-to-index) will be used.
 
-1. Inject `ISearchClient` into the `CoffeesController` as shown in [this section](#mag_right-implementing-the-search-interface).
+1. Inject `IAlgoliaIndexService` into the `CoffeesController` as shown in [this section](#mag_right-implementing-the-search-interface).
 
 2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is `DancingGoatCore.Coffee.` You also specify which `Facets` you want to retrieve, but they are not used yet.
 
@@ -563,7 +571,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
@@ -631,17 +639,28 @@ public IEnumerable<AlgoliaStoreModel> Items { get; set; }
 [HttpPost]
 public ActionResult Index()
 {
-    var searchResponse = Search();
-    var items = searchResponse.Hits.Select(
-        hit => new AlgoliaStoreModel(hit)
-    );
-
-    var model = new ProductListViewModel
+    try
     {
-        Items = items
-    };
+        var searchResponse = Search();
+        var items = searchResponse.Hits.Select(
+            hit => new AlgoliaStoreModel(hit)
+        );
 
-    return View(model);
+        var model = new ProductListViewModel
+        {
+            Items = items
+        };
+
+        return View(model);
+    }
+    catch (Exception ex)
+    {
+        // Log error..
+        return View(new ProductListViewModel
+        {
+            Items = Enumerable.Empty<AlgoliaStoreModel>()
+        });
+    }
 }
 ```
 
@@ -681,7 +700,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = _searchClient.InitIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
@@ -715,22 +734,33 @@ public CoffeesController(IAlgoliaSearchService algoliaSearchService)
 public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 {
     ModelState.Clear();
-
-    var searchResponse = Search(filter);
-    var items = searchResponse.Hits.Select(
-        hit => new AlgoliaStoreModel(hit)
-    );
-
-    var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-    var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
-
-    var model = new ProductListViewModel
+    try
     {
-        Items = items,
-        AlgoliaFacetFilter = filterViewModel
-    };
+        var searchResponse = Search(filter);
+        var items = searchResponse.Hits.Select(
+            hit => new AlgoliaStoreModel(hit)
+        );
 
-    return View(model);
+        var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
+        var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
+
+        var model = new ProductListViewModel
+        {
+            Items = items,
+            AlgoliaFacetFilter = filterViewModel
+        };
+
+        return View(model);
+    }
+    catch (Exception ex)
+    {
+        // Log error..
+        return View(new ProductListViewModel
+        {
+            Items = Enumerable.Empty<AlgoliaStoreModel>(),
+            AlgoliaFacetFilter = filter
+        });
+    }
 }
 ```
 
@@ -1226,7 +1256,7 @@ While the Xperience Algolia integration works without any changes to the Xperien
 
 ### Importing the custom module
 
-1.  Download the latest _Kentico.Xperience.AlgoliaSearch_ ZIP package in the [/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch](/CMS/CMSModules/Kentico.Xperience.AlgoliaSearch) directory
+1.  Download the _Kentico.Xperience.AlgoliaSearch_ ZIP package by locating the latest "Custom module" [Release](https://github.com/Kentico/xperience-algolia/releases).
 1. In the Xperience adminstration, open the __Sites__ application.
 1. [Import](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects) the downloaded package with the __Import files__ and __Import code files__ [settings](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Import-Objectselectionsettings) enabled.
 1. Perform the [necessary steps](https://docs.xperience.io/deploying-websites/exporting-and-importing-sites/importing-a-site-or-objects#Importingasiteorobjects-Importingpackageswithfiles) to include the following imported folder in your project:

@@ -9,7 +9,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class FakeNodes
     {
-        private static Dictionary<string, TreeNode> nodes = new Dictionary<string, TreeNode>();
+        private static readonly Dictionary<string, TreeNode> nodes = new Dictionary<string, TreeNode>();
 
 
         public static string DOCTYPE_ARTICLE = "Test.Article";
