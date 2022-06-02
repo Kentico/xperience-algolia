@@ -12,7 +12,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// Default implementation of <see cref="IAlgoliaIndexService"/> which simply calls
     /// <see cref="ISearchClient.InitIndex(string)"/>.
     /// </summary>
-    public class DefaultAlgoliaIndexService : IAlgoliaIndexService
+    internal class DefaultAlgoliaIndexService : IAlgoliaIndexService
     {
         private readonly ISearchClient searchClient;
 
