@@ -27,7 +27,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         private readonly ISearchClient searchClient;
         private readonly IAppSettingsService appSettingsService;
         private const string CMS_SETTINGS_KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
-        private const string APP_SETTINGS_KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
+        private const string APP_SETTINGS_KEY_INDEXING_DISABLED = "AlgoliaSearchDisableIndexing";
 
 
         /// <summary>
@@ -147,9 +147,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public bool IsIndexingEnabled()
         {
-            var indexingEnabled = ValidationHelper.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_ENABLED], true);
+            var indexingDisabled = ValidationHelper.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_DISABLED], false);
     
-            if (!indexingEnabled)
+            if (indexingDisabled)
             {
                 return false;
             }
