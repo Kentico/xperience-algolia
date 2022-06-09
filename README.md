@@ -1266,6 +1266,12 @@ While the Xperience Algolia integration works without any changes to the Xperien
 
 The imported module includes a setting under __Settings > Integration > Algolia search__ which allows you to enable/disable the indexing of your pages after they are created, updated, or deleted. Make sure to check that this setting is enabled after importing the module.
 
+Indexing can also be disabled through App Settings by setting `AlgoliaSearchDisableIndexing` to `true`:
+
+```xml
+<add key="AlgoliaSearchDisableIndexing" value="true" />
+```
+
 ### Algolia search application
 
 The __Algolia search__ application provides a listing of all registered Algolia search model code files, along with some statistics directly from Algolia. By default, Algolia indexes are not rebuilt at any point - only updated and newly-created pages are indexed. To rebuild the index completely, use the circular arrow icon at the left of the grid.

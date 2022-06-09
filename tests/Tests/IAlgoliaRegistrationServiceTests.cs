@@ -1,5 +1,6 @@
 ﻿using Algolia.Search.Clients;
 
+using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
@@ -30,9 +31,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetIndexSettingsTests_SetUp()
             {
                 var mockSearchClient = Substitute.For<ISearchClient>();
-                var algoliaSearchService = new DefaultAlgoliaSearchService(mockSearchClient);
-                var mockIndexService = Substitute.For<IAlgoliaIndexService>();
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(algoliaSearchService, new MockEventLogService(), mockSearchClient, mockIndexService);
+                var algoliaSearchService = new DefaultAlgoliaSearchService(mockSearchClient, Substitute.For<IAppSettingsService>());
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(algoliaSearchService, new MockEventLogService(), mockSearchClient, Substitute.For<IAlgoliaIndexService>());
 
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)

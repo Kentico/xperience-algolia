@@ -1,5 +1,7 @@
 ﻿using Algolia.Search.Clients;
 
+using CMS.Core;
+
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models.Facets;
 using Kentico.Xperience.AlgoliaSearch.Services;
@@ -27,7 +29,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void GetFacetedAttributesTests_SetUp()
             {
-                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>(), Substitute.For<IAppSettingsService>());
             }
 
 
@@ -149,7 +151,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void GetFilterablePropertyNameTests_SetUp()
             {
-                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>(), Substitute.For<IAppSettingsService>());
             }
 
 
@@ -184,7 +186,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void OrderSearchablePropertiesTests_SetUp()
             {
-                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>());
+                algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>(), Substitute.For<IAppSettingsService>());
             }
 
 

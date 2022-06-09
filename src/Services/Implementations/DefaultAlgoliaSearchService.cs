@@ -25,15 +25,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     internal class DefaultAlgoliaSearchService : IAlgoliaSearchService
     {
         private readonly ISearchClient searchClient;
-        private const string KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
+        private readonly IAppSettingsService appSettingsService;
+        private const string CMS_SETTINGS_KEY_INDEXING_ENABLED = "AlgoliaSearchEnableIndexing";
+        private const string APP_SETTINGS_KEY_INDEXING_DISABLED = "AlgoliaSearchDisableIndexing";
 
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaSearchService"/> class.
         /// </summary>
-        public DefaultAlgoliaSearchService(ISearchClient searchClient)
+        public DefaultAlgoliaSearchService(ISearchClient searchClient, IAppSettingsService appSettingsService)
         {
             this.searchClient = searchClient;
+            this.appSettingsService = appSettingsService;
         }
 
 
@@ -144,7 +147,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public bool IsIndexingEnabled()
         {
-            var existingKey = SettingsKeyInfoProvider.GetSettingsKeyInfo(KEY_INDEXING_ENABLED);
+            var indexingDisabled = ValidationHelper.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_DISABLED], false);
+            if (indexingDisabled)
+            {
+                return false;
+            }
+
+            var existingKey = SettingsKeyInfoProvider.GetSettingsKeyInfo(CMS_SETTINGS_KEY_INDEXING_ENABLED);
             if (existingKey == null)
             {
                 return true;
