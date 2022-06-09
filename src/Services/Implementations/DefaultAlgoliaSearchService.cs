@@ -148,7 +148,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         public bool IsIndexingEnabled()
         {
             var indexingDisabled = ValidationHelper.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_DISABLED], false);
-    
             if (indexingDisabled)
             {
                 return false;
