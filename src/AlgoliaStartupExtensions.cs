@@ -1,11 +1,9 @@
-﻿using Algolia.Search.Clients;
-
+﻿using System;
+using Algolia.Search.Clients;
 using Kentico.Xperience.AlgoliaSearch.Models;
-
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-
-using System;
+using Microsoft.Extensions.Options;
 
 namespace Kentico.Xperience.AlgoliaSearch
 {
@@ -22,22 +20,31 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// <param name="configuration">The application configuration.</param>
         public static IServiceCollection AddAlgolia(this IServiceCollection services, IConfiguration configuration)
         {
-            var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
-            if (String.IsNullOrEmpty(algoliaOptions.ApplicationId) || String.IsNullOrEmpty(algoliaOptions.ApiKey))
+            services.Configure<AlgoliaOptions>(configuration.GetSection(AlgoliaOptions.SECTION_NAME));
+            services.PostConfigure<AlgoliaOptions>(options =>
             {
-                // Algolia configuration is not valid, but IEventLogService can't be resolved during startup.
-                // Set dummy values so that DI is not broken, but errors can be captured when attempting to use the client
-                algoliaOptions.ApplicationId = "NO_APP";
-                algoliaOptions.ApiKey = "NO_KEY";
-            }
+                if (String.IsNullOrEmpty(options.ApplicationId) || String.IsNullOrEmpty(options.ApiKey))
+                {
+                    // Algolia configuration is not valid, but IEventLogService can't be resolved during startup.
+                    // Set dummy values so that DI is not broken, but errors can be captured when attempting to use the client
+                    options.ApplicationId = "NO_APP";
+                    options.ApiKey = "NO_KEY";
+                }
+            });
 
-            var insightsClient = new InsightsClient(algoliaOptions.ApplicationId, algoliaOptions.ApiKey);
-            var searchClient = new SearchClient(algoliaOptions.ApplicationId, algoliaOptions.ApiKey);
+            return services
+                .AddSingleton<IInsightsClient>(s =>
+                {
+                    var options = s.GetRequiredService<IOptions<AlgoliaOptions>>();
 
-            services.AddSingleton<IInsightsClient>(insightsClient);
-            services.AddSingleton<ISearchClient>(searchClient);
+                    return new InsightsClient(options.Value.ApplicationId, options.Value.ApiKey);
+                })
+                .AddSingleton<ISearchClient>(s =>
+                {
+                    var options = s.GetRequiredService<IOptions<AlgoliaOptions>>();
 
-            return services;
+                    return new SearchClient(options.Value.ApplicationId, options.Value.ApiKey);
+                });
         }
     }
 }
