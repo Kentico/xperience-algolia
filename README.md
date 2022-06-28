@@ -444,10 +444,10 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 3. Load the Algolia keys from `appsettings.json`:
 
 ```cshtml
-@inject IConfiguration configuration
+@inject IOptions<AlgoliaOptions> options
 
 @{
-    var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
+    var algoliaOptions = options.Value;
 }
 ```
 
@@ -1065,10 +1065,10 @@ endpoints.MapControllerRoute(
 2. Create the _Index.cshtml_ view for your controller with the basic layout and stylesheet references. Load your Algolia settings for use later:
 
 ```cshtml
-@inject IConfiguration configuration
+@inject IOptions<AlgoliaOptions> options
 
 @{
-    var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
+    var algoliaOptions = options.Value;
 }
 
 @section styles {
