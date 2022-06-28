@@ -9,7 +9,7 @@
 	<PropertyGroup>
 		<Title>Xperience Algolia Search</Title>
 		<PackageId>Kentico.Xperience.AlgoliaSearch</PackageId>
-		<Version>2.3.0</Version>
+		<Version>2.4.0</Version>
 		<Authors>Kentico Software</Authors>
 		<Company>Kentico Software</Company>
 		<PackageIcon>icon.png</PackageIcon>
@@ -38,7 +38,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Algolia.Search" Version="6.11.0" />
-		<PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.16" />
+		<PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.73" />
 		<PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Mvc.ViewFeatures" Version="2.2.0" />
