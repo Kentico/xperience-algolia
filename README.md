@@ -325,7 +325,8 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 {
     page = Math.Max(page, DEFAULT_PAGE_NUMBER);
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(indexName);
     var query = new Query(searchText)
     {
         Page = page - 1,
@@ -445,8 +446,10 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 
 ```cshtml
 @inject IConfiguration configuration
+@inject IAlgoliaIndexService indexService
 
 @{
+    var indexName = indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
     var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
 ```
@@ -456,7 +459,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 ```js
 <script type="text/javascript">
     var client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
-    var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
+    var index = client.initIndex('@indexName');
 </script>
 ```
 
@@ -571,7 +574,8 @@ private SearchResponse<AlgoliaSiteSearchModel> Search()
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(indexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
@@ -700,7 +704,9 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
+
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(indexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
 ```
@@ -889,10 +895,13 @@ Now, when you display the search results using the `Url` property, it will look 
 
 ```cshtml
 @inject IAlgoliaInsightsService _insightsService
+@inject IAlgoliaIndexService _indexService
 
 @{
-    await _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
-    await _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+
+    await _insightsService.LogSearchResultClicked("Search result clicked", indexName);
+    await _insightsService.LogSearchResultConversion("Search result converted", indexName);
 }
 ```
 
@@ -927,7 +936,9 @@ public async Task<ActionResult> AddItem(CartItemUpdateModel item)
         // Log Algolia Insights conversion
         if (page != null)
         {
-            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
+            var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+
+            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", indexName);
         }
         
     }
@@ -942,7 +953,9 @@ You can also log an event when a visitor simply views a page with the `LogPageVi
 public async Task<IActionResult> Detail([FromServices] ArticleRepository articleRepository)
 {
     var article = articleRepository.GetCurrent();
-    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+
+    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", indexName);
 
     return new TemplateResult(article);
 }
@@ -951,13 +964,16 @@ public async Task<IActionResult> Detail([FromServices] ArticleRepository article
 Or, in the _\_Details.cshtml_ view for products, you can log a _Product viewed_ event:
 
 ```cshtml
+@inject IAlgoliaIndexService _indexService
 @inject IAlgoliaInsightsService _insightsService
 @inject IPageDataContextRetriever _pageDataContextRetriever
 
 @{
     if(_pageDataContextRetriever.TryRetrieve<TreeNode>(out var context))
     {
-        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
+        var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+
+        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", indexName);
     }
 }
 ```
@@ -969,7 +985,8 @@ You can log events and conversions when facets are displayed to a visitor, or wh
 ```cs
 var searchResponse = Search(filter);
 var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
+var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", indexName);
 ```
 
 To log an event or conversion when a facet is clicked, you need to use AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
@@ -1018,8 +1035,10 @@ public Task<ActionResult> FacetClicked(string facet)
         return BadRequest();
     }
 
-    await _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
-    await _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
+    var indexName = _indexService.GetIndexName(AlgoliaSiteSearchModel.IndexName);
+    
+    await _insightsService.LogFacetClicked(facet, "Store facet clicked", indexName);
+    await _insightsService.LogFacetConverted(facet, "Store facet converted", indexName);
     return Ok();
 }
 ```
@@ -1066,8 +1085,10 @@ endpoints.MapControllerRoute(
 
 ```cshtml
 @inject IConfiguration configuration
+@inject IAlgoliaIndexService indexService
 
 @{
+    var indexName = indexService.GetIndexName(DancingGoatSiteIndexModel.IndexName);
     var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
 
@@ -1105,7 +1126,7 @@ endpoints.MapControllerRoute(
     <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
     <script type="text/javascript">
         const search = instantsearch({
-          indexName: '@DancingGoatSiteIndexModel.IndexName',
+          indexName: '@indexName',
           searchClient: algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey'),
         });
 

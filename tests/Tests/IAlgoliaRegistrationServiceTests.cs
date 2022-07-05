@@ -32,7 +32,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var mockSearchClient = Substitute.For<ISearchClient>();
                 var algoliaSearchService = new DefaultAlgoliaSearchService(mockSearchClient, Substitute.For<IAppSettingsService>());
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(algoliaSearchService, new MockEventLogService(), mockSearchClient, Substitute.For<IAlgoliaIndexService>());
+                var algoliaIndexService = new DefaultAlgoliaIndexService(mockSearchClient);
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(algoliaSearchService, new MockEventLogService(), mockSearchClient, algoliaIndexService);
 
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
@@ -115,7 +116,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void IsNodeAlgoliaIndexed_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
+                var mockSearchClient = Substitute.For<ISearchClient>();
+                var algoliaIndexService = new DefaultAlgoliaIndexService(mockSearchClient);
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), mockSearchClient, algoliaIndexService);
 
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
@@ -154,7 +157,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void IsNodeIndexedByIndexTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
+                var mockSearchClient = Substitute.For<ISearchClient>();
+                var algoliaIndexService = new DefaultAlgoliaIndexService(mockSearchClient);
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), mockSearchClient, algoliaIndexService);
 
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
@@ -229,7 +234,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void GetIndexedColumnNamesTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
+                var mockSearchClient = Substitute.For<ISearchClient>();
+                var algoliaIndexService = new DefaultAlgoliaIndexService(mockSearchClient);
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), mockSearchClient, algoliaIndexService);
 
                 var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
                 foreach (var attribute in attributes)
@@ -263,8 +270,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void RegisterIndexTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
-            }
+                var mockSearchClient = Substitute.For<ISearchClient>();
+                var algoliaIndexService = new DefaultAlgoliaIndexService(mockSearchClient);
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), mockSearchClient, algoliaIndexService);            }
 
 
             [Test]

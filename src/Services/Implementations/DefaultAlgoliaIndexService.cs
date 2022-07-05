@@ -1,4 +1,5 @@
 using Algolia.Search.Clients;
+using Algolia.Search.Models.Settings;
 
 using CMS;
 using CMS.Core;
@@ -9,8 +10,7 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaIndexService"/> which simply calls
-    /// <see cref="ISearchClient.InitIndex(string)"/>.
+    /// Default implementation of <see cref="IAlgoliaIndexService"/>.
     /// </summary>
     internal class DefaultAlgoliaIndexService : IAlgoliaIndexService
     {
@@ -26,9 +26,22 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
+        public string GetIndexName(string indexName)
+        {
+            return indexName;
+        }
+
+
         public ISearchIndex InitializeIndex(string indexName)
         {
             return searchClient.InitIndex(indexName);
+        }
+
+
+        public void SetIndexSettings(string indexName, IndexSettings indexSettings)
+        {
+            var index = InitializeIndex(indexName);
+            index.SetSettings(indexSettings);
         }
     }
 }
