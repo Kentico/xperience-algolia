@@ -42,7 +42,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                     }
 
                     var query = new Query(searchText);
-                    var results = searchIndex.Search<JObject>(query);
+                    var results = searchIndex.Index.Search<JObject>(query);
 
                     repSearchResults.DataSource = results.Hits;
                     repSearchResults.PagerForceNumberOfResults = results.Hits.Count;

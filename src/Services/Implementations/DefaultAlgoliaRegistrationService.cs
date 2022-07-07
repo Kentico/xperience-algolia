@@ -221,6 +221,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             {
                 try
                 {
+                    // Transform the index name and apply to attribute
+                    var index = algoliaIndexService.InitializeIndex(attribute.IndexName);
+                    attribute.IndexName = index.Name;
+
                     RegisterIndex(attribute);
 
                     var indexSettings = GetIndexSettings(attribute.IndexName);
@@ -230,8 +234,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                         continue;
                     }
 
-                    algoliaIndexService.SetIndexSettings(attribute.IndexName, indexSettings);
-                    
+                    index.Index.SetSettings(indexSettings);
+
                 }
                 catch (Exception ex)
                 {
@@ -244,10 +248,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute)
         {
-            // Get the desired index name
-            var modifiedName = algoliaIndexService.GetIndexName(registerAlgoliaIndexAttribute.IndexName);
-            registerAlgoliaIndexAttribute.IndexName = modifiedName;
-
             if (String.IsNullOrEmpty(registerAlgoliaIndexAttribute.IndexName))
             {
                 eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");

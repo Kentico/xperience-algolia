@@ -26,7 +26,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         public string IndexName
         {
             get;
-            set;
+            internal set;
         }
 
 

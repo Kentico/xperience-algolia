@@ -1,6 +1,7 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Settings;
 
+using CMS;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
