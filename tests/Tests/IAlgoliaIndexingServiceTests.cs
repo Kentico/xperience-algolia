@@ -124,11 +124,23 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void ProcessAlgoliaTasksTests_SetUp()
             {
                 var mockRegistrationService = Substitute.For<IAlgoliaRegistrationService>();
-                mockRegistrationService.RegisteredIndexes.Returns(new List<RegisterAlgoliaIndexAttribute>() {
-                    new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName),
-                    new RegisterAlgoliaIndexAttribute(typeof(Model2), Model2.IndexName),
-                    new RegisterAlgoliaIndexAttribute(typeof(Model3), Model3.IndexName),
-                    new RegisterAlgoliaIndexAttribute(typeof(Model4), Model4.IndexName)
+                mockRegistrationService.RegisteredIndexes.Returns(new List<AlgoliaIndex>() {
+                    new AlgoliaIndex{
+                        IndexName = Model1.IndexName,
+                        Type = typeof(Model1)
+                    },
+                    new AlgoliaIndex{
+                        IndexName = Model2.IndexName,
+                        Type = typeof(Model2)
+                    },
+                    new AlgoliaIndex{
+                        IndexName = Model3.IndexName,
+                        Type = typeof(Model3)
+                    },
+                    new AlgoliaIndex{
+                        IndexName = Model4.IndexName,
+                        Type = typeof(Model4)
+                    }
                 });
 
                 var mockAlgoliaConnection = Substitute.For<IAlgoliaConnection>();

@@ -4,7 +4,7 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
@@ -42,7 +42,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         }
 
 
-        private void LoadIndexes(IEnumerable<RegisterAlgoliaIndexAttribute> indexes)
+        private void LoadIndexes(IEnumerable<AlgoliaIndex> indexes)
         {
             var indexesToList = new List<IndicesResponse>();
             var indexStatistics = algoliaSearchService.GetStatistics();

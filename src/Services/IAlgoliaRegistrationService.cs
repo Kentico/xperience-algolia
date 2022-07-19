@@ -1,14 +1,13 @@
 ﻿using Algolia.Search.Clients;
 using Algolia.Search.Models.Settings;
 
-using CMS;
 using CMS.DocumentEngine;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
@@ -19,21 +18,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     public interface IAlgoliaRegistrationService
     {
         /// <summary>
-        /// A collection of registered Algolia indexes as identified by the
-        /// <see cref="RegisterAlgoliaIndexAttribute"/> in the search model class.
+        /// A collection of registered Algolia indexes.
         /// </summary>
-        List<RegisterAlgoliaIndexAttribute> RegisteredIndexes
+        List<AlgoliaIndex> RegisteredIndexes
         {
             get;
         }
-
-
-        /// <summary>
-        /// Gets all <see cref="RegisterAlgoliaIndexAttribute"/>s present in the provided assembly.
-        /// </summary>
-        /// <remarks>Logs an error if the were issues scanning the assembly.</remarks>
-        /// <param name="assembly">The assembly to scan for attributes.</param>
-        IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly);
 
 
         /// <summary>
@@ -77,20 +67,22 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         /// <summary>
         /// Scans all discoverable assemblies for instances of <see cref="RegisterAlgoliaIndexAttribute"/>s
-        /// and stores the Algolia index name and search model class in memory. Also calls
-        /// <see cref="SearchIndex.SetSettings"/> to initialize the Algolia index's configuration
-        /// based on the attributes defined in the search model.
+        /// and stores the <see cref="AlgoliaIndex"/> in memory, in addition to all indexes in the
+        /// <see cref="IAlgoliaIndexRegister"/>.
         /// </summary>
-        /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
         void RegisterAlgoliaIndexes();
 
 
         /// <summary>
-        /// Saves an Algolia index's configuration to <see cref="RegisteredIndexes"/>.
+        /// Stores an <see cref="AlgoliaIndex"/> in memory based on the provided parameters. Also calls
+        /// <see cref="SearchIndex.SetSettings"/> to initialize the Algolia index's configuration
+        /// based on the attributes defined in the <paramref name="searchModel"/>.
         /// </summary>
-        /// <remarks>Logs errors if the parameters are invalid, or the index is already registered.</remarks>
-        /// <param name="registerAlgoliaIndexAttribute">The <see cref="RegisterAlgoliaIndexAttribute"/> defined
-        /// in the search model code file.</param>
-        void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute);
+        /// <param name="searchModel">The type of the class which extends <see cref="AlgoliaSearchModel"/>.</param>
+        /// <param name="indexName">The code name of the Algolia index.</param>
+        /// <param name="siteNames">The code names of the sites whose pages will be included in the index.
+        /// If empty, all sites are included.</param>
+        /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
+        void RegisterIndex(Type searchModel, string indexName, IEnumerable<string> siteNames = null);
     }
 }

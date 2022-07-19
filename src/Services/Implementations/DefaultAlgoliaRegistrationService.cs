@@ -26,7 +26,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         private readonly IEventLogService eventLogService;
         private readonly ISearchClient searchClient;
         private readonly IAlgoliaIndexService algoliaIndexService;
-        private readonly List<RegisterAlgoliaIndexAttribute> mRegisteredIndexes = new List<RegisterAlgoliaIndexAttribute>();
+        private readonly IAlgoliaIndexRegister algoliaIndexRegister;
+        private readonly List<AlgoliaIndex> mRegisteredIndexes = new List<AlgoliaIndex>();
         private readonly string[] ignoredPropertiesForTrackingChanges = new string[] {
             nameof(AlgoliaSearchModel.ObjectID),
             nameof(AlgoliaSearchModel.Url),
@@ -34,7 +35,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         };
 
 
-        public List<RegisterAlgoliaIndexAttribute> RegisteredIndexes
+        public List<AlgoliaIndex> RegisteredIndexes
         {
             get
             {
@@ -49,30 +50,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         public DefaultAlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
             IEventLogService eventLogService,
             ISearchClient searchClient,
-            IAlgoliaIndexService algoliaIndexService)
+            IAlgoliaIndexService algoliaIndexService,
+            IAlgoliaIndexRegister algoliaIndexRegister)
         {
             this.algoliaSearchService = algoliaSearchService;
             this.eventLogService = eventLogService;
             this.searchClient = searchClient;
             this.algoliaIndexService = algoliaIndexService;
-        }
-
-
-        public IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
-        {
-            var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
-
-            try
-            {
-                attributes = assembly.GetCustomAttributes(typeof(RegisterAlgoliaIndexAttribute), false)
-                                    .Cast<RegisterAlgoliaIndexAttribute>();
-            }
-            catch (Exception exception)
-            {
-                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
-            }
-
-            return attributes;
+            this.algoliaIndexRegister = algoliaIndexRegister;
         }
 
 
@@ -83,16 +68,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(indexName));
             }
 
-            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
+            var alogliaIndex = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (alogliaIndex == null)
             {
                 return null;
             }
 
-            var searchableProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-            var retrievablProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
-            var facetableProperties = registerIndexAttribute.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
-            ;
+            var searchableProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievablProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            
             return new IndexSettings()
             {
                 SearchableAttributes = algoliaSearchService.OrderSearchableProperties(searchableProperties),
@@ -104,16 +89,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public string[] GetIndexedColumnNames(string indexName)
         {
-            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
+            var alogliaIndex = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (alogliaIndex == null)
             {
                 return new string[] { };
             }
 
             // Don't include properties with SourceAttribute at first, check the sources and add to list after
-            var indexedColumnNames = registerIndexAttribute.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var indexedColumnNames = alogliaIndex.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
                 .Where(prop => !Attribute.IsDefined(prop, typeof(SourceAttribute))).Select(prop => prop.Name).ToList();
-            var propertiesWithSourceAttribute = registerIndexAttribute.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            var propertiesWithSourceAttribute = alogliaIndex.Type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(prop => Attribute.IsDefined(prop, typeof(SourceAttribute)));
             foreach (var property in propertiesWithSourceAttribute)
             {
@@ -163,23 +148,19 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(node));
             }
 
-            var registerIndexAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
+            var alogliaIndex = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (alogliaIndex == null)
             {
-                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading search model class for index '{indexName}.'");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(IsNodeIndexedByIndex), $"Error loading registered Algolia index '{indexName}.'");
                 return false;
             }
 
-            var registrationAttribute = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registrationAttribute != null)
+            if (alogliaIndex.SiteNames != null && !alogliaIndex.SiteNames.Contains(node.NodeSiteName))
             {
-                if (registrationAttribute.SiteNames != null && !registrationAttribute.SiteNames.Contains(node.NodeSiteName))
-                {
-                    return false;
-                }
+                return false;
             }
-
-            var includedPathAttributes = registerIndexAttribute.Type.GetCustomAttributes<IncludedPathAttribute>(false);
+            
+            var includedPathAttributes = alogliaIndex.Type.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var path = includedPathAttribute.AliasPath;
@@ -219,54 +200,81 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             foreach (var attribute in attributes)
             {
-                try
-                {
-                    // Transform the index name and apply to attribute
-                    var index = algoliaIndexService.InitializeIndex(attribute.IndexName);
-                    attribute.IndexName = index.Name;
+                RegisterIndex(attribute.Type, attribute.IndexName, attribute.SiteNames);
+            }
 
-                    RegisterIndex(attribute);
-
-                    var indexSettings = GetIndexSettings(attribute.IndexName);
-                    if (indexSettings == null)
-                    {
-                        eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), $"Unable to load search index settings for index '{attribute.IndexName}.'");
-                        continue;
-                    }
-
-                    index.Index.SetSettings(indexSettings);
-
-                }
-                catch (Exception ex)
-                {
-                    mRegisteredIndexes.Remove(attribute);
-                    eventLogService.LogException(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterAlgoliaIndexes), ex, additionalMessage: $"Cannot register Algolia index '{attribute.IndexName}.'");
-                }
+            var algoliaIndex = algoliaIndexRegister.Pop();
+            while (algoliaIndex != null)
+            {
+                RegisterIndex(algoliaIndex.Type, algoliaIndex.IndexName, algoliaIndex.SiteNames);
+                algoliaIndex = algoliaIndexRegister.Pop();
             }
         }
 
 
-        public void RegisterIndex(RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute)
+        public void RegisterIndex(Type searchModel, string indexName, IEnumerable<string> siteNames = null)
         {
-            if (String.IsNullOrEmpty(registerAlgoliaIndexAttribute.IndexName))
+            if (String.IsNullOrEmpty(indexName))
             {
                 eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
                 return;
             }
 
-            if (registerAlgoliaIndexAttribute.Type == null)
+            if (searchModel == null)
             {
-                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model class.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model type.");
                 return;
             }
 
-            if (mRegisteredIndexes.Any(i => i.IndexName == registerAlgoliaIndexAttribute.IndexName))
+            if (mRegisteredIndexes.Any(i => i.IndexName == indexName))
             {
-                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{registerAlgoliaIndexAttribute.IndexName},' but it is already registered.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
                 return;
             }
 
-            mRegisteredIndexes.Add(registerAlgoliaIndexAttribute);
+            var algoliaIndex = new AlgoliaIndex
+            {
+                IndexName = indexName,
+                Type = searchModel,
+                SiteNames = siteNames
+            };
+            try
+            {
+                mRegisteredIndexes.Add(algoliaIndex);
+
+                var searchIndex = algoliaIndexService.InitializeIndex(indexName);
+                var indexSettings = GetIndexSettings(indexName);
+                if (indexSettings == null)
+                {
+                    eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Unable to load search index settings for index '{indexName}.'");
+                    return;
+                }
+
+                searchIndex.SetSettings(indexSettings);
+            }
+            catch (Exception ex)
+            {
+                mRegisteredIndexes.Remove(algoliaIndex);
+                eventLogService.LogException(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), ex, additionalMessage: $"Cannot register Algolia index '{indexName}.'");
+            }
+        }
+
+
+        private IEnumerable<RegisterAlgoliaIndexAttribute> GetAlgoliaIndexAttributes(Assembly assembly)
+        {
+            var attributes = Enumerable.Empty<RegisterAlgoliaIndexAttribute>();
+
+            try
+            {
+                attributes = assembly.GetCustomAttributes(typeof(RegisterAlgoliaIndexAttribute), false)
+                                    .Cast<RegisterAlgoliaIndexAttribute>();
+            }
+            catch (Exception exception)
+            {
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(GetAlgoliaIndexAttributes), $"Failed to register Algolia indexes for assembly '{assembly.FullName}:' {exception.Message}.");
+            }
+
+            return attributes;
         }
     }
 }

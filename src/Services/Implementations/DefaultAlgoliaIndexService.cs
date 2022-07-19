@@ -3,7 +3,6 @@ using Algolia.Search.Clients;
 using CMS;
 using CMS.Core;
 
-using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaIndexService), typeof(DefaultAlgoliaIndexService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
@@ -26,9 +25,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public InitializedIndex InitializeIndex(string indexName)
+        public ISearchIndex InitializeIndex(string indexName)
         {
-            return new InitializedIndex(searchClient.InitIndex(indexName), indexName);
+            return searchClient.InitIndex(indexName);
         }
     }
 }
