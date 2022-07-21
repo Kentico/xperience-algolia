@@ -466,8 +466,6 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 
 ```cshtml
 @inject IConfiguration configuration
-@inject IAlgoliaIndexService indexService
-
 @{
     var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
