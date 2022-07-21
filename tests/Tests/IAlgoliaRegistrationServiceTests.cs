@@ -5,7 +5,6 @@ using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
@@ -13,7 +12,6 @@ using NSubstitute;
 using NUnit.Framework;
 
 using System;
-using System.Reflection;
 
 using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
@@ -32,13 +30,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var mockSearchClient = Substitute.For<ISearchClient>();
                 var algoliaSearchService = new DefaultAlgoliaSearchService(mockSearchClient, Substitute.For<IAppSettingsService>());
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(algoliaSearchService, new MockEventLogService(), mockSearchClient, Substitute.For<IAlgoliaIndexService>());
-
-                var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-                foreach (var attribute in attributes)
-                {
-                    algoliaRegistrationService.RegisterIndex(attribute);
-                }
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
+                    algoliaSearchService,
+                    new MockEventLogService(),
+                    mockSearchClient,
+                    Substitute.For<IAlgoliaIndexService>(),
+                    Substitute.For<IAlgoliaIndexRegister>());
+                algoliaRegistrationService.RegisterAlgoliaIndexes();
             }
 
 
@@ -87,13 +85,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
 
             [Test]
-            public void GetIndexSettings_IndexWithInvalidConfiguration_ThrowsInvalidOperationException()
-            {
-                Assert.Throws<InvalidOperationException>(() => algoliaRegistrationService.GetIndexSettings(Model6.IndexName));
-            }
-
-
-            [Test]
             public void GetIndexSettings_IndexInheritsBaseClass_ContainsPropertiesFromAllClasses()
             {
                 var indexSettings = algoliaRegistrationService.GetIndexSettings(Model7.IndexName);
@@ -115,13 +106,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void IsNodeAlgoliaIndexed_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
-
-                var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-                foreach (var attribute in attributes)
-                {
-                    algoliaRegistrationService.RegisterIndex(attribute);
-                }
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
+                    Substitute.For<IAlgoliaSearchService>(),
+                    new MockEventLogService(),
+                    Substitute.For<ISearchClient>(),
+                    Substitute.For<IAlgoliaIndexService>(),
+                    Substitute.For<IAlgoliaIndexRegister>());
+                algoliaRegistrationService.RegisterAlgoliaIndexes();
             }
 
 
@@ -154,13 +145,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void IsNodeIndexedByIndexTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
-
-                var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-                foreach (var attribute in attributes)
-                {
-                    algoliaRegistrationService.RegisterIndex(attribute);
-                }
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
+                    Substitute.For<IAlgoliaSearchService>(),
+                    new MockEventLogService(),
+                    Substitute.For<ISearchClient>(),
+                    Substitute.For<IAlgoliaIndexService>(),
+                    Substitute.For<IAlgoliaIndexRegister>());
+                algoliaRegistrationService.RegisterAlgoliaIndexes();
             }
 
 
@@ -229,13 +220,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void GetIndexedColumnNamesTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
-
-                var attributes = algoliaRegistrationService.GetAlgoliaIndexAttributes(Assembly.GetExecutingAssembly());
-                foreach (var attribute in attributes)
-                {
-                    algoliaRegistrationService.RegisterIndex(attribute);
-                }
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
+                    Substitute.For<IAlgoliaSearchService>(),
+                    new MockEventLogService(),
+                    Substitute.For<ISearchClient>(),
+                    Substitute.For<IAlgoliaIndexService>(),
+                    Substitute.For<IAlgoliaIndexRegister>());
+                algoliaRegistrationService.RegisterAlgoliaIndexes();
             }
 
 
@@ -263,16 +254,21 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void RegisterIndexTests_SetUp()
             {
-                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(Substitute.For<IAlgoliaSearchService>(), new MockEventLogService(), Substitute.For<ISearchClient>(), Substitute.For<IAlgoliaIndexService>());
+                algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
+                    Substitute.For<IAlgoliaSearchService>(),
+                    new MockEventLogService(),
+                    Substitute.For<ISearchClient>(),
+                    Substitute.For<IAlgoliaIndexService>(),
+                    Substitute.For<IAlgoliaIndexRegister>());
             }
 
 
             [Test]
             public void RegisterIndex_ValidIndexes_AreRegistered()
             {
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model2), Model2.IndexName));
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model3), Model3.IndexName));
+                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
+                algoliaRegistrationService.RegisterIndex(typeof(Model2), Model2.IndexName);
+                algoliaRegistrationService.RegisterIndex(typeof(Model3), Model3.IndexName);
 
                 Assert.AreEqual(3, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -281,7 +277,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_EmptyIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), String.Empty));
+                algoliaRegistrationService.RegisterIndex(typeof(Model1), String.Empty);
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -290,7 +286,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_NullSearchModel_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(null, "FAKE_NAME"));
+                algoliaRegistrationService.RegisterIndex(null, "FAKE_NAME");
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -299,8 +295,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_DuplicateIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
-                algoliaRegistrationService.RegisterIndex(new RegisterAlgoliaIndexAttribute(typeof(Model1), Model1.IndexName));
+                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
+                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
 
                 Assert.AreEqual(1, algoliaRegistrationService.RegisteredIndexes.Count);
             }

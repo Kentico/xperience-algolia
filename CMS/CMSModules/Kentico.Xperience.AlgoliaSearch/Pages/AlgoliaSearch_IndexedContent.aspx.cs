@@ -1,6 +1,7 @@
 ﻿using CMS.Helpers;
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
 using System.Collections.Generic;
@@ -12,7 +13,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
     public partial class AlgoliaSearch_IndexedContent : AlgoliaUIPage
     {
         private string indexName;
-        private RegisterAlgoliaIndexAttribute registerAlgoliaIndexAttribute;
+        private AlgoliaIndex algoliaIndex;
 
 
         protected override void OnLoad(EventArgs e)
@@ -26,16 +27,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 return;
             }
 
-            var registerIndexAttribute = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registerIndexAttribute == null || registerIndexAttribute.Type == null)
+            var foundIndex = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (foundIndex == null)
             {
-                ShowError("Unable to load index search model class.");
+                ShowError($"Error loading registered Algolia index '{indexName}.'");
                 return;
             }
 
-            ShowInformation($"The indexed columns and pages are defined in the class <b>{registerIndexAttribute.Type}</b>. To modify them, please contact your developer.");
+            ShowInformation($"The indexed columns and pages are defined in the class <b>{foundIndex.Type}</b>. To modify them, please contact your developer.");
 
-            registerAlgoliaIndexAttribute = registerIndexAttribute;
+            algoliaIndex = foundIndex;
             LoadProperties();
             LoadPaths();
         }
@@ -44,7 +45,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         private void LoadProperties()
         {
             var indexedProperties = new List<IndexedProperty>();
-            var modelProperties = registerAlgoliaIndexAttribute.Type.GetProperties();
+            var modelProperties = algoliaIndex.Type.GetProperties();
 
             foreach (var property in modelProperties)
             {
@@ -72,7 +73,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         private void LoadPaths()
         {
             var includedContent = new List<IncludedContent>();
-            var includedPathAttributes = registerAlgoliaIndexAttribute.Type.GetCustomAttributes(typeof(IncludedPathAttribute), false);
+            var includedPathAttributes = algoliaIndex.Type.GetCustomAttributes(typeof(IncludedPathAttribute), false);
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var includedPath = includedPathAttribute as IncludedPathAttribute;

@@ -21,8 +21,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         protected override void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            indexName = QueryHelper.GetString("indexName", "");
-            if (indexName == null)
+            indexName = QueryHelper.GetString("indexName", String.Empty);
+            if (String.IsNullOrEmpty(indexName))
             {
                 ShowError("Unable to load index name.");
                 searchPnl.Visible = false;
@@ -31,8 +31,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
 
             if (!RequestHelper.IsPostBack())
             {
-                string searchText = QueryHelper.GetString("searchtext", "");
-                if (!string.IsNullOrEmpty(searchText))
+                string searchText = QueryHelper.GetString("searchtext", String.Empty);
+                if (!String.IsNullOrEmpty(searchText))
                 {
                     var searchIndexService = Service.Resolve<IAlgoliaIndexService>();
                     var searchIndex = searchIndexService.InitializeIndex(indexName);

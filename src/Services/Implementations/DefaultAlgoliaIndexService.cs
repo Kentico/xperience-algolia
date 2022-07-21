@@ -9,8 +9,7 @@ using Kentico.Xperience.AlgoliaSearch.Services;
 namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
-    /// Default implementation of <see cref="IAlgoliaIndexService"/> which simply calls
-    /// <see cref="ISearchClient.InitIndex(string)"/>.
+    /// Default implementation of <see cref="IAlgoliaIndexService"/>.
     /// </summary>
     internal class DefaultAlgoliaIndexService : IAlgoliaIndexService
     {

@@ -131,5 +131,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Searchable]
             public string NodeAliasPath { get; set; }
         }
+
+
+        [IncludedPath("/Articles/%")]
+        public class Model8 : AlgoliaSearchModel
+        {
+            public const string IndexName = "Model8";
+
+
+            [Searchable]
+            public string DocumentCreatedWhen { get; set; }
+        }
     }
 }

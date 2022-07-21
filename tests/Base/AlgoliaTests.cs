@@ -1,4 +1,5 @@
-﻿using CMS.DocumentEngine;
+﻿using CMS;
+using CMS.DocumentEngine;
 using CMS.SiteProvider;
 using CMS.Tests;
 
@@ -7,6 +8,7 @@ using NUnit.Framework;
 using Tests.DocumentEngine;
 
 [assembly: Category("Algolia")]
+[assembly: AssemblyDiscoverable]
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class AlgoliaTests : UnitTests

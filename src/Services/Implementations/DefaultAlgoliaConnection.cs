@@ -23,10 +23,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     /// </summary>
     internal class DefaultAlgoliaConnection : IAlgoliaConnection
     {
-        private SearchIndex searchIndex;
-        private RegisterAlgoliaIndexAttribute registerIndexAttribute;
+        private ISearchIndex searchIndex;
+        private AlgoliaIndex algoliaIndex;
         private readonly ISearchClient searchClient;
         private readonly IEventLogService eventLogService;
+        private readonly IAlgoliaIndexService algoliaIndexService;
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
 
 
@@ -35,10 +36,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         public DefaultAlgoliaConnection(ISearchClient searchClient,
             IEventLogService eventLogService,
+            IAlgoliaIndexService algoliaIndexService,
             IAlgoliaRegistrationService algoliaRegistrationService)
         {
             this.searchClient = searchClient;
             this.eventLogService = eventLogService;
+            this.algoliaIndexService = algoliaIndexService;
             this.algoliaRegistrationService = algoliaRegistrationService;
         }
 
@@ -50,18 +53,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(indexName);
             }
 
-            registerIndexAttribute = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (registerIndexAttribute == null)
+            algoliaIndex = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (algoliaIndex == null)
             {
-                throw new InvalidOperationException($"Unable to load registration attribute for index '{indexName}.'");
+                throw new InvalidOperationException($"Error loading registered Algolia index '{indexName}.'");
             }
 
-            if (!registerIndexAttribute.Type.IsSubclassOf(typeof(AlgoliaSearchModel)))
-            {
-                throw new InvalidOperationException($"Algolia search models must extend the {nameof(AlgoliaSearchModel)} class.");
-            }
-
-            searchIndex = searchClient.InitIndex(indexName);
+            searchIndex = algoliaIndexService.InitializeIndex(indexName);
         }
 
 
@@ -111,7 +109,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public void Rebuild()
         {
-            if (registerIndexAttribute.Type == null)
+            if (algoliaIndex.Type == null)
             {
                 throw new InvalidOperationException("No registered search model class found for index.");
             }
@@ -119,7 +117,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             searchIndex.ClearObjects();
 
             var indexedNodes = new List<TreeNode>();
-            var includedPathAttributes = registerIndexAttribute.Type.GetCustomAttributes<IncludedPathAttribute>(false);
+            var includedPathAttributes = algoliaIndex.Type.GetCustomAttributes<IncludedPathAttribute>(false);
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var query = new MultiDocumentQuery()
@@ -137,9 +135,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                     query.Culture(includedPathAttribute.Cultures);
                 }
 
-                if (registerIndexAttribute.SiteNames.Length > 0)
+                if (algoliaIndex.SiteNames != null && algoliaIndex.SiteNames.Count() > 0)
                 {
-                    foreach (var site in registerIndexAttribute.SiteNames)
+                    foreach (var site in algoliaIndex.SiteNames)
                     {
                         query.OnSite(site).Or();
                     }
@@ -151,7 +149,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             AlgoliaQueueWorker.EnqueueAlgoliaQueueItems(indexedNodes.Select(node =>
                 new AlgoliaQueueItem
                 {
-                    IndexName = registerIndexAttribute.IndexName,
+                    IndexName = algoliaIndex.IndexName,
                     Node = node,
                     Deleted = false
                 }

@@ -4,7 +4,7 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
@@ -23,7 +23,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
             var siteIndexes = algoliaRegistrationService.RegisteredIndexes.Where(i => i.SiteNames == null || i.SiteNames.Contains(CurrentSiteName));
             if (siteIndexes.Count() == 0)
             {
-                ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
+                ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#gear-creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
                 return;
             }
 
@@ -42,7 +42,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         }
 
 
-        private void LoadIndexes(IEnumerable<RegisterAlgoliaIndexAttribute> indexes)
+        private void LoadIndexes(IEnumerable<AlgoliaIndex> indexes)
         {
             var indexesToList = new List<IndicesResponse>();
             var indexStatistics = algoliaSearchService.GetStatistics();
