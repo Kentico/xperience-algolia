@@ -1,7 +1,6 @@
 ﻿using CMS.DataEngine;
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
 using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 

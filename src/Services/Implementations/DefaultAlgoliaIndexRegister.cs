@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.AlgoliaSearch.Services.Implementations
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaIndexRegister"/>.

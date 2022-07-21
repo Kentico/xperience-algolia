@@ -5,8 +5,6 @@ using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
