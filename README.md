@@ -24,36 +24,24 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 }
 ```
 
-4. In the live-site project's startup code, call the `AddAlgolia()` extension method:
-
-```cs
-// Startup.cs
-public void ConfigureServices(IServiceCollection services)
-{
-    services.AddAlgolia(Configuration);
-}
-```
-
-5. In your administration project's `web.config` files's `appSettings` section, add the following keys:
+4. In your administration project's `web.config` files's `appSettings` section, add the following keys:
 
 ```xml
 <add key="AlgoliaApplicationId" value="<your application ID>"/>
 <add key="AlgoliaApiKey" value="<your Admin API key>"/>
 ```
 
+5. Register the `IAlgoliaIndexRegister` service and any indexes by following [this guide](#gear-creating-and-registering-an-algolia-index).
 6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-algolia-search-application-for-administration-interface) in your Xperience website.
 
 ## :gear: Creating and registering an Algolia index
 
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends the [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs) class. Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
-The index is registered via the [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) attribute which requires the type of the search model class and the code name of the Algolia index. Optionally, you can provide a list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included.
-
 ```cs
 using Kentico.Xperience.AlgoliaSearch.Models;
 using System;
 
-[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName, SiteNames = new string[] { "DancingGoatCore" })]
 namespace DancingGoat
 {
     public class AlgoliaSiteSearchModel : AlgoliaSearchModel
@@ -70,6 +58,43 @@ namespace DancingGoat
 ```
 
 > :ab: The property names (and names used in the [SourceAttribute](#source-attribute)) are __case-insensitive__. This means that your search model can contain an "articletext" property, or an "ArticleText" property- both will work.
+
+Indexes must be registered during application startup in both the administration application and the live-site application. In the __administration__ project, create a [custom module](https://docs.xperience.io/custom-development/creating-custom-modules/initializing-modules-to-run-custom-code) and use the `OnPreInit` method to create an `IAlgoliaIndexRegister`, add your indexes, and register the service:
+
+```cs
+protected override void OnPreInit()
+{
+    base.OnPreInit();
+
+    Service.Use<IAlgoliaIndexRegister>(new DefaultAlgoliaIndexRegister()
+        .Add<AlgoliaSiteSearchModel>(AlgoliaSiteSearchModel.IndexName)
+    );
+}
+```
+
+The `Add` method also accepts an optional list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included. In the __live-site__ project's startup code, call the `AddAlgolia()` extension method and add your indexes to the `IAlgoliaIndexRegister`:
+
+```cs
+// Startup.cs
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddAlgolia(Configuration,
+        new DefaultAlgoliaIndexRegister()
+            .Add<AlgoliaSiteSearchModel>(AlgoliaSiteSearchModel.IndexName)
+    );
+}
+```
+
+If you're developing your search solution in multiple environments (e.g. "DEV" and "STG"), it is recommended that you create a unique Algolia index per environment. With this approach, the search functionality can be tested in each environment individually and changes to the index structure or content will not affect other environments. This can be implemented any way you'd like, including some custom service which transforms the index names. The simplest approach would be to prepend some environment name to the index, which is stored in the application settings:
+
+```cs
+var environment = ConfigurationManager.AppSettings["Environment"];
+Service.Use<IAlgoliaIndexRegister>(new DefaultAlgoliaIndexRegister()
+    .Add<AlgoliaSiteSearchModel>($"{environment}-{AlgoliaSiteSearchModel.IndexName}")
+);
+```
+
+> :triangular_flag_on_post: The method of registering indexes via [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) is still supported, but no longer recommended.
 
 ### Determining which pages to index
 
@@ -89,48 +114,44 @@ All pages under the specified __AliasPath__ will be indexed regardless of the [p
 Below is an example of an Algolia index which includes multiple paths and page types:
 
 ```cs
-[assembly: RegisterAlgoliaIndex(typeof(AlgoliaSiteSearchModel), AlgoliaSiteSearchModel.IndexName)]
-namespace DancingGoat
+[IncludedPath("/Articles/%", PageTypes = new string[] { Article.CLASS_NAME })]
+[IncludedPath("/Store/%", PageTypes = new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
+public class AlgoliaSiteSearchModel : AlgoliaSearchModel
 {
-    [IncludedPath("/Articles/%", PageTypes = new string[] { Article.CLASS_NAME })]
-    [IncludedPath("/Store/%", PageTypes = new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
-    public class AlgoliaSiteSearchModel : AlgoliaSearchModel
-    {
-        public const string IndexName = "DancingGoatSiteSearch";
+    public const string IndexName = "DancingGoatSiteSearch";
 
-        [Searchable, Retrievable]
-        public string DocumentName { get; set; }
+    [Searchable, Retrievable]
+    public string DocumentName { get; set; }
 
-        [Url, Retrievable]
-        [Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
-        public string Thumbnail { get; set; }
+    [Url, Retrievable]
+    [Source(new string[] { nameof(SKUTreeNode.SKU.SKUImagePath), nameof(Article.ArticleTeaser) })]
+    public string Thumbnail { get; set; }
 
-        [Searchable]
-        [Source(new string[] { nameof(SKUTreeNode.DocumentSKUDescription), nameof(Article.ArticleText) })]
-        public string Content { get; set; }
+    [Searchable]
+    [Source(new string[] { nameof(SKUTreeNode.DocumentSKUDescription), nameof(Article.ArticleText) })]
+    public string Content { get; set; }
 
-        [Searchable, Retrievable]
-        [Source(new string[] { nameof(SKUTreeNode.DocumentSKUShortDescription), nameof(Article.ArticleSummary) })]
-        public string ShortDescription { get; set; }
+    [Searchable, Retrievable]
+    [Source(new string[] { nameof(SKUTreeNode.DocumentSKUShortDescription), nameof(Article.ArticleSummary) })]
+    public string ShortDescription { get; set; }
 
-        [Retrievable]
-        public int SKUID { get; set; }
+    [Retrievable]
+    public int SKUID { get; set; }
 
-        [Facetable, Retrievable]
-        public decimal? SKUPrice { get; set; }
+    [Facetable, Retrievable]
+    public decimal? SKUPrice { get; set; }
 
-        [Retrievable]
-        public int SKUPublicStatusID { get; set; }
+    [Retrievable]
+    public int SKUPublicStatusID { get; set; }
 
-        [Retrievable]
-        public DateTime DocumentCreatedWhen { get; set; }
+    [Retrievable]
+    public DateTime DocumentCreatedWhen { get; set; }
 
-        [Facetable]
-        public string CoffeeProcessing { get; set; }
+    [Facetable]
+    public string CoffeeProcessing { get; set; }
 
-        [Facetable]
-        public bool CoffeeIsDecaf { get; set; }
-    }
+    [Facetable]
+    public bool CoffeeIsDecaf { get; set; }
 }
 ```
 
@@ -445,7 +466,6 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 
 ```cshtml
 @inject IConfiguration configuration
-
 @{
     var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
@@ -700,6 +720,7 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
         Facets = facetsToRetrieve
     };
 
+
     var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
     return searchIndex.Search<AlgoliaSiteSearchModel>(query);
 }
@@ -942,6 +963,7 @@ You can also log an event when a visitor simply views a page with the `LogPageVi
 public async Task<IActionResult> Detail([FromServices] ArticleRepository articleRepository)
 {
     var article = articleRepository.GetCurrent();
+
     await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
 
     return new TemplateResult(article);
@@ -1011,7 +1033,7 @@ In the appropriate controller, create the action which accepts the facet paramet
 
 ```cs
 [HttpPost]
-public Task<ActionResult> FacetClicked(string facet)
+public async Task<ActionResult> FacetClicked(string facet)
 {
     if (String.IsNullOrEmpty(facet))
     {
@@ -1066,7 +1088,6 @@ endpoints.MapControllerRoute(
 
 ```cshtml
 @inject IConfiguration configuration
-
 @{
     var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
 }
@@ -1105,7 +1126,7 @@ endpoints.MapControllerRoute(
     <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
     <script type="text/javascript">
         const search = instantsearch({
-          indexName: '@DancingGoatSiteIndexModel.IndexName',
+          indexName: '@AlgoliaSiteSearchModel.IndexName',
           searchClient: algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey'),
         });
 

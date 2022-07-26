@@ -1,6 +1,7 @@
 ﻿using Algolia.Search.Clients;
 
 using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,12 +16,13 @@ namespace Kentico.Xperience.AlgoliaSearch
     public static class AlgoliaStartupExtensions
     {
         /// <summary>
-        /// Registers instances of <see cref="IInsightsClient"/> and <see cref="ISearchClient"/>
-        /// with Dependency Injection.
+        /// Registers instances of <see cref="IInsightsClient"/>, <see cref="ISearchClient"/>, and
+        /// <see cref="IAlgoliaIndexRegister"/> with Dependency Injection.
         /// </summary>
         /// <param name="services">The service collection.</param>
         /// <param name="configuration">The application configuration.</param>
-        public static IServiceCollection AddAlgolia(this IServiceCollection services, IConfiguration configuration)
+        /// <param name="register">The implementation of <see cref="IAlgoliaIndexRegister"/> to register.</param>
+        public static IServiceCollection AddAlgolia(this IServiceCollection services, IConfiguration configuration, IAlgoliaIndexRegister register)
         {
             var algoliaOptions = configuration.GetSection(AlgoliaOptions.SECTION_NAME).Get<AlgoliaOptions>();
             if (String.IsNullOrEmpty(algoliaOptions.ApplicationId) || String.IsNullOrEmpty(algoliaOptions.ApiKey))
@@ -36,6 +38,7 @@ namespace Kentico.Xperience.AlgoliaSearch
 
             services.AddSingleton<IInsightsClient>(insightsClient);
             services.AddSingleton<ISearchClient>(searchClient);
+            services.AddSingleton(register);
 
             return services;
         }
