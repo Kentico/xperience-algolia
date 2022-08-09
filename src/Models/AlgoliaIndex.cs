@@ -9,6 +9,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
     public class AlgoliaIndex
     {
         /// <summary>
+        /// The name of the attribute used for Algolia de-duplication. See
+        /// <see href="https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents/"/>.
+        /// </summary>
+        public string DistinctAttribute
+        {
+            get;
+            set;
+        }
+
+
+        /// <summary>
         /// The type of the class which extends <see cref="AlgoliaSearchModel"/>.
         /// </summary>
         public Type Type

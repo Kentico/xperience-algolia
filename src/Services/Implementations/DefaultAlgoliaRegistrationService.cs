@@ -68,22 +68,28 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(indexName));
             }
 
-            var alogliaIndex = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
-            if (alogliaIndex == null)
+            var algoliaIndex = mRegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            if (algoliaIndex == null)
             {
                 return null;
             }
 
-            var searchableProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
-            var retrievablProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
-            var facetableProperties = alogliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
-            
-            return new IndexSettings()
+            var searchableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievablProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            var settings = new IndexSettings()
             {
                 SearchableAttributes = algoliaSearchService.OrderSearchableProperties(searchableProperties),
                 AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
                 AttributesForFaceting = facetableProperties.Select(algoliaSearchService.GetFilterablePropertyName).ToList()
             };
+
+            if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute))
+            {
+                settings.AttributeForDistinct = algoliaIndex.DistinctAttribute;
+            }
+
+            return settings;
         }
 
 
