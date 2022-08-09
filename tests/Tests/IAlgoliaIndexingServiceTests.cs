@@ -37,11 +37,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_UnscheduledNode_ContainsMinMaxPublishingDates()
             {
                 var unscheduledNode = FakeNodes.GetNode("/Articles/1");
-                var nodeData = algoliaIndexingService.GetTreeNodeData(unscheduledNode, typeof(Model1));
+                var nodeData = algoliaIndexingService.GetTreeNodeData(unscheduledNode, new AlgoliaIndex {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
 
                 Assert.Multiple(() => {
-                    Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), 0);
-                    Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)), Int32.MaxValue);
+                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), 0);
+                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)), Int32.MaxValue);
                 });
             }
 
@@ -55,11 +58,17 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     p.SetValue(nameof(AlgoliaSearchModel.DocumentPublishTo), new DateTime(2023, 1, 1));
                 });
 
-                var nodeData = algoliaIndexingService.GetTreeNodeData(scheduledNode, typeof(Model1));
+                var nodeData = algoliaIndexingService.GetTreeNodeData(scheduledNode, new AlgoliaIndex
+                {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
 
                 Assert.Multiple(() => {
-                    Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), scheduledNode.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
-                    Assert.AreEqual(nodeData.Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)), scheduledNode.DocumentPublishTo.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)),
+                        scheduledNode.DocumentPublishFrom.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
+                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)),
+                        scheduledNode.DocumentPublishTo.ToUniversalTime().Subtract(new DateTime(1970, 1, 1)).TotalSeconds);
                 });
             }
 
@@ -68,9 +77,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_PropertiesFromModel_MatchNodeValue()
             {
                 var node = FakeNodes.GetNode("/Articles/1");
-                var nodeData = algoliaIndexingService.GetTreeNodeData(node, typeof(Model1));
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, new AlgoliaIndex
+                {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
 
-                Assert.AreEqual(nodeData.Value<DateTime>(nameof(Model1.DocumentCreatedWhen)), new DateTime(2022, 1, 1));
+                Assert.AreEqual(nodeData.FirstOrDefault().Value<DateTime>(nameof(Model1.DocumentCreatedWhen)), new DateTime(2022, 1, 1));
             }
 
 
@@ -79,9 +92,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var nodeAliasPath = "/Articles/1";
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                var nodeData = algoliaIndexingService.GetTreeNodeData(node, typeof(Model4));
+                var nodeData = algoliaIndexingService.GetTreeNodeData(node, new AlgoliaIndex
+                {
+                    IndexName = Model4.IndexName,
+                    Type = typeof(Model4)
+                });
 
-                Assert.AreEqual(nodeData.Value<string>(nameof(Model4.Prop1)), nodeAliasPath);
+                Assert.AreEqual(nodeData.FirstOrDefault().Value<string>(nameof(Model4.Prop1)), nodeAliasPath);
             }
 
 
@@ -89,11 +106,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             public void GetTreeNodeData_InheritsBaseClass_ContainsNodeValuesFromAllClasses()
             {
                 var node = FakeNodes.GetNode("/Articles/1");
-                var data = algoliaIndexingService.GetTreeNodeData(node, typeof(Model7));
+                var data = algoliaIndexingService.GetTreeNodeData(node, new AlgoliaIndex
+                {
+                    IndexName = Model7.IndexName,
+                    Type = typeof(Model7)
+                });
 
                 Assert.Multiple(() => {
-                    Assert.IsNotNull(data.Value<string>(nameof(Model7.NodeAliasPath)));
-                    Assert.IsNotNull(data.Value<string>(nameof(ModelBaseClass.DocumentName)));
+                    Assert.IsNotNull(data.FirstOrDefault().Value<string>(nameof(Model7.NodeAliasPath)));
+                    Assert.IsNotNull(data.FirstOrDefault().Value<string>(nameof(ModelBaseClass.DocumentName)));
                 });
             }
 
@@ -103,11 +124,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             {
                 var nodeAliasPath = "/Articles/1";
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                var data = algoliaIndexingService.GetTreeNodeData(node, typeof(Model7));
+                var data = algoliaIndexingService.GetTreeNodeData(node, new AlgoliaIndex
+                {
+                    IndexName = Model7.IndexName,
+                    Type = typeof(Model7)
+                });
 
                 Assert.Multiple(() => {
-                    Assert.AreEqual(nodeAliasPath.ToUpper(), data.Value<string>(nameof(Model7.NodeAliasPath)));
-                    Assert.AreEqual("NAME", data.Value<string>(nameof(ModelBaseClass.DocumentName)));
+                    Assert.AreEqual(nodeAliasPath.ToUpper(), data.FirstOrDefault().Value<string>(nameof(Model7.NodeAliasPath)));
+                    Assert.AreEqual("NAME", data.FirstOrDefault().Value<string>(nameof(ModelBaseClass.DocumentName)));
                 });
             }
         }

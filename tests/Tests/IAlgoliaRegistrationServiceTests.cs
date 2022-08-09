@@ -5,6 +5,7 @@ using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
 
+using Kentico.Xperience.AlgoliaSearch.Models;
 using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
@@ -266,9 +267,20 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_ValidIndexes_AreRegistered()
             {
-                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
-                algoliaRegistrationService.RegisterIndex(typeof(Model2), Model2.IndexName);
-                algoliaRegistrationService.RegisterIndex(typeof(Model3), Model3.IndexName);
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = Model2.IndexName,
+                    Type = typeof(Model2)
+                });
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = Model3.IndexName,
+                    Type = typeof(Model3)
+                });
 
                 Assert.AreEqual(3, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -277,7 +289,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_EmptyIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(typeof(Model1), String.Empty);
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = String.Empty,
+                    Type = typeof(Model1)
+                });
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -286,7 +302,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_NullSearchModel_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(null, "FAKE_NAME");
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = "FAKE_NAME",
+                    Type = null
+                });
 
                 Assert.AreEqual(0, algoliaRegistrationService.RegisteredIndexes.Count);
             }
@@ -295,8 +315,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [Test]
             public void RegisterIndex_DuplicateIndexName_DoesntRegisterIndex()
             {
-                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
-                algoliaRegistrationService.RegisterIndex(typeof(Model1), Model1.IndexName);
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
+                algoliaRegistrationService.RegisterIndex(new AlgoliaIndex
+                {
+                    IndexName = Model1.IndexName,
+                    Type = typeof(Model1)
+                });
 
                 Assert.AreEqual(1, algoliaRegistrationService.RegisteredIndexes.Count);
             }

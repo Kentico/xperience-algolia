@@ -79,6 +79,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var facetableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
             var settings = new IndexSettings()
             {
+                Distinct = algoliaIndex.DistinctLevel,
                 SearchableAttributes = algoliaSearchService.OrderSearchableProperties(searchableProperties),
                 AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
                 AttributesForFaceting = facetableProperties.Select(algoliaSearchService.GetFilterablePropertyName).ToList()
@@ -206,53 +207,51 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
             foreach (var attribute in attributes)
             {
-                RegisterIndex(attribute.Type, attribute.IndexName, attribute.SiteNames);
+                RegisterIndex(new AlgoliaIndex {
+                    IndexName = attribute.IndexName,
+                    Type = attribute.Type,
+                    SiteNames = attribute.SiteNames
+                });
             }
 
             var algoliaIndex = algoliaIndexRegister.Pop();
             while (algoliaIndex != null)
             {
-                RegisterIndex(algoliaIndex.Type, algoliaIndex.IndexName, algoliaIndex.SiteNames);
+                RegisterIndex(algoliaIndex);
                 algoliaIndex = algoliaIndexRegister.Pop();
             }
         }
 
 
-        public void RegisterIndex(Type searchModel, string indexName, IEnumerable<string> siteNames = null)
+        public void RegisterIndex(AlgoliaIndex algoliaIndex)
         {
-            if (String.IsNullOrEmpty(indexName))
+            if (String.IsNullOrEmpty(algoliaIndex.IndexName))
             {
                 eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with empty or null code name.");
                 return;
             }
 
-            if (searchModel == null)
+            if (algoliaIndex.Type == null)
             {
                 eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), "Cannot register Algolia index with null search model type.");
                 return;
             }
 
-            if (mRegisteredIndexes.Any(i => i.IndexName == indexName))
+            if (mRegisteredIndexes.Any(i => i.IndexName == algoliaIndex.IndexName))
             {
-                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{indexName},' but it is already registered.");
+                eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Attempted to register Algolia index with name '{algoliaIndex.IndexName},' but it is already registered.");
                 return;
             }
 
-            var algoliaIndex = new AlgoliaIndex
-            {
-                IndexName = indexName,
-                Type = searchModel,
-                SiteNames = siteNames
-            };
             try
             {
                 mRegisteredIndexes.Add(algoliaIndex);
 
-                var searchIndex = algoliaIndexService.InitializeIndex(indexName);
-                var indexSettings = GetIndexSettings(indexName);
+                var searchIndex = algoliaIndexService.InitializeIndex(algoliaIndex.IndexName);
+                var indexSettings = GetIndexSettings(algoliaIndex.IndexName);
                 if (indexSettings == null)
                 {
-                    eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Unable to load search index settings for index '{indexName}.'");
+                    eventLogService.LogError(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), $"Unable to load search index settings for index '{algoliaIndex.IndexName}.'");
                     return;
                 }
 
@@ -261,7 +260,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             catch (Exception ex)
             {
                 mRegisteredIndexes.Remove(algoliaIndex);
-                eventLogService.LogException(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), ex, additionalMessage: $"Cannot register Algolia index '{indexName}.'");
+                eventLogService.LogException(nameof(DefaultAlgoliaRegistrationService), nameof(RegisterIndex), ex, additionalMessage: $"Cannot register Algolia index '{algoliaIndex.IndexName}.'");
             }
         }
 

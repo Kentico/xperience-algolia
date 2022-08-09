@@ -74,23 +74,29 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public JObject GetTreeNodeData(TreeNode node, Type searchModelType)
+        public IEnumerable<JObject> GetTreeNodeData(TreeNode node, AlgoliaIndex algoliaIndex)
         {
             if (node == null)
             {
                 throw new ArgumentNullException(nameof(node));
             }
 
-            if (searchModelType == null)
+            if (algoliaIndex == null)
             {
-                throw new ArgumentNullException(nameof(searchModelType));
+                throw new ArgumentNullException(nameof(algoliaIndex));
             }
 
             var data = new JObject();
-            MapTreeNodeProperties(node, data, searchModelType);
+            MapTreeNodeProperties(node, data, algoliaIndex.Type);
             MapCommonProperties(node, data);
 
-            return data;
+            if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute) && algoliaIndex.DistinctLevel > 0)
+            {
+                var searchModel = Activator.CreateInstance(algoliaIndex.Type) as AlgoliaSearchModel;
+                return searchModel.SplitData(data);
+            }
+
+            return new JObject[] { data };
         }
 
 
@@ -115,11 +121,30 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
                     var deleteTasks = group.Where(queueItem => queueItem.Deleted);
                     var updateTasks = group.Where(queueItem => !queueItem.Deleted);
-                    var upsertData = updateTasks.Select(queueItem => GetTreeNodeData(queueItem.Node, algoliaIndex.Type)).ToList();
-                    var deleteData = deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString()).ToList();
+
+                    var deleteIds = new List<string>();
+                    if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute) && algoliaIndex.DistinctLevel > 0)
+                    {
+                        // Data has been split, call GetTreeNodeData to obtain IDs of the smaller records
+                        foreach (var queueItem in deleteTasks)
+                        {
+                            var splitData = GetTreeNodeData(queueItem.Node, algoliaIndex);
+                            deleteIds.AddRange(splitData.Select(obj => obj.Value<string>("objectID")));
+                        }
+                    }
+                    else
+                    {
+                        deleteIds.AddRange(deleteTasks.Select(queueItem => queueItem.Node.DocumentID.ToString()));
+                    }
+
+                    var upsertData = new List<JObject>();
+                    foreach (var queueItem in updateTasks)
+                    {
+                        upsertData.AddRange(GetTreeNodeData(queueItem.Node, algoliaIndex));
+                    }
 
                     successfulOperations += algoliaConnection.UpsertRecords(upsertData);
-                    successfulOperations += algoliaConnection.DeleteRecords(deleteData);
+                    successfulOperations += algoliaConnection.DeleteRecords(deleteIds);
                 }
                 catch (InvalidOperationException ex)
                 {
@@ -170,6 +195,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     case FieldDataType.File: // Attachment
                         var attachment = AttachmentInfo.Provider.Get(new Guid(strValue), node.NodeSiteID);
+                        if (attachment == null)
+                        {
+                            return null;
+                        }
+
                         nodeValue = AttachmentURLProvider.GetAttachmentUrl(attachment.AttachmentGUID, attachment.AttachmentName);
                         break;
                 }

@@ -2,6 +2,10 @@
 
 using Kentico.Xperience.AlgoliaSearch.Attributes;
 
+using Newtonsoft.Json.Linq;
+
+using System.Collections.Generic;
+
 namespace Kentico.Xperience.AlgoliaSearch.Models
 {
     /// <summary>
@@ -83,6 +87,20 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
         public virtual object OnIndexingProperty(TreeNode node, string propertyName, string usedColumn, object foundValue)
         {
             return foundValue;
+        }
+
+
+        /// <summary>
+        /// Called when indexing a <see cref="TreeNode"/> if the <see cref="AlgoliaIndex"/> was registered
+        /// with a <see cref="AlgoliaIndex.DistinctAttribute"/> and <see cref="AlgoliaIndex.DistinctLevel"/>.
+        /// This method can be used to split one large Algolia record into multiple, smaller records.
+        /// </summary>
+        /// <remarks>See <see href="https://www.algolia.com/doc/guides/sending-and-managing-data/prepare-your-data/how-to/indexing-long-documents/"/>.</remarks>
+        /// <param name="originalData">The node's data before being split into smaller objects.</param>
+        /// <returns>One or more <see cref="JObject"/>s representing the data of the node.</returns>
+        public virtual IEnumerable<JObject> SplitData(JObject originalData)
+        {
+            return new JObject[] { originalData };
         }
     }
 }

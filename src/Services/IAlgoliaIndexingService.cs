@@ -27,16 +27,16 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Gets a dynamic <see cref="JObject"/> containing the properties of the Algolia
+        /// Gets dynamic <see cref="JObject"/>s containing the properties of the Algolia
         /// search model and base class <see cref="AlgoliaSearchModel"/>, populated with data
         /// from the <paramref name="node"/>.
         /// </summary>
         /// <param name="node">The <see cref="TreeNode"/> being indexed.</param>
-        /// <param name="searchModelType">The class of the Algolia search model.</param>
-        /// <returns>A <see cref="JObject"/> with its properties and values set.</returns>
+        /// <param name="algoliaIndex">The Algolia index which includes the <paramref name="node"/>.</param>
+        /// <returns>One or more <see cref="JObject"/>s representing the data of the <paramref name="node"/>.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="node"/> or
-        /// <paramref name="searchModelType"/> are null.</exception>
-        JObject GetTreeNodeData(TreeNode node, Type searchModelType);
+        /// <paramref name="algoliaIndex"/> are null.</exception>
+        IEnumerable<JObject> GetTreeNodeData(TreeNode node, AlgoliaIndex algoliaIndex);
 
 
         /// <summary>

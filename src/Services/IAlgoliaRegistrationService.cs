@@ -74,15 +74,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
 
         /// <summary>
-        /// Stores an <see cref="AlgoliaIndex"/> in memory based on the provided parameters. Also calls
+        /// Stores the provided <see cref="AlgoliaIndex"/> in memory. Also calls
         /// <see cref="SearchIndex.SetSettings"/> to initialize the Algolia index's configuration
-        /// based on the attributes defined in the <paramref name="searchModel"/>.
+        /// based on the attributes defined in the <see cref="AlgoliaIndex.Type"/>.
         /// </summary>
-        /// <param name="searchModel">The type of the class which extends <see cref="AlgoliaSearchModel"/>.</param>
-        /// <param name="indexName">The code name of the Algolia index.</param>
-        /// <param name="siteNames">The code names of the sites whose pages will be included in the index.
-        /// If empty, all sites are included.</param>
+        /// <param name="algoliaIndex">The Algolia index definition.</param>
         /// <remarks>Logs an error if the index settings cannot be loaded.</remarks>
-        void RegisterIndex(Type searchModel, string indexName, IEnumerable<string> siteNames = null);
+        void RegisterIndex(AlgoliaIndex algoliaIndex);
     }
 }

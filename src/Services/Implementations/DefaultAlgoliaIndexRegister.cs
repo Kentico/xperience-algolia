@@ -13,14 +13,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         private readonly Stack<AlgoliaIndex> indexes = new Stack<AlgoliaIndex>();
 
 
-        public IAlgoliaIndexRegister Add<TModel>(string indexName, IEnumerable<string> siteNames = null, string distinctAttribute = null) where TModel : AlgoliaSearchModel
+        public IAlgoliaIndexRegister Add<TModel>(string indexName, IEnumerable<string> siteNames = null, string distinctAttribute = null, int distinctLevel = 0) where TModel : AlgoliaSearchModel
         {
             indexes.Push(new AlgoliaIndex
             {
                 IndexName = indexName,
                 Type = typeof(TModel),
                 SiteNames = siteNames,
-                DistinctAttribute = distinctAttribute
+                DistinctAttribute = distinctAttribute,
+                DistinctLevel = distinctLevel
             });
 
             return this;
