@@ -90,7 +90,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             MapTreeNodeProperties(node, data, algoliaIndex.Type);
             MapCommonProperties(node, data);
 
-            if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute) && algoliaIndex.DistinctLevel > 0)
+            if (algoliaIndex.DistinctOptions != null)
             {
                 var searchModel = Activator.CreateInstance(algoliaIndex.Type) as AlgoliaSearchModel;
                 return searchModel.SplitData(data);
@@ -123,7 +123,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                     var updateTasks = group.Where(queueItem => !queueItem.Deleted);
 
                     var deleteIds = new List<string>();
-                    if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute) && algoliaIndex.DistinctLevel > 0)
+                    if (algoliaIndex.DistinctOptions != null)
                     {
                         // Data has been split, call GetTreeNodeData to obtain IDs of the smaller records
                         foreach (var queueItem in deleteTasks)

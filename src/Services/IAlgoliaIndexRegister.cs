@@ -17,10 +17,9 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <param name="indexName">The code name of the Algolia index.</param>
         /// <param name="siteNames">The code names of the sites whose pages will be included in the index.
         /// If empty, all sites are included.</param>
-        /// <param name="distinctAttribute">The name of the attribute used for Algolia de-duplication.</param>
-        /// <param name="distinctLevel">The distinction level.</param>
+        /// <param name="distinctOptions">The distinct options of the index.</param>
         /// <returns>The <see cref="IAlgoliaRegistrationService"/> for chaining.</returns>
-        IAlgoliaIndexRegister Add<TModel>(string indexName, IEnumerable<string> siteNames = null, string distinctAttribute = null, int distinctLevel = 0) where TModel : AlgoliaSearchModel;
+        IAlgoliaIndexRegister Add<TModel>(string indexName, IEnumerable<string> siteNames = null, DistinctOptions distinctOptions = null) where TModel : AlgoliaSearchModel;
 
 
         /// <summary>

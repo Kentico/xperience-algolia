@@ -9,21 +9,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Models
     public class AlgoliaIndex
     {
         /// <summary>
-        /// The name of the attribute used for Algolia de-duplication.
+        /// The distinct and de-duplication settings for the Algolia index.
         /// </summary>
-        public string DistinctAttribute
+        public DistinctOptions DistinctOptions
         {
-            get;
-            set;
-        }
-
-
-        /// <summary>
-        /// The distinction level.
-        /// </summary>
-        public int DistinctLevel
-        {
-            get;
+            get; 
             set;
         }
 

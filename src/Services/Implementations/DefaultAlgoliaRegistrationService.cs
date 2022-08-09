@@ -79,15 +79,15 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var facetableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
             var settings = new IndexSettings()
             {
-                Distinct = algoliaIndex.DistinctLevel,
                 SearchableAttributes = algoliaSearchService.OrderSearchableProperties(searchableProperties),
                 AttributesToRetrieve = retrievablProperties.Select(p => p.Name).ToList(),
                 AttributesForFaceting = facetableProperties.Select(algoliaSearchService.GetFilterablePropertyName).ToList()
             };
 
-            if (!String.IsNullOrEmpty(algoliaIndex.DistinctAttribute))
+            if (algoliaIndex.DistinctOptions != null)
             {
-                settings.AttributeForDistinct = algoliaIndex.DistinctAttribute;
+                settings.Distinct = algoliaIndex.DistinctOptions.DistinctLevel;
+                settings.AttributeForDistinct = algoliaIndex.DistinctOptions.DistinctAttribute;
             }
 
             return settings;
