@@ -184,25 +184,25 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     new AlgoliaQueueItem
                     {
                         IndexName = Model1.IndexName,
-                        Deleted = true,
+                        Delete = true,
                         Node = node1
                     },
                     new AlgoliaQueueItem
                     {
                         IndexName = Model2.IndexName,
-                        Deleted = false,
+                        Delete = false,
                         Node = node2
                     },
                     new AlgoliaQueueItem
                     {
                         IndexName = Model3.IndexName,
-                        Deleted = true,
+                        Delete = true,
                         Node = node1
                     },
                     new AlgoliaQueueItem
                     {
                         IndexName = Model4.IndexName,
-                        Deleted = false,
+                        Delete = false,
                         Node = node2
                     }
                 };
@@ -222,13 +222,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                     new AlgoliaQueueItem
                     {
                         IndexName = Model1.IndexName,
-                        Deleted = true,
+                        Delete = true,
                         Node = node1
                     },
                     new AlgoliaQueueItem
                     {
                         IndexName = "FAKE_NAME",
-                        Deleted = false,
+                        Delete = false,
                         Node = node2
                     }
                 };

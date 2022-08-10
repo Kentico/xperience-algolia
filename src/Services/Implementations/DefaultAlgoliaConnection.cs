@@ -151,7 +151,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     IndexName = algoliaIndex.IndexName,
                     Node = node,
-                    Deleted = false
+                    Delete = false
                 }
             ));
         }

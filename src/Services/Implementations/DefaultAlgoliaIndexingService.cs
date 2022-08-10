@@ -43,7 +43,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
-        public void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew)
+        public void EnqueueAlgoliaItems(TreeNode node, string eventName)
         {
             foreach (var index in algoliaRegistrationService.RegisteredIndexes)
             {
@@ -59,15 +59,18 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                     continue;
                 }
 
-                if (!isNew && !wasDeleted && !node.AnyItemChanged(indexedColumns))
+                if (node.GetWorkflow() == null && eventName.Equals(DocumentEvents.Update.Name) && !node.AnyItemChanged(indexedColumns))
                 {
+                    // For updated non-workflow pages, don't update Algolia if nothing changed
                     continue;
                 }
 
-                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem()
+                var shouldDelete = eventName.Equals(DocumentEvents.Delete.Name, StringComparison.OrdinalIgnoreCase) ||
+                    eventName.Equals(WorkflowEvents.Archive.Name, StringComparison.OrdinalIgnoreCase);
+                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(new AlgoliaQueueItem
                 {
                     Node = node,
-                    Deleted = wasDeleted,
+                    Delete = shouldDelete,
                     IndexName = index.IndexName
                 });
             }
@@ -119,8 +122,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                         continue;
                     }
 
-                    var deleteTasks = group.Where(queueItem => queueItem.Deleted);
-                    var updateTasks = group.Where(queueItem => !queueItem.Deleted);
+                    var deleteTasks = group.Where(queueItem => queueItem.Delete);
+                    var updateTasks = group.Where(queueItem => !queueItem.Delete);
 
                     var deleteIds = new List<string>();
                     if (algoliaIndex.DistinctOptions != null)

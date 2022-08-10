@@ -21,9 +21,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         /// <remarks>Logs an error if there are issues loading indexed columns.</remarks>
         /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
-        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
-        /// <param name="isNew">True if the <paramref name="node"/> was created.</param>
-        void EnqueueAlgoliaItems(TreeNode node, bool wasDeleted, bool isNew);
+        /// <param name="eventName">The name of the Xperience event that was triggered.</param>
+        void EnqueueAlgoliaItems(TreeNode node, string eventName);
 
 
         /// <summary>
