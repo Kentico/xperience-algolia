@@ -81,7 +81,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 }
             ).ToList();
 
-            if (!displayEmptyFacets)
+            if (!displayEmptyFacets || filter == null)
             {
                 return facets.ToArray();
             }
@@ -89,7 +89,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             // Loop through all facets present in previous filter
             foreach (var previousFacetedAttribute in filter.FacetedAttributes)
             {
-                var matchingFacetFromResponse = facets.Where(facet => facet.Attribute == previousFacetedAttribute.Attribute).FirstOrDefault();
+                var matchingFacetFromResponse = facets.FirstOrDefault(facet => facet.Attribute == previousFacetedAttribute.Attribute);
                 if (matchingFacetFromResponse == null)
                 {
                     // Previous attribute was not returned by Algolia, add to new facet list

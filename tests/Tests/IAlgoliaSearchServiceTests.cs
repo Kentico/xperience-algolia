@@ -73,12 +73,12 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
                     Assert.True(facets.Any(attr => attr.Attribute == "attr2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Any(facet => facet.Value == "facet1"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet3"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet1").FirstOrDefault().Count == 1);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet2").FirstOrDefault().Count == 2);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet3").FirstOrDefault().Count == 3);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.Any(facet => facet.Value == "facet1"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet2"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet3"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet1").Count == 1);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet2").Count == 2);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet3").Count == 3);
                 });
             }
 
@@ -92,14 +92,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
                     Assert.True(facets.Any(attr => attr.Attribute == "attr2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Any(facet => facet.Value == "facet0"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Any(facet => facet.Value == "facet1"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet3"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet0").FirstOrDefault().Count == 0);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet1").FirstOrDefault().Count == 1);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet2").FirstOrDefault().Count == 2);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet3").FirstOrDefault().Count == 3);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.Any(facet => facet.Value == "facet0"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.Any(facet => facet.Value == "facet1"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet2"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet3"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet0").Count == 0);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet1").Count == 1);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet2").Count == 2);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet3").Count == 3);
                 });
             }
 
@@ -113,14 +113,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 Assert.Multiple(() => {
                     Assert.True(facets.Any(attr => attr.Attribute == "attr1"));
                     Assert.True(facets.Any(attr => attr.Attribute == "attr2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Any(facet => facet.Value == "facet1"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet2"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Any(facet => facet.Value == "facet3"));
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet1").FirstOrDefault().Count == 1);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet2").FirstOrDefault().Count == 2);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet3").FirstOrDefault().Count == 3);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.Any(facet => facet.Value == "facet1"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet2"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.Any(facet => facet.Value == "facet3"));
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet1").Count == 1);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet2").Count == 2);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet3").Count == 3);
 
-                    Assert.False(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Any(facet => facet.Value == "facet0"));
+                    Assert.False(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.Any(facet => facet.Value == "facet0"));
                 });
             }
 
@@ -132,11 +132,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 var facets = algoliaSearchService.GetFacetedAttributes(facetsFromResponse, filter);
 
                 Assert.Multiple(() => {
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet1").FirstOrDefault().IsChecked);
-                    Assert.True(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet3").FirstOrDefault().IsChecked);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet1").IsChecked);
+                    Assert.True(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet3").IsChecked);
 
-                    Assert.False(facets.Where(attr => attr.Attribute == "attr1").FirstOrDefault().Facets.Where(facet => facet.Value == "facet0").FirstOrDefault().IsChecked);
-                    Assert.False(facets.Where(attr => attr.Attribute == "attr2").FirstOrDefault().Facets.Where(facet => facet.Value == "facet2").FirstOrDefault().IsChecked);
+                    Assert.False(facets.FirstOrDefault(attr => attr.Attribute == "attr1").Facets.FirstOrDefault(facet => facet.Value == "facet0").IsChecked);
+                    Assert.False(facets.FirstOrDefault(attr => attr.Attribute == "attr2").Facets.FirstOrDefault(facet => facet.Value == "facet2").IsChecked);
                 });
             }
         }

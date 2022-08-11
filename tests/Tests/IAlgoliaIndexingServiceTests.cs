@@ -43,8 +43,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 });
 
                 Assert.Multiple(() => {
-                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)), 0);
-                    Assert.AreEqual(nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)), Int32.MaxValue);
+                    Assert.AreEqual(0, nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishFrom)));
+                    Assert.AreEqual(Int32.MaxValue, nodeData.FirstOrDefault().Value<int>(nameof(AlgoliaSearchModel.DocumentPublishTo)));
                 });
             }
 
@@ -235,7 +235,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
 
                 var successfulOperations = algoliaIndexingService.ProcessAlgoliaTasks(testQueueItems);
 
-                Assert.AreEqual(successfulOperations, 1);
+                Assert.AreEqual(1, successfulOperations);
             }
         }
     }

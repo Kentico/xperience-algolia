@@ -7,7 +7,7 @@ using System.Collections.Generic;
 
 namespace Kentico.Xperience.AlgoliaSearch.Test
 {
-    internal class FakeNodes
+    internal static class FakeNodes
     {
         private static readonly Dictionary<string, TreeNode> nodes = new Dictionary<string, TreeNode>();
 

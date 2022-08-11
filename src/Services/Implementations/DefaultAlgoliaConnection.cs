@@ -25,7 +25,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     {
         private ISearchIndex searchIndex;
         private AlgoliaIndex algoliaIndex;
-        private readonly ISearchClient searchClient;
         private readonly IEventLogService eventLogService;
         private readonly IAlgoliaIndexService algoliaIndexService;
         private readonly IAlgoliaRegistrationService algoliaRegistrationService;
@@ -34,12 +33,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultAlgoliaConnection"/> class.
         /// </summary>
-        public DefaultAlgoliaConnection(ISearchClient searchClient,
-            IEventLogService eventLogService,
+        public DefaultAlgoliaConnection(IEventLogService eventLogService,
             IAlgoliaIndexService algoliaIndexService,
             IAlgoliaRegistrationService algoliaRegistrationService)
         {
-            this.searchClient = searchClient;
             this.eventLogService = eventLogService;
             this.algoliaIndexService = algoliaIndexService;
             this.algoliaRegistrationService = algoliaRegistrationService;
@@ -66,7 +63,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         public int DeleteRecords(IEnumerable<string> objectIds)
         {
             var deletedCount = 0;
-            if (objectIds == null || objectIds.Count() == 0)
+            if (objectIds == null || !objectIds.Any())
             {
                 return 0;
             }
@@ -84,7 +81,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         public int UpsertRecords(IEnumerable<JObject> dataObjects)
         {
             var upsertedCount = 0;
-            if (dataObjects == null || dataObjects.Count() == 0)
+            if (dataObjects == null || !dataObjects.Any())
             {
                 return 0;
             }
@@ -135,7 +132,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                     query.Culture(includedPathAttribute.Cultures);
                 }
 
-                if (algoliaIndex.SiteNames != null && algoliaIndex.SiteNames.Count() > 0)
+                if (algoliaIndex.SiteNames != null && algoliaIndex.SiteNames.Any())
                 {
                     foreach (var site in algoliaIndex.SiteNames)
                     {

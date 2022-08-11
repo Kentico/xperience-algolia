@@ -24,7 +24,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     {
         private readonly IAlgoliaSearchService algoliaSearchService;
         private readonly IEventLogService eventLogService;
-        private readonly ISearchClient searchClient;
         private readonly IAlgoliaIndexService algoliaIndexService;
         private readonly IAlgoliaIndexRegister algoliaIndexRegister;
         private readonly List<AlgoliaIndex> mRegisteredIndexes = new List<AlgoliaIndex>();
@@ -49,13 +48,11 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         /// </summary>
         public DefaultAlgoliaRegistrationService(IAlgoliaSearchService algoliaSearchService,
             IEventLogService eventLogService,
-            ISearchClient searchClient,
             IAlgoliaIndexService algoliaIndexService,
             IAlgoliaIndexRegister algoliaIndexRegister)
         {
             this.algoliaSearchService = algoliaSearchService;
             this.eventLogService = eventLogService;
-            this.searchClient = searchClient;
             this.algoliaIndexService = algoliaIndexService;
             this.algoliaIndexRegister = algoliaIndexRegister;
         }
@@ -132,15 +129,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 throw new ArgumentNullException(nameof(node));
             }
 
-            foreach (var index in mRegisteredIndexes)
-            {
-                if (IsNodeIndexedByIndex(node, index.IndexName))
-                {
-                    return true;
-                }
-            }
-
-            return false;
+            return mRegisteredIndexes.Any(index => IsNodeIndexedByIndex(node, index.IndexName));
         }
 
 
@@ -168,8 +157,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             }
             
             var includedPathAttributes = alogliaIndex.Type.GetCustomAttributes<IncludedPathAttribute>(false);
-            foreach (var includedPathAttribute in includedPathAttributes)
-            {
+            return includedPathAttributes.Any(includedPathAttribute => {
                 var path = includedPathAttribute.AliasPath;
                 var matchesPageType = (includedPathAttribute.PageTypes.Length == 0 || includedPathAttribute.PageTypes.Contains(node.ClassName));
                 var matchesCulture = (includedPathAttribute.Cultures.Length == 0 || includedPathAttribute.Cultures.Contains(node.DocumentCulture));
@@ -177,21 +165,13 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 if (path.EndsWith("/%"))
                 {
                     path = path.TrimEnd('%', '/');
-                    if (node.NodeAliasPath.StartsWith(path) && matchesPageType && matchesCulture)
-                    {
-                        return true;
-                    }
+                    return node.NodeAliasPath.StartsWith(path) && matchesPageType && matchesCulture;
                 }
                 else
                 {
-                    if (node.NodeAliasPath == path && matchesPageType && matchesCulture)
-                    {
-                        return true;
-                    }
+                    return node.NodeAliasPath == path && matchesPageType && matchesCulture;
                 }
-            }
-
-            return false;
+            });
         }
 
 

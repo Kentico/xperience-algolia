@@ -61,7 +61,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 return new DefaultAlgoliaRegistrationService(
                     Substitute.For<IAlgoliaSearchService>(),
                     new MockEventLogService(),
-                    Substitute.For<ISearchClient>(),
                     Substitute.For<IAlgoliaIndexService>(),
                     indexRegister);
             }

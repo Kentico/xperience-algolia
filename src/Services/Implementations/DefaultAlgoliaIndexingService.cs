@@ -45,14 +45,14 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
 
         public void EnqueueAlgoliaItems(TreeNode node, string eventName)
         {
-            foreach (var index in algoliaRegistrationService.RegisteredIndexes)
+            foreach (var indexName in algoliaRegistrationService.RegisteredIndexes.Select(index => index.IndexName))
             {
-                if (!algoliaRegistrationService.IsNodeIndexedByIndex(node, index.IndexName))
+                if (!algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName))
                 {
                     continue;
                 }
 
-                var indexedColumns = algoliaRegistrationService.GetIndexedColumnNames(index.IndexName);
+                var indexedColumns = algoliaRegistrationService.GetIndexedColumnNames(indexName);
                 if (indexedColumns.Length == 0)
                 {
                     eventLogService.LogError(nameof(DefaultAlgoliaIndexingService), nameof(EnqueueAlgoliaItems), $"Unable to enqueue node change: Error loading indexed columns.");
@@ -71,7 +71,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
                 {
                     Node = node,
                     Delete = shouldDelete,
-                    IndexName = index.IndexName
+                    IndexName = indexName
                 });
             }
         }
@@ -108,7 +108,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
             var successfulOperations = 0;
 
             // Group queue items based on index name
-            var groups = items.ToList().GroupBy(item => item.IndexName);
+            var groups = items.GroupBy(item => item.IndexName);
             foreach (var group in groups)
             {
                 try

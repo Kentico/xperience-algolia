@@ -29,12 +29,10 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
             [SetUp]
             public void GetIndexSettingsTests_SetUp()
             {
-                var mockSearchClient = Substitute.For<ISearchClient>();
-                var algoliaSearchService = new DefaultAlgoliaSearchService(mockSearchClient, Substitute.For<IAppSettingsService>());
+                var algoliaSearchService = new DefaultAlgoliaSearchService(Substitute.For<ISearchClient>(), Substitute.For<IAppSettingsService>());
                 algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
                     algoliaSearchService,
                     new MockEventLogService(),
-                    mockSearchClient,
                     Substitute.For<IAlgoliaIndexService>(),
                     Substitute.For<IAlgoliaIndexRegister>());
                 algoliaRegistrationService.RegisterAlgoliaIndexes();
@@ -110,7 +108,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
                     Substitute.For<IAlgoliaSearchService>(),
                     new MockEventLogService(),
-                    Substitute.For<ISearchClient>(),
                     Substitute.For<IAlgoliaIndexService>(),
                     Substitute.For<IAlgoliaIndexRegister>());
                 algoliaRegistrationService.RegisterAlgoliaIndexes();
@@ -149,33 +146,32 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
                     Substitute.For<IAlgoliaSearchService>(),
                     new MockEventLogService(),
-                    Substitute.For<ISearchClient>(),
                     Substitute.For<IAlgoliaIndexService>(),
                     Substitute.For<IAlgoliaIndexRegister>());
                 algoliaRegistrationService.RegisterAlgoliaIndexes();
             }
 
 
-            [TestCase(Model1.IndexName, "/Articles/1", ExpectedResult = true)]
-            [TestCase(Model2.IndexName, "/Articles/1", ExpectedResult = true)]
-            [TestCase(Model2.IndexName, "/CZ/Articles/1", ExpectedResult = true)]
-            [TestCase(Model3.IndexName, "/Articles/1", ExpectedResult = true)]
-            [TestCase(Model4.IndexName, "/Store/Products/1", ExpectedResult = true)]
-            public bool IsNodeIndexedByIndex_NodesWithCorrectPath_ReturnsTrue(string indexName, string nodeAliasPath)
+            [TestCase(Model1.IndexName, "/Articles/1")]
+            [TestCase(Model2.IndexName, "/Articles/1")]
+            [TestCase(Model2.IndexName, "/CZ/Articles/1")]
+            [TestCase(Model3.IndexName, "/Articles/1")]
+            [TestCase(Model4.IndexName, "/Store/Products/1")]
+            public void IsNodeIndexedByIndex_NodesWithCorrectPath_ReturnsTrue(string indexName, string nodeAliasPath)
             {
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                return algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName);
+                Assert.True(algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName));
             }
 
 
-            [TestCase(Model1.IndexName, "/CZ/Articles/1", ExpectedResult = false)]
-            [TestCase(Model2.IndexName, "/Store/Products/1", ExpectedResult = false)]
-            [TestCase(Model3.IndexName, "/CZ/Articles/1", ExpectedResult = false)]
-            [TestCase(Model3.IndexName, "/Store/Products/1", ExpectedResult = false)]
-            public bool IsNodeIndexedByIndex_NodesWithIncorrectPath_ReturnsFalse(string indexName, string nodeAliasPath)
+            [TestCase(Model1.IndexName, "/CZ/Articles/1")]
+            [TestCase(Model2.IndexName, "/Store/Products/1")]
+            [TestCase(Model3.IndexName, "/CZ/Articles/1")]
+            [TestCase(Model3.IndexName, "/Store/Products/1")]
+            public void IsNodeIndexedByIndex_NodesWithIncorrectPath_ReturnsFalse(string indexName, string nodeAliasPath)
             {
                 var node = FakeNodes.GetNode(nodeAliasPath);
-                return algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName);
+                Assert.False(algoliaRegistrationService.IsNodeIndexedByIndex(node, indexName));
             }
 
 
@@ -224,7 +220,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
                     Substitute.For<IAlgoliaSearchService>(),
                     new MockEventLogService(),
-                    Substitute.For<ISearchClient>(),
                     Substitute.For<IAlgoliaIndexService>(),
                     Substitute.For<IAlgoliaIndexRegister>());
                 algoliaRegistrationService.RegisterAlgoliaIndexes();
@@ -258,7 +253,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Test
                 algoliaRegistrationService = new DefaultAlgoliaRegistrationService(
                     Substitute.For<IAlgoliaSearchService>(),
                     new MockEventLogService(),
-                    Substitute.For<ISearchClient>(),
                     Substitute.For<IAlgoliaIndexService>(),
                     Substitute.For<IAlgoliaIndexRegister>());
             }

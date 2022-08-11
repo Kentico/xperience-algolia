@@ -16,7 +16,7 @@ namespace Kentico.Xperience.AlgoliaSearch
     /// </summary>
     public class AlgoliaQueueWorker : ThreadQueueWorker<AlgoliaQueueItem, AlgoliaQueueWorker>
     {
-        private IAlgoliaIndexingService algoliaIndexingService;
+        private readonly IAlgoliaIndexingService algoliaIndexingService;
 
 
         protected override int DefaultInterval => 10000;
