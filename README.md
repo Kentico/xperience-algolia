@@ -473,19 +473,20 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 }
 ```
 
-4. Add a script near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__!
+4. Add a script near the end of the `<body>` which loads your Algolia index. Be sure to use your __Search API Key__ which is public, and _not_ your __Admin API Key__! Please include the following custom user agent, with the version of the integration you are using:
 
 ```js
 <script type="text/javascript">
-    var client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
-    var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
+    const client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
+    client.addAlgoliaAgent('Kentico Xperience Integration', '4.0.0');
+    const index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
 </script>
 ```
 
 5. Initialize the autocomplete search box, then create a handler for when users click on autocomplete suggestions, and when the _Enter_ button is used:
 
 ```js
-var autocompleteBox = autocomplete('#search-input', {hint: false}, [
+const autocompleteBox = autocomplete('#search-input', {hint: false}, [
 {
     source: autocomplete.sources.hits(index, {hitsPerPage: 5}),
     displayKey: 'DocumentName' // The Algolia attribute used to display the title of a suggestion
@@ -497,7 +498,7 @@ var autocompleteBox = autocomplete('#search-input', {hint: false}, [
 document.querySelector("#search-input").addEventListener("keyup", (e) => {
 	if (e.key === 'Enter') {
         // Navigate to search results page when Enter is pressed
-        var searchText = document.querySelector("#search-input").value;
+        const searchText = document.querySelector("#search-input").value;
         window.location = '@(Url.Action("Index", "Search"))?searchtext=' + searchText;
     }
 });
@@ -1089,6 +1090,7 @@ endpoints.MapControllerRoute(
 2. Create the _Index.cshtml_ view for your controller with the basic layout and stylesheet references. Load your Algolia settings for use later:
 
 ```cshtml
+@using Kentico.Xperience.AlgoliaSearch.Models
 @using Microsoft.Extensions.Options
 @inject IOptions<AlgoliaOptions> options
 
@@ -1122,16 +1124,18 @@ endpoints.MapControllerRoute(
 </div>
 ```
 
-3. At the bottom of your view, add a `scripts` section which loads the InstantSearch.js scripts, initializes the search widget, three faceting widgets, the results widget, and pagination widget:
+3. At the bottom of your view, add a `scripts` section which loads the InstantSearch.js scripts, initializes the search widget, three faceting widgets, the results widget, and pagination widget. Please include the following custom user agent, with the version of the integration you are using:
 
 ```cshtml
 @section scripts {
     <script src="https://cdn.jsdelivr.net/npm/algoliasearch@4/dist/algoliasearch-lite.umd.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
     <script type="text/javascript">
+        const client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
+        client.addAlgoliaAgent('Kentico Xperience Integration', '4.0.0');
         const search = instantsearch({
           indexName: '@AlgoliaSiteSearchModel.IndexName',
-          searchClient: algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey'),
+          searchClient: client
         });
 
         search.addWidgets([
