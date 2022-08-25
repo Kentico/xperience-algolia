@@ -1,8 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
-    <RootNamespace>Kentico.Xperience.AlgoliaSearch.Test</RootNamespace>
+    <RootNamespace>Kentico.Xperience.Algolia.KX13.Test</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Kentico.Xperience.AlgoliaSearch.csproj" />
+    <ProjectReference Include="..\src\Kentico.Xperience.Algolia.KX13.csproj" />
   </ItemGroup>
 
 </Project>

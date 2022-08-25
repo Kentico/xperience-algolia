@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kentico.Xperience.AlgoliaSearch.Attributes
+namespace Kentico.Xperience.Algolia.KX13.Attributes
 {
     /// <summary>
     /// A class attribute applied to an Algolia search model indicating that the specified path, page

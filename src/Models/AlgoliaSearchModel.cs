@@ -1,8 +1,8 @@
 ﻿using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.Algolia.KX13.Attributes;
 
-namespace Kentico.Xperience.AlgoliaSearch.Models
+namespace Kentico.Xperience.Algolia.KX13.Models
 {
     /// <summary>
     /// The base class for all Algolia search models. Contains common Algolia

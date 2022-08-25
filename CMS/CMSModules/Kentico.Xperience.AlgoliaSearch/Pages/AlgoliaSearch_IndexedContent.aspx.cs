@@ -1,14 +1,14 @@
 ﻿using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+namespace Kentico.Xperience.Algolia.KX13.Pages
 {
     public partial class AlgoliaSearch_IndexedContent : AlgoliaUIPage
     {

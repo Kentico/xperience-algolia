@@ -1,14 +1,14 @@
 ﻿using Algolia.Search.Models.Common;
 using Algolia.Search.Models.Search;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models.Facets;
 
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.KX13.Services
 {
     /// <summary>
     /// Contains methods for common Algolia tasks.

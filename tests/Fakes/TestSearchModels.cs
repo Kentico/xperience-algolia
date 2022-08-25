@@ -1,10 +1,10 @@
 ﻿using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Test;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models;
+using Kentico.Xperience.Algolia.KX13.Test;
 
-using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
+using static Kentico.Xperience.Algolia.KX13.Test.TestSearchModels;
 
 [assembly: RegisterAlgoliaIndex(typeof(Model1), Model1.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model2), Model2.IndexName, SiteNames = new string[] { AlgoliaTests.DEFAULT_SITE })]
@@ -13,7 +13,7 @@ using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 [assembly: RegisterAlgoliaIndex(typeof(Model5), Model5.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model6), Model6.IndexName)]
 [assembly: RegisterAlgoliaIndex(typeof(Model7), Model7.IndexName)]
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.KX13.Test
 {
     public class TestSearchModels
     {

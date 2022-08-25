@@ -5,7 +5,7 @@ using CMS.SiteProvider;
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.KX13.Test
 {
     internal class FakeNodes
     {

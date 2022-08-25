@@ -1,10 +1,10 @@
 ﻿using CMS.DocumentEngine;
 using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models;
 
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.KX13.Test
 {
     public class ModelBaseClass : AlgoliaSearchModel
     {

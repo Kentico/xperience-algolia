@@ -7,9 +7,9 @@ using CMS.Core;
 using CMS.DataEngine;
 using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models.Facets;
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models.Facets;
+using Kentico.Xperience.Algolia.KX13.Services;
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Linq;
 using System.Reflection;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaSearchService), typeof(DefaultAlgoliaSearchService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.KX13.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaSearchService"/>.

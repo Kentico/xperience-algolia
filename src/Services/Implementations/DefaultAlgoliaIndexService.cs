@@ -3,10 +3,10 @@ using Algolia.Search.Clients;
 using CMS;
 using CMS.Core;
 
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.KX13.Services;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaIndexService), typeof(DefaultAlgoliaIndexService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.KX13.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaIndexService"/>.

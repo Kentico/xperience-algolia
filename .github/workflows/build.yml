@@ -18,8 +18,8 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Restore dependencies
-      run: dotnet restore src/Kentico.Xperience.AlgoliaSearch.csproj
+      run: dotnet restore src/Kentico.Xperience.Algolia.KX13.csproj
     - name: Build
-      run: dotnet build src/Kentico.Xperience.AlgoliaSearch.csproj --no-restore
+      run: dotnet build src/Kentico.Xperience.Algolia.KX13.csproj --no-restore
     - name: Test
-      run: dotnet test tests/Kentico.Xperience.AlgoliaSearch.Tests.csproj --no-build --logger GitHubActions
+      run: dotnet test tests/Kentico.Xperience.Algolia.KX13.Tests.csproj --no-build --logger GitHubActions

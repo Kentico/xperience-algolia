@@ -16,9 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BFF4FFD1-F72D-4420-9325-A11FD5613102}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.AlgoliaSearch", "src\Kentico.Xperience.AlgoliaSearch.csproj", "{CF8C169B-DC33-4873-A93E-DC38D8E66CFE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.Algolia.KX13", "src\Kentico.Xperience.Algolia.KX13.csproj", "{93B56F3A-3E74-43AA-9114-ADE491CB20B1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.AlgoliaSearch.Tests", "tests\Kentico.Xperience.AlgoliaSearch.Tests.csproj", "{0722E27D-7206-4337-A288-2E53478C7330}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.Algolia.KX13.Tests", "tests\Kentico.Xperience.Algolia.KX13.Tests.csproj", "{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -26,21 +26,21 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{CF8C169B-DC33-4873-A93E-DC38D8E66CFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF8C169B-DC33-4873-A93E-DC38D8E66CFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF8C169B-DC33-4873-A93E-DC38D8E66CFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF8C169B-DC33-4873-A93E-DC38D8E66CFE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{0722E27D-7206-4337-A288-2E53478C7330}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0722E27D-7206-4337-A288-2E53478C7330}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0722E27D-7206-4337-A288-2E53478C7330}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0722E27D-7206-4337-A288-2E53478C7330}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93B56F3A-3E74-43AA-9114-ADE491CB20B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93B56F3A-3E74-43AA-9114-ADE491CB20B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93B56F3A-3E74-43AA-9114-ADE491CB20B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93B56F3A-3E74-43AA-9114-ADE491CB20B1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{CF8C169B-DC33-4873-A93E-DC38D8E66CFE} = {C81B9DC5-4F3A-41A4-B5B2-79CAD18E0B16}
-		{0722E27D-7206-4337-A288-2E53478C7330} = {BFF4FFD1-F72D-4420-9325-A11FD5613102}
+		{93B56F3A-3E74-43AA-9114-ADE491CB20B1} = {C81B9DC5-4F3A-41A4-B5B2-79CAD18E0B16}
+		{BF2724C0-0F15-4D3C-8F53-3DAD7284B789} = {BFF4FFD1-F72D-4420-9325-A11FD5613102}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2BD254B2-55E1-426A-8B2E-6DFFA1E967A8}

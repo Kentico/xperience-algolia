@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.AlgoliaSearch.Models
+namespace Kentico.Xperience.Algolia.KX13.Models
 {
     /// <summary>
     /// Represents the configuration of an Algolia index.

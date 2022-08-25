@@ -1,8 +1,8 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Models;
+﻿using Kentico.Xperience.Algolia.KX13.Models;
 
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.KX13.Services
 {
     /// <summary>
     /// Contains a collection of <see cref="AlgoliaIndex"/> which are automatically registered by

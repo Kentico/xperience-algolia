@@ -1,14 +1,14 @@
 ﻿using Algolia.Search.Clients;
 
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.KX13.Services;
 
 using NSubstitute;
 
 using NUnit.Framework;
 
-using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
+using static Kentico.Xperience.Algolia.KX13.Test.TestSearchModels;
 
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.KX13.Test
 {
     internal class IAlgoliaIndexRegisterTests
     {

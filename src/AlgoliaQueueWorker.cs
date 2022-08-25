@@ -1,14 +1,14 @@
 ﻿using CMS.Base;
 using CMS.Core;
 
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.KX13.Models;
+using Kentico.Xperience.Algolia.KX13.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.Algolia.KX13
 {
     /// <summary>
     /// Thread worker which enqueues recently created, updated, or deleted nodes

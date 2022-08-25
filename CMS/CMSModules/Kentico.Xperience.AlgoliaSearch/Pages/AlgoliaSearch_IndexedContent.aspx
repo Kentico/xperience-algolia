@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="True" CodeBehind="AlgoliaSearch_IndexedContent.aspx.cs" Inherits="Kentico.Xperience.AlgoliaSearch.Pages.AlgoliaSearch_IndexedContent"
+﻿<%@ Page Language="C#" AutoEventWireup="True" CodeBehind="AlgoliaSearch_IndexedContent.aspx.cs" Inherits="Kentico.Xperience.Algolia.KX13.Pages.AlgoliaSearch_IndexedContent"
     Title="Algolia search - Indexed content" MasterPageFile="~/CMSMasterPages/UI/SimplePage.master" Theme="Default" EnableEventValidation="false" ValidateRequest="false" %>
 
 <%@ Register src="~/CMSAdminControls/UI/UniGrid/UniGrid.ascx" tagname="UniGrid" tagprefix="cms" %>

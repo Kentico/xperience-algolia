@@ -1,5 +1,5 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Services;
+﻿using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Services;
 
 using CMS.Core;
 using CMS.UIControls;
@@ -8,7 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.Algolia.KX13
 {
     /// <summary>
     /// Base class for Algolia custom module pages.

@@ -3,13 +3,13 @@ using Algolia.Search.Models.Settings;
 
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.Algolia.KX13.Attributes;
+using Kentico.Xperience.Algolia.KX13.Models;
 
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.KX13.Services
 {
     /// <summary>
     /// Stores the registered Algolia indexes in memory and contains methods for retrieving information

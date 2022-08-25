@@ -9,7 +9,7 @@ using Tests.DocumentEngine;
 
 [assembly: Category("Algolia")]
 [assembly: AssemblyDiscoverable]
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.KX13.Test
 {
     internal class AlgoliaTests : UnitTests
     {
