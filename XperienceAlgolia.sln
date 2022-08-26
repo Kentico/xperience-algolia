@@ -16,9 +16,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BFF4FFD1-F72D-4420-9325-A11FD5613102}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.Algolia.KX13", "src\Kentico.Xperience.Algolia.KX13.csproj", "{93B56F3A-3E74-43AA-9114-ADE491CB20B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.AlgoliaSearch", "src\Kentico.Xperience.AlgoliaSearch.csproj", "{93B56F3A-3E74-43AA-9114-ADE491CB20B1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.Algolia.KX13.Tests", "tests\Kentico.Xperience.Algolia.KX13.Tests.csproj", "{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Kentico.Xperience.AlgoliaSearch.Tests", "tests\Kentico.Xperience.AlgoliaSearch.Tests.csproj", "{BF2724C0-0F15-4D3C-8F53-3DAD7284B789}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

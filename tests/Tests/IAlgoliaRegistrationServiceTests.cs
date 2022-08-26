@@ -5,7 +5,7 @@ using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
 
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
 
@@ -13,9 +13,9 @@ using NUnit.Framework;
 
 using System;
 
-using static Kentico.Xperience.Algolia.KX13.Test.TestSearchModels;
+using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
-namespace Kentico.Xperience.Algolia.KX13.Test
+namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class IAlgoliaRegistrationServiceTests
     {

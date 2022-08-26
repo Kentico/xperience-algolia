@@ -7,9 +7,9 @@ using CMS.ContactManagement;
 using CMS.Core;
 using CMS.Helpers;
 
-using Kentico.Xperience.Algolia.KX13.Models;
-using Kentico.Xperience.Algolia.KX13.Models.Facets;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
@@ -17,7 +17,7 @@ using System.Linq;
 using System.Threading.Tasks;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaInsightsService), typeof(DefaultAlgoliaInsightsService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaInsightsService"/> which logs

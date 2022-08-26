@@ -4,15 +4,15 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.Algolia.KX13.Models;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 
-namespace Kentico.Xperience.Algolia.KX13.Pages
+namespace Kentico.Xperience.AlgoliaSearch.Pages
 {
     public partial class AlgoliaSearch_Dashboard : AlgoliaUIPage
     {

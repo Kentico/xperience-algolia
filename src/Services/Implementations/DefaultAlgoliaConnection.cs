@@ -4,9 +4,9 @@ using CMS;
 using CMS.Core;
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.Algolia.KX13.Attributes;
-using Kentico.Xperience.Algolia.KX13.Models;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Newtonsoft.Json.Linq;
 
@@ -16,7 +16,7 @@ using System.Linq;
 using System.Reflection;
 
 [assembly: RegisterImplementation(typeof(IAlgoliaConnection), typeof(DefaultAlgoliaConnection), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaConnection"/>.

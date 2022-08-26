@@ -12,7 +12,7 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 
 ## :rocket: Installation
 
-1. Install the [Kentico.Xperience.Algolia.KX13](Kentico.Xperience.Algolia.KX13) NuGet package in both the administration and the live-site project.
+1. Install the [Kentico.Xperience.Algolia.KX13](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13) NuGet package in both the administration and the live-site project.
 2. On the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and select "API keys" to find and note the application ID, admin API key and the search API key.
 3. In your live-site project's `appsettings.json`, add the following section:
 
@@ -39,7 +39,7 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends the [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs) class. Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
 ```cs
-using Kentico.Xperience.Algolia.KX13.Models;
+using Kentico.Xperience.AlgoliaSearch.Models;
 using System;
 
 namespace DancingGoat
@@ -818,7 +818,7 @@ The Dancing Goat store listing now uses Algolia search, and you have a filter wh
 3. Create a _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and loops through each `AlogliaFacetedAttribute` it contains:
 
 ```cshtml
-@using Kentico.Xperience.Algolia.KX13.Models.Facets
+@using Kentico.Xperience.AlgoliaSearch.Models.Facets
 @model AlgoliaFacetFilterViewModel
 
 @for (var i=0; i<Model.FacetedAttributes.Count(); i++)
@@ -831,7 +831,7 @@ The Dancing Goat store listing now uses Algolia search, and you have a filter wh
 4. For each `AlgoliaFacetedAttribute` you now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create a _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
 
 ```cshtml
-@using Kentico.Xperience.Algolia.KX13.Models.Facets
+@using Kentico.Xperience.AlgoliaSearch.Models.Facets
 @model AlgoliaFacetedAttribute
 
 <h4>@Model.DisplayName</h4>

@@ -3,7 +3,7 @@ using CMS.EventLog;
 
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.Algolia.KX13.Test
+namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class MockEventLogService : EventLogService
     {

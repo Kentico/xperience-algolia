@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Creates a connection to the Algolia services and provides methods for updating an Algolia index.

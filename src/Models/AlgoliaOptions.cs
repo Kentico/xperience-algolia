@@ -1,4 +1,4 @@
-﻿namespace Kentico.Xperience.Algolia.KX13.Models
+﻿namespace Kentico.Xperience.AlgoliaSearch.Models
 {
     /// <summary>
     /// Algolia integration options.

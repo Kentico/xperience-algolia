@@ -6,18 +6,18 @@ using CMS.Core;
 using CMS.DocumentEngine;
 using CMS.Helpers;
 
-using Kentico.Xperience.Algolia.KX13;
-using Kentico.Xperience.Algolia.KX13.Attributes;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch;
+using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using System;
 using System.Configuration;
 using System.Runtime.CompilerServices;
 
 [assembly: AssemblyDiscoverable]
-[assembly: InternalsVisibleTo("Kentico.Xperience.Algolia.KX13.Tests")]
+[assembly: InternalsVisibleTo("Kentico.Xperience.AlgoliaSearch.Tests")]
 [assembly: RegisterModule(typeof(AlgoliaSearchModule))]
-namespace Kentico.Xperience.Algolia.KX13
+namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
     /// Initializes the Algolia integration by scanning assemblies for custom models containing the

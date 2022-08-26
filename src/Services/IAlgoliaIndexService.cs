@@ -1,6 +1,6 @@
 using Algolia.Search.Clients;
 
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Initializes <see cref="ISearchIndex" /> instances.

@@ -1,8 +1,8 @@
 ﻿using CMS.DataEngine;
 using CMS.DocumentEngine;
 
-using Kentico.Xperience.Algolia.KX13.Models;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Models;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Newtonsoft.Json.Linq;
 
@@ -14,9 +14,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using static Kentico.Xperience.Algolia.KX13.Test.TestSearchModels;
+using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
-namespace Kentico.Xperience.Algolia.KX13.Test
+namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class IAlgoliaIndexingServiceTests
     {

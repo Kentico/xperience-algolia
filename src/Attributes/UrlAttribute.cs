@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kentico.Xperience.Algolia.KX13.Attributes
+namespace Kentico.Xperience.AlgoliaSearch.Attributes
 {
     /// <summary>
     /// A property attribute which specifies that the value of the property

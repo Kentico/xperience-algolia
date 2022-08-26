@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kentico.Xperience.Algolia.KX13.Attributes
+namespace Kentico.Xperience.AlgoliaSearch.Attributes
 {
     /// <summary>
     /// A property attribute to indicate a search model property is retrievable within Algolia.

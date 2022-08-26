@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Kentico.Xperience.Algolia.KX13
+namespace Kentico.Xperience.AlgoliaSearch
 {
     /// <summary>
     /// Truncates decimal values to two places.

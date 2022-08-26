@@ -1,4 +1,4 @@
-﻿using Kentico.Xperience.Algolia.KX13.Attributes;
+﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
 
 using Microsoft.Extensions.Localization;
 
@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Kentico.Xperience.Algolia.KX13.Models.Facets
+namespace Kentico.Xperience.AlgoliaSearch.Models.Facets
 {
     /// <summary>
     /// Contains the faceted attributes of an Algolia index and the filter state for

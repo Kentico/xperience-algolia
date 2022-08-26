@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net48</TargetFramework>
-    <RootNamespace>Kentico.Xperience.Algolia.KX13.Test</RootNamespace>
+    <RootNamespace>Kentico.Xperience.AlgoliaSearch.Test</RootNamespace>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\Kentico.Xperience.Algolia.KX13.csproj" />
+    <ProjectReference Include="..\src\Kentico.Xperience.AlgoliaSearch.csproj" />
   </ItemGroup>
 
 </Project>

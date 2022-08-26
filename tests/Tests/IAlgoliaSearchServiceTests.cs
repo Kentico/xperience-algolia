@@ -2,9 +2,9 @@
 
 using CMS.Core;
 
-using Kentico.Xperience.Algolia.KX13.Attributes;
-using Kentico.Xperience.Algolia.KX13.Models.Facets;
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Attributes;
+using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using NSubstitute;
 
@@ -14,9 +14,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-using static Kentico.Xperience.Algolia.KX13.Test.TestSearchModels;
+using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
 
-namespace Kentico.Xperience.Algolia.KX13.Test
+namespace Kentico.Xperience.AlgoliaSearch.Test
 {
     internal class IAlgoliaSearchServiceTests
     {

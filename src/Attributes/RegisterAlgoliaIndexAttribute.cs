@@ -1,8 +1,8 @@
-﻿using Kentico.Xperience.Algolia.KX13.Models;
+﻿using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
 
-namespace Kentico.Xperience.Algolia.KX13.Attributes
+namespace Kentico.Xperience.AlgoliaSearch.Attributes
 {
     /// <summary>
     /// When applied to a class extending <see cref="AlgoliaSearchModel"/>, the Algolia index

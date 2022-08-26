@@ -3,7 +3,7 @@
 using CMS.Core;
 using CMS.Helpers;
 
-using Kentico.Xperience.Algolia.KX13.Services;
+using Kentico.Xperience.AlgoliaSearch.Services;
 
 using Newtonsoft.Json.Linq;
 
@@ -11,7 +11,7 @@ using System;
 using System.Text;
 using System.Web;
 
-namespace Kentico.Xperience.Algolia.KX13.Pages
+namespace Kentico.Xperience.AlgoliaSearch.Pages
 {
     public partial class AlgoliaSearch_Preview : AlgoliaUIPage
     {

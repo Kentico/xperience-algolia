@@ -1,13 +1,13 @@
 ﻿using CMS.DocumentEngine;
 
-using Kentico.Xperience.Algolia.KX13.Models;
+using Kentico.Xperience.AlgoliaSearch.Models;
 
 using Newtonsoft.Json.Linq;
 
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Contains methods used during the indexing of content in an Algolia index.

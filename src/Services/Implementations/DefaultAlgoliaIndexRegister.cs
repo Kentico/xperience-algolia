@@ -1,9 +1,9 @@
-﻿using Kentico.Xperience.Algolia.KX13.Models;
+﻿using Kentico.Xperience.AlgoliaSearch.Models;
 
 using System;
 using System.Collections.Generic;
 
-namespace Kentico.Xperience.Algolia.KX13.Services
+namespace Kentico.Xperience.AlgoliaSearch.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaIndexRegister"/>.
