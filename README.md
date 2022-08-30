@@ -1,4 +1,4 @@
-![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.AlgoliaSearch)](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) ![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.73-orange)
+![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.Algolia.KX13)](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13) ![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.73-orange)
 
 # Xperience Algolia Search Integration
 
@@ -12,7 +12,7 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 
 ## :rocket: Installation
 
-1. Install the [Kentico.Xperience.AlgoliaSearch](https://www.nuget.org/packages/Kentico.Xperience.AlgoliaSearch) NuGet package in both the administration and the live-site project.
+1. Install the [Kentico.Xperience.Algolia.KX13](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13) NuGet package in both the administration and the live-site project.
 2. On the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and select "API keys" to find and note the application ID, admin API key and the search API key.
 3. In your live-site project's `appsettings.json`, add the following section:
 

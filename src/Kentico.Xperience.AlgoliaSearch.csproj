@@ -8,7 +8,7 @@
 
 	<PropertyGroup>
 		<Title>Xperience Algolia Search</Title>
-		<PackageId>Kentico.Xperience.AlgoliaSearch</PackageId>
+		<PackageId>Kentico.Xperience.Algolia.KX13</PackageId>
 		<Version>3.1.0</Version>
 		<Authors>Kentico Software</Authors>
 		<Company>Kentico Software</Company>
