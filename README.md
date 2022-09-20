@@ -1,4 +1,7 @@
-![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg) [![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.Algolia.KX13)](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13) ![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.73-orange)
+![build](https://github.com/Kentico/xperience-algolia/actions/workflows/build.yml/badge.svg)
+[![Nuget](https://img.shields.io/nuget/v/Kentico.Xperience.Algolia.KX13)](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13)
+![Kentico.Xperience.Libraries 13.0.16](https://img.shields.io/badge/Kentico.Xperience.Libraries-v13.0.73-orange)
+[![Algolia.Search 6.11.0](https://img.shields.io/badge/Algolia.Search-v6.11.0-blue)](https://www.nuget.org/packages/Algolia.Search#versions-body-tab)
 
 # Xperience Algolia Search Integration
 
@@ -13,26 +16,37 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 ## :rocket: Installation
 
 1. Install the [Kentico.Xperience.Algolia.KX13](https://www.nuget.org/packages/Kentico.Xperience.Algolia.KX13) NuGet package in both the administration and the live-site project.
-2. On the [Algolia dashboard](https://www.algolia.com/dashboard), open your application and select "API keys" to find and note the application ID, admin API key and the search API key.
-3. In your live-site project's `appsettings.json`, add the following section:
+2. On the [Algolia dashboard](https://www.algolia.com/dashboard), open your application, navigate to __Settings → API keys__ and note the _Search API key_ value.
+3. On the __All API keys__ tab, create a new "Indexing" API key which will be used for indexing and performing searches in the Xperience application. The key must have at least the following ACLs:
+  - search
+  - addObject
+  - deleteObject
+  - editSettings
+  - listIndexes
+4. In the Xperience project's `appsettings.json`, add the following section with your API key values:
 
 ```json
 "xperience.algolia": {
     "applicationId": "<your application ID>",
-    "apiKey": "<your Admin API key>",
+    "apiKey": "<your Indexing API key>",
     "searchKey": "<your Search API key>"
 }
 ```
+> :warning: Do not use the Admin API key! Use the custom API key you created in step #3.
 
-4. In your administration project's `web.config` files's `appSettings` section, add the following keys:
+5. In your administration project's `web.config` files's `appSettings` section, add the following keys:
 
 ```xml
 <add key="AlgoliaApplicationId" value="<your application ID>"/>
-<add key="AlgoliaApiKey" value="<your Admin API key>"/>
+<add key="AlgoliaApiKey" value="<your Indexing API key>"/>
 ```
 
-5. Register the `IAlgoliaIndexRegister` service and any indexes by following [this guide](#gear-creating-and-registering-an-algolia-index).
-6. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-algolia-search-application-for-administration-interface) in your Xperience website.
+6. Register the `IAlgoliaIndexRegister` service and any indexes by following [this guide](#gear-creating-and-registering-an-algolia-index).
+7. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-algolia-search-application-for-administration-interface) in your Xperience website.
+
+## Limitations
+
+It's important to note that Algolia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records. If you are indexing content that may contain large amounts of data, you may need to [customize the indexing process](#customizing-the-indexing-process) to contain only the most important page data.
 
 ## :gear: Creating and registering an Algolia index
 
@@ -105,6 +119,8 @@ While the above sample code will create an Algolia index, pages in the content t
 - __Cultures__ (optional): The culture codes of the page language versions to include in the index. If not provided, all culture versions are indexed.
 
 > :bulb: We recommend using the generated [Xperience page type code](https://docs.xperience.io/x/Qw6RBg) to reference page type class names.
+
+When determining which __Cultures__ to index, we recommend creating a new search model per language in your site. This allows Algolia to return more relevant results for that language using stop words and synonyms.
 
 All pages under the specified __AliasPath__ will be indexed regardless of the [permissions](https://docs.xperience.io/x/mgmRBg). This means that if there are publicly-accessible pages and secured pages (e.g. articles only meant for partners), they will all be indexed. If you need to separate this content in your search functionality, you can either:
 
