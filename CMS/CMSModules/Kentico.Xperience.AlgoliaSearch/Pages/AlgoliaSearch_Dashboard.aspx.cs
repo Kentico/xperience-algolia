@@ -1,31 +1,35 @@
-﻿using Algolia.Search.Models.Common;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+
+using Algolia.Search.Models.Common;
 
 using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Services;
-
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
+using Kentico.Xperience.Algolia;
+using Kentico.Xperience.Algolia.Models;
+using Kentico.Xperience.Algolia.Services;
 
 namespace Kentico.Xperience.AlgoliaSearch.Pages
 {
     public partial class AlgoliaSearch_Dashboard : AlgoliaUIPage
     {
+        private IAlgoliaClient algoliaClient;
+
+
         protected void Page_Load(object sender, EventArgs e)
         {
             ShowTaskCount();
-
-            var siteIndexes = algoliaRegistrationService.RegisteredIndexes.Where(i => i.SiteNames == null || i.SiteNames.Contains(CurrentSiteName));
-            if (siteIndexes.Count() == 0)
+            var siteIndexes = IndexStore.Instance.GetAll().Where(i => !i.SiteNames.Any() || i.SiteNames.Contains(CurrentSiteName));
+            if (!siteIndexes.Any())
             {
                 ShowInformation("No Algolia indexes registered. See <a target='_blank' href='https://github.com/Kentico/xperience-algolia#gear-creating-and-registering-an-algolia-index'>our instructions</a> to read more about creating and registering Algolia indexes.");
                 return;
             }
+
+            algoliaClient = Service.Resolve<IAlgoliaClient>();
 
             LoadIndexes(siteIndexes);
         }
@@ -33,7 +37,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
 
         private void ShowTaskCount()
         {
-            if (algoliaRegistrationService.RegisteredIndexes.Count == 0)
+            if (!IndexStore.Instance.GetAll().Any())
             {
                 return;
             }
@@ -45,7 +49,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
         private void LoadIndexes(IEnumerable<AlgoliaIndex> indexes)
         {
             var indexesToList = new List<IndicesResponse>();
-            var indexStatistics = algoliaSearchService.GetStatistics();
+            var indexStatistics = algoliaClient.GetStatistics();
             foreach (var index in indexes)
             {
                 // Find statistics with matching name
@@ -94,7 +98,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
 
         private void UgIndexes_OnAction(string actionName, object actionArgument)
         {
-            var indexName = ValidationHelper.GetString(actionArgument, "");
+            var indexName = ValidationHelper.GetString(actionArgument, String.Empty);
             if (String.IsNullOrEmpty(indexName))
             {
                 ShowError("Unable to load index name.");
@@ -106,9 +110,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 case "rebuild":
                     try
                     {
-                        var conn = Service.Resolve<IAlgoliaConnection>();
-                        conn.Initialize(indexName);
-                        conn.Rebuild();
+                        algoliaClient.Rebuild(indexName);
                         ShowInformation("Index is rebuilding.");
                     }
                     catch (InvalidOperationException ex)

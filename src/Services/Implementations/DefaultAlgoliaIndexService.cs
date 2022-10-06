@@ -1,12 +1,17 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+
 using Algolia.Search.Clients;
+using Algolia.Search.Models.Settings;
 
-using CMS;
-using CMS.Core;
+using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.Attributes;
+using Kentico.Xperience.Algolia.Models;
 
-[assembly: RegisterImplementation(typeof(IAlgoliaIndexService), typeof(DefaultAlgoliaIndexService), Lifestyle = Lifestyle.Singleton, Priority = RegistrationPriority.SystemDefault)]
-namespace Kentico.Xperience.AlgoliaSearch.Services
+namespace Kentico.Xperience.Algolia.Services
 {
     /// <summary>
     /// Default implementation of <see cref="IAlgoliaIndexService"/>.
@@ -14,6 +19,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
     internal class DefaultAlgoliaIndexService : IAlgoliaIndexService
     {
         private readonly ISearchClient searchClient;
+        private readonly Dictionary<string, IndexSettings> cachedSettings = new Dictionary<string, IndexSettings>();
 
 
         /// <summary>
@@ -25,9 +31,116 @@ namespace Kentico.Xperience.AlgoliaSearch.Services
         }
 
 
+        /// <inheritdoc />
         public ISearchIndex InitializeIndex(string indexName)
         {
-            return searchClient.InitIndex(indexName);
+            var algoliaIndex = IndexStore.Instance.Get(indexName);
+            if (algoliaIndex == null)
+            {
+                throw new InvalidOperationException($"Registered index with name '{indexName}' doesn't exist.");
+            }
+
+            if (!cachedSettings.TryGetValue(indexName, out IndexSettings indexSettings))
+            {
+                indexSettings = GetIndexSettings(algoliaIndex);
+                cachedSettings.Add(indexName, indexSettings);
+            }
+
+            var searchIndex = searchClient.InitIndex(indexName);
+            searchIndex.SetSettings(indexSettings);
+
+            return searchIndex;
+        }
+
+
+        private string GetFilterablePropertyName(PropertyInfo property)
+        {
+            var attr = property.GetCustomAttributes<FacetableAttribute>(false).FirstOrDefault();
+            if (attr.FilterOnly)
+            {
+                return $"filterOnly({property.Name})";
+            }
+            if (attr.Searchable)
+            {
+                return $"searchable({property.Name})";
+            }
+
+            return property.Name;
+        }
+
+
+        private List<string> OrderSearchableProperties(IEnumerable<PropertyInfo> searchableProperties)
+        {
+            var propertiesWithAttribute = new Dictionary<string, SearchableAttribute>();
+            foreach (var prop in searchableProperties)
+            {
+                var attr = prop.GetCustomAttributes<SearchableAttribute>(false).FirstOrDefault();
+                propertiesWithAttribute.Add(prop.Name, attr);
+            }
+
+            // Remove properties without order, add to end of list later
+            var propertiesWithOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order >= 0);
+            var sortedByOrder = propertiesWithOrdering.OrderBy(prop => prop.Value.Order);
+            var groupedByOrder = sortedByOrder.GroupBy(prop => prop.Value.Order);
+            var searchableAttributes = groupedByOrder.Select(group =>
+                group.Select(prop =>
+                {
+                    if (prop.Value.Unordered)
+                    {
+                        return $"unordered({prop.Key})";
+                    }
+
+                    return prop.Key;
+                }).Join(",")
+            ).ToList();
+
+            // Add properties without order as single items
+            var propertiesWithoutOrdering = propertiesWithAttribute.Where(prop => prop.Value.Order == -1);
+            foreach (var prop in propertiesWithoutOrdering)
+            {
+                if (prop.Value.Unordered)
+                {
+                    searchableAttributes.Add($"unordered({prop.Key})");
+                    continue;
+                }
+
+                searchableAttributes.Add(prop.Key);
+            }
+
+            return searchableAttributes;
+        }
+
+
+        /// <summary>
+        /// Gets the <see cref="IndexSettings"/> of the Algolia index.
+        /// </summary>
+        /// <param name="algoliaIndex">The index to retrieve settings for.</param>
+        /// <returns>The index settings.</returns>
+        /// <exception cref="ArgumentNullException" />
+        internal IndexSettings GetIndexSettings(AlgoliaIndex algoliaIndex)
+        {
+            if (algoliaIndex == null)
+            {
+                throw new ArgumentNullException(nameof(algoliaIndex));
+            }
+
+            var searchableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(SearchableAttribute)));
+            var retrievableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(RetrievableAttribute)));
+            var facetableProperties = algoliaIndex.Type.GetProperties().Where(prop => Attribute.IsDefined(prop, typeof(FacetableAttribute)));
+            var indexSettings = new IndexSettings()
+            {
+                SearchableAttributes = OrderSearchableProperties(searchableProperties),
+                AttributesToRetrieve = retrievableProperties.Select(p => p.Name).ToList(),
+                AttributesForFaceting = facetableProperties.Select(GetFilterablePropertyName).ToList()
+            };
+
+            if (algoliaIndex.DistinctOptions != null)
+            {
+                indexSettings.Distinct = algoliaIndex.DistinctOptions.DistinctLevel;
+                indexSettings.AttributeForDistinct = algoliaIndex.DistinctOptions.DistinctAttribute;
+            }
+
+            return indexSettings;
         }
     }
 }

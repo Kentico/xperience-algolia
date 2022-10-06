@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Kentico.Xperience.AlgoliaSearch.Attributes
+namespace Kentico.Xperience.Algolia.Attributes
 {
     /// <summary>
     /// A property attribute to indicate a search model property is searchable within Algolia.
@@ -31,14 +31,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         {
             get;
             set;
-        }
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SearchableAttribute"/> class.
-        /// </summary>
-        public SearchableAttribute()
-        {
         }
     }
 }

@@ -21,5 +21,3 @@ jobs:
       run: dotnet restore src/Kentico.Xperience.AlgoliaSearch.csproj
     - name: Build
       run: dotnet build src/Kentico.Xperience.AlgoliaSearch.csproj --no-restore
-    - name: Test
-      run: dotnet test tests/Kentico.Xperience.AlgoliaSearch.Tests.csproj --no-build --logger GitHubActions

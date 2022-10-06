@@ -1,15 +1,15 @@
-﻿using Algolia.Search.Models.Search;
+﻿using System;
+using System.Text;
+using System.Web;
+
+using Algolia.Search.Models.Search;
 
 using CMS.Core;
 using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.Services;
 
 using Newtonsoft.Json.Linq;
-
-using System;
-using System.Text;
-using System.Web;
 
 namespace Kentico.Xperience.AlgoliaSearch.Pages
 {
