@@ -7,14 +7,14 @@ using NSubstitute;
 
 using NUnit.Framework;
 
-using static Kentico.Xperience.Algolia.Test.TestSearchModels;
+using static Kentico.Xperience.Algolia.Tests.TestSearchModels;
 
-namespace Kentico.Xperience.Algolia.Test
+namespace Kentico.Xperience.Algolia.Tests
 {
-    internal class IAlgoliaObjectGeneratorTests
+    internal class DefaultAlgoliaObjectGeneratorTests
     {
         [TestFixture]
-        internal class GetTreeNodeDataTests : AlgoliaTest
+        internal class GetTreeNodeDataTests : AlgoliaTests
         {
             private IAlgoliaObjectGenerator algoliaObjectGenerator;
 
@@ -27,17 +27,22 @@ namespace Kentico.Xperience.Algolia.Test
 
 
             [Test]
-            public void GetTreeNodeData_CustomIndexing_ConvertedToUpper()
+            public void GetTreeNodeData_CreateTask_GetsAllData()
             {
                 var queueItem = new AlgoliaQueueItem(FakeNodes.ArticleEn, AlgoliaTaskType.CREATE, nameof(ArticleEnSearchModel));
                 var articleEnData = algoliaObjectGenerator.GetTreeNodeData(queueItem);
 
-                Assert.That(articleEnData.Value<string>("DocumentName"), Is.EqualTo(FakeNodes.ArticleEn.DocumentName.ToUpper()));
+                Assert.Multiple(() => {
+                    Assert.That(articleEnData.Value<string>("NodeAliasPath"), Is.EqualTo(FakeNodes.ArticleEn.NodeAliasPath));
+                    Assert.That(articleEnData.Value<string>("ClassName"), Is.EqualTo(FakeNodes.DOCTYPE_ARTICLE));
+                    Assert.That(articleEnData.Value<string>("DocumentName"), Is.EqualTo(FakeNodes.ArticleEn.DocumentName.ToUpper()));
+                    Assert.That(articleEnData.Value<int>("objectID"), Is.EqualTo(FakeNodes.ArticleEn.DocumentID));
+                });
             }
 
 
             [Test]
-            public void GetTreeNodeData_PartialUpdate_ContainsUpdatedColumns()
+            public void GetTreeNodeData_UpdateTask_ContainsUpdatedColumns()
             {
                 var queueItem = new AlgoliaQueueItem(
                     FakeNodes.ArticleEn,
@@ -49,20 +54,6 @@ namespace Kentico.Xperience.Algolia.Test
                 Assert.Multiple(() => {
                     Assert.That(articleEnData.Value<string>("NodeAliasPath"), Is.EqualTo(FakeNodes.ArticleEn.NodeAliasPath));
                     Assert.That(articleEnData.Value<string>("DocumentName"), Is.Null);
-                });
-            }
-
-
-            [Test]
-            public void GetTreeNodeData_ValidIndex_GetsData()
-            {
-                var queueItem = new AlgoliaQueueItem(FakeNodes.ArticleEn, AlgoliaTaskType.CREATE, nameof(ArticleEnSearchModel));
-                var articleEnData = algoliaObjectGenerator.GetTreeNodeData(queueItem);
-
-                Assert.Multiple(() => {
-                    Assert.That(articleEnData.Value<string>("NodeAliasPath"), Is.EqualTo(FakeNodes.ArticleEn.NodeAliasPath));
-                    Assert.That(articleEnData.Value<string>("ClassName"), Is.EqualTo(FakeNodes.DOCTYPE_ARTICLE));
-                    Assert.That(articleEnData.Value<int>("objectID"), Is.EqualTo(FakeNodes.ArticleEn.DocumentID));
                 });
             }
         }
