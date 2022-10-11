@@ -40,7 +40,10 @@ namespace Kentico.Xperience.Algolia
             {
                 var applicationId = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApplicationId"], "NO_APP");
                 var apiKey = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApiKey"], "NO_KEY");
-                var client = new SearchClient(applicationId, apiKey);
+                var configuration = new SearchConfig(applicationId, apiKey);
+                configuration.DefaultHeaders["User-Agent"] = "Kentico Xperience for Algolia (4.0.0)";
+
+                var client = new SearchClient(configuration);
                 Service.Use<ISearchClient>(client);
             }
         }
