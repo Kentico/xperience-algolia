@@ -40,75 +40,79 @@ We recommend that you to create a new [.NET Standard 2.0](https://docs.microsoft
 <add key="AlgoliaApplicationId" value="<your application ID>"/>
 <add key="AlgoliaApiKey" value="<your Indexing API key>"/>
 ```
+6. In your live-site's `Startup.cs`, register the Algolia integration:
 
-6. Register the `IAlgoliaIndexRegister` service and any indexes by following [this guide](#gear-creating-and-registering-an-algolia-index).
+```cs
+services.AddAlgolia(Configuration);
+```
+
 7. (Optional) Import the [Xperience Algolia module](#chart_with_upwards_trend-algolia-search-application-for-administration-interface) in your Xperience website.
 
 ## Limitations
 
-It's important to note that Algolia has [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of your records. If you are indexing content that may contain large amounts of data, you may need to [customize the indexing process](#customizing-the-indexing-process) to contain only the most important page data.
+It's important to note that Algolia has limitations on the size of your records. If you are indexing content that may contain large amounts of data, we recommend splitting your records into smaller "fragments." Follow the instructions in the [Splitting large content](#scissors-splitting-large-content) section.
 
 ## :gear: Creating and registering an Algolia index
 
 An Algolia index and its attributes are defined within a single class file, in which your custom class extends the [`AlgoliaSearchModel`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs) class. Within the class, you define the attributes of the index by creating properties which match the names of Xperience page fields to index. The Xperience fields available may come from the `TreeNode` object, `SKUTreeNode` for products, or any custom page type fields.
 
 ```cs
-using Kentico.Xperience.AlgoliaSearch.Models;
-using System;
-
-namespace DancingGoat
+public class SiteSearchModel : AlgoliaSearchModel
 {
-    public class AlgoliaSiteSearchModel : AlgoliaSearchModel
-    {
-        public const string IndexName = "AlgoliaSiteIndex";
+    public const string IndexName = "SiteIndex";
 
-        public string DocumentName { get; set; }
+    [Searchable, Retrievable]
+    public string DocumentName { get; set; }
 
-        public decimal SKUPrice { get; set; }
+    [MediaUrls, Retrievable, Source(new string[] { nameof(Article.ArticleTeaser), nameof(Coffee.CoffeeImage) })]
+    public IEnumerable<string> Thumbnail { get; set; }
 
-        public string ArticleText { get; set; }
-    }
+    [Searchable, Retrievable, Source(new string[] { nameof(Article.ArticleSummary), nameof(Coffee.CoffeeShortDescription) })]
+    public string ShortDescription { get; set; }
+
+    [Searchable, Source(new string[] { nameof(Article.ArticleText), nameof(Coffee.CoffeeDescription) })]
+    public string Content { get; set; }
+
+    [Facetable]
+    public string CoffeeProcessing { get; set; }
+
+    [Facetable]
+    public bool CoffeeIsDecaf { get; set; }
 }
 ```
 
 > :ab: The property names (and names used in the [SourceAttribute](#source-attribute)) are __case-insensitive__. This means that your search model can contain an "articletext" property, or an "ArticleText" property- both will work.
 
-Indexes must be registered during application startup in both the administration application and the live-site application. In the __administration__ project, create a [custom module](https://docs.xperience.io/custom-development/creating-custom-modules/initializing-modules-to-run-custom-code) and use the `OnPreInit` method to create an `IAlgoliaIndexRegister`, add your indexes, and register the service:
+Indexes must be registered during application startup in both the administration application and the live-site application. In the __administration__ project, create a [custom module](https://docs.xperience.io/custom-development/creating-custom-modules/initializing-modules-to-run-custom-code) and use the `OnInit` method to register your indexes with the `IndexStore`:
 
 ```cs
-protected override void OnPreInit()
+protected override void OnInit()
 {
-    base.OnPreInit();
+    base.OnInit();
 
-    Service.Use<IAlgoliaIndexRegister>(new DefaultAlgoliaIndexRegister()
-        .Add<AlgoliaSiteSearchModel>(AlgoliaSiteSearchModel.IndexName)
-    );
+    IndexStore.Instance.Add(new AlgoliaIndex(typeof(SiteSearchModel), SiteSearchModel.IndexName));
 }
 ```
 
-The `Add` method also accepts an optional list of `SiteNames` to which the index is assigned. If not provided, pages from all sites are included. In the __live-site__ project's startup code, call the `AddAlgolia()` extension method and add your indexes to the `IAlgoliaIndexRegister`:
+The `AlgoliaIndex` constructor also accepts an optional list of site names to which the index is assigned. If not provided, pages from all sites are included. In the __live-site__ project's startup code, modify the `AddAlgolia()` extension method. This method accepts a list of `AlgoliaIndex`, so you can create and register as many indexes as needed
 
 ```cs
-// Startup.cs
-public void ConfigureServices(IServiceCollection services)
+services.AddAlgolia(Configuration, new AlgoliaIndex[]
 {
-    services.AddAlgolia(Configuration,
-        new DefaultAlgoliaIndexRegister()
-            .Add<AlgoliaSiteSearchModel>(AlgoliaSiteSearchModel.IndexName)
-    );
-}
+    new AlgoliaIndex(typeof(SiteSearchModel), SiteSearchModel.IndexName),
+    // more indexes...
+});
 ```
 
 If you're developing your search solution in multiple environments (e.g. "DEV" and "STG"), it is recommended that you create a unique Algolia index per environment. With this approach, the search functionality can be tested in each environment individually and changes to the index structure or content will not affect other environments. This can be implemented any way you'd like, including some custom service which transforms the index names. The simplest approach would be to prepend some environment name to the index, which is stored in the application settings:
 
 ```cs
 var environment = ConfigurationManager.AppSettings["Environment"];
-Service.Use<IAlgoliaIndexRegister>(new DefaultAlgoliaIndexRegister()
-    .Add<AlgoliaSiteSearchModel>($"{environment}-{AlgoliaSiteSearchModel.IndexName}")
-);
+services.AddAlgolia(Configuration, new AlgoliaIndex[]
+{
+    new AlgoliaIndex(typeof(SiteSearchModel), $"{environment}-{SiteSearchModel.IndexName}")
+});
 ```
-
-> :triangular_flag_on_post: The method of registering indexes via [`RegisterAlgoliaIndex`](https://github.com/Kentico/xperience-algolia/blob/master/src/Attributes/RegisterAlgoliaIndexAttribute.cs) is still supported, but no longer recommended.
 
 ### Determining which pages to index
 
@@ -132,9 +136,9 @@ Below is an example of an Algolia index which includes multiple paths and page t
 ```cs
 [IncludedPath("/Articles/%", PageTypes = new string[] { Article.CLASS_NAME })]
 [IncludedPath("/Store/%", PageTypes = new string[] { "DancingGoatCore.Brewer", "DancingGoatCore.Coffee", "DancingGoatCore.ElectricGrinder", "DancingGoatCore.FilterPack", "DancingGoatCore.ManualGrinder", "DancingGoatCore.Tableware" })]
-public class AlgoliaSiteSearchModel : AlgoliaSearchModel
+public class SiteSearchModel : AlgoliaSearchModel
 {
-    public const string IndexName = "DancingGoatSiteSearch";
+    public const string IndexName = "SiteSearchModel";
 
     [Searchable, Retrievable]
     public string DocumentName { get; set; }
@@ -346,6 +350,81 @@ public string ArticleTeaser { get; set; }
 public string Thumbnail { get; set; }
 ```
 
+## :scissors: Splitting large content
+
+Due to [limitations](https://support.algolia.com/hc/en-us/articles/4406981897617-Is-there-a-size-limit-for-my-index-records-/) on the size of Algolia records, we recommend splitting large content into smaller fragments. This operation is performed automatically during indexing by [`IAlgoliaObjectGenerator.SplitData()`](/src/Services/IAlgoliaObjectGenerator.cs), but there is no data splitting by default.
+
+To enable data splitting for an Algolia index, add the `DistinctOptions` parameter during registration:
+
+```cs
+IndexStore.Instance.Add(new AlgoliaIndex(typeof(SiteSearchModel), SiteSearchModel.IndexName, distinctOptions: new DistinctOptions(nameof(SiteSearchModel.DocumentName), 1)))
+```
+
+The `DistinctOptions` constructor accepts two parameters:
+
+  - __distinctAttribute__: Corresponds with [this Algolia setting](https://www.algolia.com/doc/api-reference/api-parameters/attributeForDistinct). This is a property of the search model whose value will remain constant for all fragments, and is used to identify fragments during de-duplication. Fragments of a search result are "grouped" together according to this attribute's value, then a certain number of fragments per-group are returned, depending on the `distinctLevel` setting. In most cases, this will be a property like `DocumentName` or `NodeAliasPath`.
+  - __distinctLevel__: Corresponds with [this Algolia setting](https://www.algolia.com/doc/api-reference/api-parameters/distinct). A value of zero disables de-duplication and grouping, while positive values determine how many fragments will be returned by a search. This is generally set to "1" so that only one fragment is returned from each grouping.
+
+To implement data splitting, create and register a custom implementation of `IAlgoliaObjectGenerator`. It's __very important__ to set the "objectID" of each fragment, as seen in the below example. The IDs can be any arbitrary string, but setting this ensures that the fragments are updated and deleted properly when the page is modified. We recommend developing a consistent naming strategy like in the example below, where an index number is appended to the original ID. The IDs should _not_ be random! Calling `SplitData()` on the same node multiple times should always generate the same fragments and IDs.
+
+In the following example, we have large articles on our website which can be split into smaller fragments by splitting text on the `<p>` tag. Note that each fragment still contains all of the original data- only the "Content" property is modified.
+
+```cs
+[assembly: RegisterImplementation(typeof(IAlgoliaObjectGenerator), typeof(CustomAlgoliaObjectGenerator))]
+namespace DancingGoat.Algolia
+{
+  public class CustomAlgoliaObjectGenerator : IAlgoliaObjectGenerator
+  {
+      private readonly IAlgoliaObjectGenerator defaultImplementation;
+
+      public CustomAlgoliaObjectGenerator(IAlgoliaObjectGenerator defaultImplementation)
+      {
+          this.defaultImplementation = defaultImplementation;
+      }
+
+      public JObject GetTreeNodeData(AlgoliaQueueItem queueItem)
+      {
+          return defaultImplementation.GetTreeNodeData(queueItem);
+      }
+
+      public IEnumerable<JObject> SplitData(JObject originalData, AlgoliaIndex algoliaIndex)
+      {
+          if (algoliaIndex.Type == typeof(SiteSearchModel))
+          {
+              return SplitParagraphs(originalData, nameof(SiteSearchModel.Content));
+          }
+
+          return new JObject[] { originalData };
+      }
+
+      private IEnumerable<JObject> SplitParagraphs(JObject originalData, string propertyToSplit)
+      {
+          var originalId = originalData.Value<string>("objectID");
+          var content = originalData.Value<string>(propertyToSplit);
+          if (string.IsNullOrEmpty(content))
+          {
+              return new JObject[] { originalData };
+          }
+
+          List<string> paragraphs = new List<string>();
+          var matches = Regex.Match(content, @"<p>\s*(.+?)\s*</p>");
+          while (matches.Success)
+          {
+              paragraphs.Add(matches.Value);
+              matches = matches.NextMatch();
+          }
+
+          return paragraphs.Select((p, index) => {
+              var data = (JObject)originalData.DeepClone();
+              data["objectID"] = $"{originalId}-{index}";
+              data[propertyToSplit] = p;
+              return data;
+          });
+      }
+  }
+}
+```
+
 ## :mag_right: Implementing the search interface
 
 You can use Algolia's [.NET API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/csharp/?client=csharp), [JavaScript API](https://www.algolia.com/doc/api-client/getting-started/what-is-the-api-client/javascript/?client=javascript), or [InstantSearch.js](https://www.algolia.com/doc/guides/building-search-ui/what-is-instantsearch/js/) to implement a search interface on your live site. The following example will help you with creating a search interface for .NET Core. In your Controllers, you can get a `SearchIndex` object by injecting the `IAlgoliaIndexService` interface and calling the `InitializeIndex()` method on the client using your index's code name. Then, construct a `Query` to search the Algolia index. Algolia's pagination is zero-based, so in the Dancing Goat sample project we subtract 1 from the current page number:
@@ -362,7 +441,7 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 {
     page = Math.Max(page, DEFAULT_PAGE_NUMBER);
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
+    var searchIndex = _indexService.InitializeIndex(SiteSearchModel.IndexName);
     var query = new Query(searchText)
     {
         Page = page - 1,
@@ -371,7 +450,7 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 
     try
     {
-        var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+        var results = searchIndex.Search<SiteSearchModel>(query);
         //...
     }
     catch (Exception e)
@@ -381,7 +460,7 @@ public ActionResult Search(string searchText, int page = DEFAULT_PAGE_NUMBER)
 }
 ```
 
-The `Hits` object of the [search response](https://www.algolia.com/doc/api-reference/api-methods/search/?client=csharp#response) will be a list of the strongly typed objects defined by your search model (`AlgoliaSiteSearchModel` in the above example). Other helpful properties of the results are `NbPages` and `NbHits`.
+The `Hits` object of the [search response](https://www.algolia.com/doc/api-reference/api-methods/search/?client=csharp#response) will be a list of the strongly typed objects defined by your search model (`SiteSearchModel` in the above example). Other helpful properties of the results are `NbPages` and `NbHits`.
 
 The properties of each hit will be populated from the Algolia index, but be sure to check for `null` values! For example, a property that does _not_ have the [`Retrievable`](#retrievable-attribute) attribute will not be returned and custom page type fields will only be present for results of that type. That is, a property named "ArticleText" will most likely be `null` for products on your site. You can reference the [`AlgoliaSearchModel.ClassName`](https://github.com/Kentico/xperience-algolia/blob/master/src/Models/AlgoliaSearchModel.cs#L27) property present on all indexes to check the type of the returned hit.
 
@@ -420,7 +499,7 @@ foreach (var item in Model.Items)
 In the display template, reference your the properties of your search model to display the result:
 
 ```cshtml
-@model DancingGoat.AlgoliaSiteSearchModel
+@model DancingGoat.SiteSearchModel
 
 <div class="row search-tile">
     <div class="col-md-4 col-lg-3">
@@ -452,7 +531,7 @@ This repository automatically indexes the `DocumentPublishFrom` and `DocumentPub
 var nowUnixTimestamp = DateTime.UtcNow.Subtract(DateTime.UnixEpoch).TotalSeconds;
 var query = new Query(searchText)
 {
-    Filters = $"{nameof(AlgoliaSiteSearchModel.DocumentPublishFrom)} <= {nowUnixTimestamp} AND {nameof(AlgoliaSiteSearchModel.DocumentPublishTo)} > {nowUnixTimestamp}"
+    Filters = $"{nameof(SiteSearchModel.DocumentPublishFrom)} <= {nowUnixTimestamp} AND {nameof(SiteSearchModel.DocumentPublishTo)} > {nowUnixTimestamp}"
 };
 ```
 
@@ -494,7 +573,7 @@ Algolia provides [autocomplete](https://www.algolia.com/doc/ui-libraries/autocom
 ```js
 <script type="text/javascript">
     var client = algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey');
-    var index = client.initIndex('@AlgoliaSiteSearchModel.IndexName');
+    var index = client.initIndex('@SiteSearchModel.IndexName');
 </script>
 ```
 
@@ -595,22 +674,22 @@ The Dancing Goat store doesn't use search out-of-the-box, so first you need to h
 2. In __CoffeesController.cs__, create a method that will perform a standard Algolia search. In the `Query.Filters` property, add a filter to only retrieve records where `ClassName` is `DancingGoatCore.Coffee.` You also specify which `Facets` you want to retrieve, but they are not used yet.
 
 ```cs
-private SearchResponse<AlgoliaSiteSearchModel> Search()
+private SearchResponse<SiteSearchModel> Search()
 {
     var facetsToRetrieve = new string[] {
-        nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf),
-        nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
+        nameof(SiteSearchModel.CoffeeIsDecaf),
+        nameof(SiteSearchModel.CoffeeProcessing)
     };
 
-    var defaultFilter = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}";
+    var defaultFilter = $"{nameof(SiteSearchModel.ClassName)}:{new Coffee().ClassName}";
     var query = new Query()
     {
         Filters = defaultFilter,
         Facets = facetsToRetrieve
     };
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
-    return searchIndex.Search<AlgoliaSiteSearchModel>(query);
+    var searchIndex = _indexService.InitializeIndex(SiteSearchModel.IndexName);
+    return searchIndex.Search<SiteSearchModel>(query);
 }
 ```
 
@@ -625,7 +704,7 @@ namespace DancingGoat.Models.Store
 {
     public class AlgoliaStoreModel
     {
-        public AlgoliaSiteSearchModel Hit { get; set; }
+        public SiteSearchModel Hit { get; set; }
 
         public ProductCatalogPrices PriceDetail { get; }
 
@@ -643,7 +722,7 @@ namespace DancingGoat.Models.Store
             }
         }
 
-        public AlgoliaStoreModel(AlgoliaSiteSearchModel hit)
+        public AlgoliaStoreModel(SiteSearchModel hit)
         {
             Hit = hit;
             var sku = SKUInfo.Provider.Get(hit.SKUID);
@@ -706,26 +785,24 @@ public ActionResult Index()
 
 ### Filtering your search with facets
 
-In the `Search()` method, the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets are retrieved from Algolia, but they are not used yet. In the following steps you will use an `AlgoliaFacetFilterViewModel` (which implements `IAlgoliaFacetFilter`) to hold the facets and the current state of the faceted search interface.
+In the `Search()` method, the _CoffeeIsDecaf_ and _CoffeeProcessing_ facets are retrieved from Algolia, but they are not used yet. In the following steps you will use an `AlgoliaFacetFilter` (which implements `IAlgoliaFacetFilter`) to hold the facets and the current state of the faceted search interface. The `UpdateFacets()` method of this interface allows you convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet` objects.
 
-This repository contains several classes which can be used to strongly-type the `SearchResponse.Facets` result of an Algolia search. The `IAlgoliaSearchService.GetFacetedAttributes()` allows you convert the facet response into a list of `AlgoliaFacetedAttribute`s which contains the attribute name (e.g. "CoffeeIsDecaf"), localized display name (e.g. "Decaf"), and a list of `AlgoliaFacet` objects.
-
-Each `AlgoliaFacet` object represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` contains 3 `AlgoliaFacet` objects in its `Facets` property. The `Value` property of those facets will be "washed," "natural," and "semiwashed."
+Each `AlgoliaFacet` object represents the faceted attribute's possible values and contains the number of results that will be returned if the facet is enabled. For example, the "CoffeeProcessing" `AlgoliaFacetedAttribute` contains 3 `AlgoliaFacet` objects in its `Facets` property.
 
 1. In the `Search()` method, add a parameter that accepts an `IAlgoliaFacetFilter`. Then, check whether the `filter` is non-null and call the `GetFilter()` method to generate the facet filters:
 
 ```cs
-private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter = null)
+private SearchResponse<SiteSearchModel> Search(IAlgoliaFacetFilter filter = null)
 {
     var facetsToRetrieve = new string[] {
-        nameof(AlgoliaSiteSearchModel.CoffeeIsDecaf),
-        nameof(AlgoliaSiteSearchModel.CoffeeProcessing)
+        nameof(SiteSearchModel.CoffeeIsDecaf),
+        nameof(SiteSearchModel.CoffeeProcessing)
     };
 
-    var defaultFilter = $"{nameof(AlgoliaSiteSearchModel.ClassName)}:{new Coffee().ClassName}";
+    var defaultFilter = $"{nameof(SiteSearchModel.ClassName)}:{new Coffee().ClassName}";
     if (filter != null)
     {
-        var facetFilter = filter.GetFilter(typeof(AlgoliaSiteSearchModel));
+        var facetFilter = filter.GetFilter(typeof(SiteSearchModel));
         if (!String.IsNullOrEmpty(facetFilter))
         {
             defaultFilter += $" AND {facetFilter}";
@@ -739,8 +816,8 @@ private SearchResponse<AlgoliaSiteSearchModel> Search(IAlgoliaFacetFilter filter
     };
 
 
-    var searchIndex = _indexService.InitializeIndex(AlgoliaSiteSearchModel.IndexName);
-    return searchIndex.Search<AlgoliaSiteSearchModel>(query);
+    var searchIndex = _indexService.InitializeIndex(SiteSearchModel.IndexName);
+    return searchIndex.Search<SiteSearchModel>(query);
 }
 ```
 
@@ -756,16 +833,7 @@ You can change this behavior by setting the [`UseAndCondition`](#facetable-attri
 public IAlgoliaFacetFilter AlgoliaFacetFilter { get; set; }
 ```
 
-3. Inject `IAlgoliaSearchService` into your search controller:
-
-```cs
-public CoffeesController(IAlgoliaSearchService algoliaSearchService)
-{
-    _searchService = algoliaSearchService;
-}
-```
-
-4. Modify the `Index()` action to accept an `AlgoliaFacetFilterViewModel` parameter, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
+3. Modify the `Index()` action to accept an `AlgoliaFacetFilter` parameter, pass it to the `Search()` method, parse the facets from the search response, then pass the filter to the view:
 
 ```cs
 [HttpGet]
@@ -780,13 +848,12 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
             hit => new AlgoliaStoreModel(hit)
         );
 
-        var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-        var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
+        filter.UpdateFacets(new FacetConfiguration(searchResponse.Facets));
 
         var model = new ProductListViewModel
         {
             Items = items,
-            AlgoliaFacetFilter = filterViewModel
+            AlgoliaFacetFilter = filter
         };
 
         return View(model);
@@ -803,7 +870,7 @@ public ActionResult Index(AlgoliaFacetFilterViewModel filter)
 }
 ```
 
-Here, the `GetFacetedAttributes()` method accepts the facets returned from Algolia, but also the current `IAlgoliaFacetFilter`. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "CoffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
+Here, the `UpdateFacets()` method accepts the facets returned from Algolia. Because the entire list of available facets depends on the Algolia response, and the facets in your filter are replaced with new ones, this method ensures that a facet that was used previously (e.g. "CoffeeIsDecaf:true") maintains it's enabled state when reloading the search interface.
 
 ### Displaying the facets
 
@@ -834,8 +901,8 @@ The Dancing Goat store listing now uses Algolia search, and you have a filter wh
 3. Create a _/Views/Shared/Algolia/\_AlgoliaFacetFilter.cshtml_ view. As you can see in step 1, this view will accept our facet filter and loops through each `AlogliaFacetedAttribute` it contains:
 
 ```cshtml
-@using Kentico.Xperience.AlgoliaSearch.Models.Facets
-@model AlgoliaFacetFilterViewModel
+@using Kentico.Xperience.Algolia.Models
+@model AlgoliaFacetFilter
 
 @for (var i=0; i<Model.FacetedAttributes.Count(); i++)
 {
@@ -847,7 +914,7 @@ The Dancing Goat store listing now uses Algolia search, and you have a filter wh
 4. For each `AlgoliaFacetedAttribute` you now want to loop through each `AlgoliaFacet` it contains and display a checkbox that will enable the facet for filtering. Create a _/Views/Shared/Algolia/EditorTemplates/\_AlgoliaFacetedAttribute.cshtml_ file and render inputs for each facet:
 
 ```cshtml
-@using Kentico.Xperience.AlgoliaSearch.Models.Facets
+@using Kentico.Xperience.Algolia.Models
 @model AlgoliaFacetedAttribute
 
 <h4>@Model.DisplayName</h4>
@@ -866,29 +933,42 @@ Now, when you check one of the facets your JavaScript code will cause the form t
 
 ![Dancing goat facet example](/img/dg-facets.png)
 
-### Localizing facet names and values
+### Translating facet names and values
 
-Without localization, the view will display facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable title like "Decaffeinated," and values like "true" and "false." You can use any localization approach you'd like, but the `IAlgoliaFacetFilter` contains a `Localize()` method that you can use out-of-the-box.
+Without translation, the view will display facet attribute names (e.g. "CoffeeIsDecaf") instead of a human-readable title like "Decaffeinated," and values like "true" and "false." The `FacetConfiguration` model accepted by `IAlgoliaFacetFilter.UpdateFacets()` contains the `displayNames` parameter which can be used to translate facets into any text you'd like.
 
-1. Inject `IStringLocalizer<SharedResources>` into the __CoffeeController__.
-2. Call `filterViewModel.Localize()` in the `Index()` method after constructing the facet filter view model.
+1. Create a new class (or use an existing class) to hold a `Dictionary<string, string>` containing the translations:
 
 ```cs
-public ActionResult Index(AlgoliaFacetFilterViewModel filter)
-{
-    ...
-    var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-    var filterViewModel = new AlgoliaFacetFilterViewModel(facetedAttributes);
-    filterViewModel.Localize(_localizer);
-    ...
-}
+public class AlgoliaFacetTranslations
 ```
 
-3. The `Localize()` method searches for facet names with keys in the format _algolia.facet.[AttributeName]_, and facet values in the format _algolia.facet.[AttributeName].[FacetValue]_. In __SharedResources.resx__, add the following keys and your translations:
+2. Add entries to the dictionary with keys in the format _[AttributeName]_ or _[AttributeName].[Value]_ for faceted attributes or facet values, respectively:
 
-![Resource strings](/img/resource-strings.png)
+```cs
+  public static Dictionary<string, string> CoffeeTranslations
+  {
+      get
+      {
+          return new Dictionary<string, string>
+          {
+              { nameof(SiteSearchModel.CoffeeIsDecaf), "Decaffeinated" },
+              { $"{nameof(SiteSearchModel.CoffeeIsDecaf)}.true", "Yes" },
+              { $"{nameof(SiteSearchModel.CoffeeIsDecaf)}.false", "No" },
+              { nameof(SiteSearchModel.CoffeeProcessing), "Processing" },
+              { $"{nameof(SiteSearchModel.CoffeeProcessing)}.washed", "Washed" },
+              { $"{nameof(SiteSearchModel.CoffeeProcessing)}.natural", "Natural" }
+          };
+      }
+  }
+```
 
-4. Each `AlgoliaFacetedAttribute.DisplayName` and `AlgoliaFacet.DisplayValue` within the filter is now localized.
+3. Reference this dictionary when calling the `UpdateFacets()` method in your search interface:
+
+```cs
+var searchResponse = await Search(filter, cancellationToken);
+filter.UpdateFacets(new FacetConfiguration(searchResponse.Facets, AlgoliaFacetTranslations.CoffeeTranslations));
+```
 
 ## :bulb: Personalizing search results
 
@@ -920,7 +1000,7 @@ public SearchController(IAlgoliaInsightsService algoliaInsightsService)
 }
 
 // In your search method, call SetInsightsUrls
-var results = searchIndex.Search<AlgoliaSiteSearchModel>(query);
+var results = searchIndex.Search<SiteSearchModel>(query);
 _algoliaInsightsService.SetInsightsUrls(results);
 ```
 
@@ -930,8 +1010,8 @@ Now, when you display the search results using the `Url` property, it will look 
 @inject IAlgoliaInsightsService _insightsService
 
 @{
-    await _insightsService.LogSearchResultClicked("Search result clicked", AlgoliaSiteSearchModel.IndexName);
-    await _insightsService.LogSearchResultConversion("Search result converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogSearchResultClicked("Search result clicked", SiteSearchModel.IndexName, CancellationToken.None);
+    await _insightsService.LogSearchResultConversion("Search result converted", SiteSearchModel.IndexName, CancellationToken.None);
 }
 ```
 
@@ -966,7 +1046,7 @@ public async Task<ActionResult> AddItem(CartItemUpdateModel item)
         // Log Algolia Insights conversion
         if (page != null)
         {
-            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", AlgoliaSiteSearchModel.IndexName);
+            await _insightsService.LogPageConversion(page.DocumentID, "Product added to cart", SiteSearchModel.IndexName, CancellationToken.None);
         }
         
     }
@@ -982,7 +1062,7 @@ public async Task<IActionResult> Detail([FromServices] ArticleRepository article
 {
     var article = articleRepository.GetCurrent();
 
-    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogPageViewed(article.DocumentID, "Article viewed", SiteSearchModel.IndexName, CancellationToken.None);
 
     return new TemplateResult(article);
 }
@@ -997,19 +1077,19 @@ Or, in the _\_Details.cshtml_ view for products, you can log a _Product viewed_ 
 @{
     if(_pageDataContextRetriever.TryRetrieve<TreeNode>(out var context))
     {
-        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", AlgoliaSiteSearchModel.IndexName);
+        await _insightsService.LogPageViewed(context.Page.DocumentID, "Product viewed", SiteSearchModel.IndexName, CancellationToken.None);
     }
 }
 ```
 
 ### Logging facet-related events/conversions
 
-You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, the code from our Dancing Goat faceted search [example](#filtering-your-search-with-facets) will be used. Logging a _Search facets viewed_ event can be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which you already have from the `IAlgoliaSearchService.GetFacetedAttributes()` call:
+You can log events and conversions when facets are displayed to a visitor, or when they click on an individual facet. In this example, the code from our Dancing Goat faceted search [example](#filtering-your-search-with-facets) will be used. Logging a _Search facets viewed_ event can be done in the `Index()` action of __CoffeesController__. The `LogFacetsViewed()` method requires a list of `AlgoliaFacetedAttribute`s, which you can get from the filter:
 
 ```cs
 var searchResponse = Search(filter);
-var facetedAttributes = _searchService.GetFacetedAttributes(searchResponse.Facets, filter);
-await _insightsService.LogFacetsViewed(facetedAttributes, "Store facets viewed", AlgoliaSiteSearchModel.IndexName);
+filter.UpdateFacets(new FacetConfiguration(searchResponse.Facets));
+await _insightsService.LogFacetsViewed(filter.FacetedAttributes, "Store facets viewed", SiteSearchModel.IndexName, CancellationToken.None);
 ```
 
 To log an event or conversion when a facet is clicked, you need to use AJAX. First, in the _\_AlgoliaFacetedAttribute.cshtml_ view which displays each check box, add a `data` attribute that stores the facet name and value (e.g. "CoffeeIsDecaf:true"):
@@ -1051,15 +1131,15 @@ In the appropriate controller, create the action which accepts the facet paramet
 
 ```cs
 [HttpPost]
-public async Task<ActionResult> FacetClicked(string facet)
+public async Task<ActionResult> FacetClicked(string facet, CancellationToken ct)
 {
     if (String.IsNullOrEmpty(facet))
     {
         return BadRequest();
     }
 
-    await _insightsService.LogFacetClicked(facet, "Store facet clicked", AlgoliaSiteSearchModel.IndexName);
-    await _insightsService.LogFacetConverted(facet, "Store facet converted", AlgoliaSiteSearchModel.IndexName);
+    await _insightsService.LogFacetClicked(facet, "Store facet clicked", SiteSearchModel.IndexName, ct);
+    await _insightsService.LogFacetConverted(facet, "Store facet converted", SiteSearchModel.IndexName, ct);
     return Ok();
 }
 ```
@@ -1083,7 +1163,7 @@ var query = new Query(searchText)
     EnablePersonalization = true,
     UserToken = ContactManagementContext.CurrentContact.ContactGUID.ToString()
 };
-var results = searchIndex.Search<AlgoliaSiteSearchModel>(query, new RequestOptions {
+var results = searchIndex.Search<SiteSearchModel>(query, new RequestOptions {
     Headers = new Dictionary<string, string> { { "X-Forwarded-For", Request.HttpContext.Connection.RemoteIpAddress.ToString() } }
 });
 ```
@@ -1146,7 +1226,7 @@ endpoints.MapControllerRoute(
     <script src="https://cdn.jsdelivr.net/npm/instantsearch.js@4"></script>
     <script type="text/javascript">
         const search = instantsearch({
-          indexName: '@AlgoliaSiteSearchModel.IndexName',
+          indexName: '@SiteSearchModel.IndexName',
           searchClient: algoliasearch('@algoliaOptions.ApplicationId', '@algoliaOptions.SearchKey'),
         });
 
