@@ -16,14 +16,7 @@ namespace Kentico.Xperience.Algolia.Tests
         [TestFixture]
         internal class GetTreeNodeDataTests : AlgoliaTests
         {
-            private IAlgoliaObjectGenerator algoliaObjectGenerator;
-
-
-            [SetUp]
-            public void GetTreeNodeDataTestsSetUp()
-            {
-                algoliaObjectGenerator = new DefaultAlgoliaObjectGenerator(Substitute.For<IConversionService>(), new MockEventLogService());
-            }
+            private readonly IAlgoliaObjectGenerator algoliaObjectGenerator = new DefaultAlgoliaObjectGenerator(Substitute.For<IConversionService>(), Substitute.For<IEventLogService>());
 
 
             [Test]

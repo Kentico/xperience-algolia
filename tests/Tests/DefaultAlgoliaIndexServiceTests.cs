@@ -71,14 +71,7 @@ namespace Kentico.Xperience.Algolia.Tests
         [TestFixture]
         internal class InitializeIndexTests : AlgoliaTests
         {
-            private IAlgoliaIndexService algoliaIndexService;
-
-
-            [SetUp]
-            public void InitializeIndexTestsTestsSetUp()
-            {
-                algoliaIndexService = new DefaultAlgoliaIndexService(Substitute.For<ISearchClient>());
-            }
+            private readonly DefaultAlgoliaIndexService algoliaIndexService = new(Substitute.For<ISearchClient>());
 
 
             [Test]
