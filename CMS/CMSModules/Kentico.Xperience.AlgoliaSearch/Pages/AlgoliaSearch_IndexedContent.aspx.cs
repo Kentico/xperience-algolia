@@ -5,11 +5,10 @@ using System.Reflection;
 
 using CMS.Helpers;
 
-using Kentico.Xperience.Algolia;
 using Kentico.Xperience.Algolia.Attributes;
 using Kentico.Xperience.Algolia.Models;
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+namespace Kentico.Xperience.Algolia.Pages
 {
     public partial class AlgoliaSearch_IndexedContent : AlgoliaUIPage
     {

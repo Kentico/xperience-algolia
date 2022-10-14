@@ -11,7 +11,7 @@ using Kentico.Xperience.Algolia.Services;
 
 using Newtonsoft.Json.Linq;
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+namespace Kentico.Xperience.Algolia.Pages
 {
     public partial class AlgoliaSearch_Preview : AlgoliaUIPage
     {

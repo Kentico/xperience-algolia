@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+namespace Kentico.Xperience.Algolia.Pages
 {
 
 

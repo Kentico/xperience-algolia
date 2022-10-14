@@ -11,7 +11,6 @@ using CMS.Helpers;
 
 using Kentico.Xperience.Algolia.Attributes;
 using Kentico.Xperience.Algolia.Models;
-using Kentico.Xperience.AlgoliaSearch;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

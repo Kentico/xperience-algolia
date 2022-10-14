@@ -8,11 +8,10 @@ using CMS.Core;
 using CMS.Helpers;
 using CMS.Modules;
 
-using Kentico.Xperience.Algolia;
 using Kentico.Xperience.Algolia.Models;
 using Kentico.Xperience.Algolia.Services;
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+namespace Kentico.Xperience.Algolia.Pages
 {
     public partial class AlgoliaSearch_Dashboard : AlgoliaUIPage
     {

@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="True" CodeBehind="AlgoliaSearch_Preview.aspx.cs" Inherits="Kentico.Xperience.AlgoliaSearch.Pages.AlgoliaSearch_Preview"
+﻿<%@ Page Language="C#" AutoEventWireup="True" CodeBehind="AlgoliaSearch_Preview.aspx.cs" Inherits="Kentico.Xperience.Algolia.Pages.AlgoliaSearch_Preview"
     Title="Algolia search - Search preview" MasterPageFile="~/CMSMasterPages/UI/SimplePage.master" Theme="Default" EnableEventValidation="false" ValidateRequest="false" %>
 
 <%@ Register Src="~/CMSAdminControls/UI/Pager/UIPager.ascx" TagName="UIPager" TagPrefix="cms" %>

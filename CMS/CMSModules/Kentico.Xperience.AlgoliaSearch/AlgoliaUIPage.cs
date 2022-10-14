@@ -6,7 +6,7 @@ using Kentico.Xperience.Algolia.Attributes;
 
 using CMS.UIControls;
 
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.Algolia
 {
     /// <summary>
     /// Base class for Algolia custom module pages.
