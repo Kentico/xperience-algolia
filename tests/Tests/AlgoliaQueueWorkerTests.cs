@@ -33,7 +33,7 @@ namespace Kentico.Xperience.Algolia.Tests
             public void EnqueueAlgoliaQueueItem_InvalidIndex_ThrowsException_DoesntQueue()
             {
                 Assert.Multiple(() => {
-                    Assert.Throws<InvalidOperationException>(() => AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(
+                    Assert.Throws<InvalidOperationException>(() => AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(
                         new AlgoliaQueueItem(FakeNodes.ArticleEn, AlgoliaTaskType.CREATE, "FAKE_INDEX")));
                     Assert.That(AlgoliaQueueWorker.Current.ItemsInQueue, Is.EqualTo(0));
                 });
@@ -45,8 +45,8 @@ namespace Kentico.Xperience.Algolia.Tests
             {
                 var createTask = new AlgoliaQueueItem(FakeNodes.ArticleEn, AlgoliaTaskType.CREATE, nameof(ArticleEnSearchModel));
                 var deleteTask = new AlgoliaQueueItem(FakeNodes.ProductEn, AlgoliaTaskType.DELETE, nameof(ProductsSearchModel));
-                AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(createTask);
-                AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(deleteTask);
+                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(createTask);
+                AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(deleteTask);
 
                 algoliaClient.Received(1).ProcessAlgoliaTasks(
                     Arg.Is<IEnumerable<AlgoliaQueueItem>>(arg => arg.SequenceEqual(new AlgoliaQueueItem[] { createTask })));
