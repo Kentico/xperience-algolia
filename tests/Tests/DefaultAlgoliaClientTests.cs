@@ -63,13 +63,13 @@ namespace Kentico.Xperience.Algolia.Tests
         {
             private IAlgoliaClient algoliaClient;
             private IAlgoliaObjectGenerator algoliaObjectGenerator;
+            private readonly IAlgoliaIndexService mockIndexService = Substitute.For<IAlgoliaIndexService>();
             private readonly ISearchIndex mockSearchIndex = GetMockSearchIndex();
 
 
             [SetUp]
             public void DeleteRecordsTestsSetUp()
             {
-                var mockIndexService = Substitute.For<IAlgoliaIndexService>();
                 mockIndexService.InitializeIndex(Arg.Any<string>()).Returns(args => mockSearchIndex);
 
                 algoliaObjectGenerator = new DefaultAlgoliaObjectGenerator(Substitute.For<IConversionService>(), Substitute.For<IEventLogService>());
@@ -95,6 +95,7 @@ namespace Kentico.Xperience.Algolia.Tests
                 var numProcessed = algoliaClient.DeleteRecords(objectIds, nameof(ArticleEnSearchModel));
 
                 Assert.That(numProcessed, Is.EqualTo(2));
+                mockIndexService.Received(1).InitializeIndex(nameof(ArticleEnSearchModel));
                 mockSearchIndex.Received(1).DeleteObjects(Arg.Is<IEnumerable<string>>(arg => arg.SequenceEqual(objectIds)), null);
             }
         }
@@ -197,13 +198,13 @@ namespace Kentico.Xperience.Algolia.Tests
         {
             private IAlgoliaClient algoliaClient;
             private IAlgoliaObjectGenerator algoliaObjectGenerator;
+            private readonly IAlgoliaIndexService mockIndexService = Substitute.For<IAlgoliaIndexService>();
             private readonly ISearchIndex mockSearchIndex = GetMockSearchIndex();
 
 
             [SetUp]
             public void UpsertRecordsTestsSetUp()
             {
-                var mockIndexService = Substitute.For<IAlgoliaIndexService>();
                 mockIndexService.InitializeIndex(Arg.Any<string>()).Returns(args => mockSearchIndex);
 
                 algoliaObjectGenerator = new DefaultAlgoliaObjectGenerator(Substitute.For<IConversionService>(), Substitute.For<IEventLogService>()); 
@@ -230,6 +231,7 @@ namespace Kentico.Xperience.Algolia.Tests
                 var numProcessed = algoliaClient.UpsertRecords(dataToUpsert, nameof(ArticleEnSearchModel));
 
                 Assert.That(numProcessed, Is.EqualTo(2));
+                mockIndexService.Received(1).InitializeIndex(nameof(ArticleEnSearchModel));
                 mockSearchIndex.Received(1).PartialUpdateObjects(
                     Arg.Is<IEnumerable<JObject>>(arg => arg.SequenceEqual(dataToUpsert, new JObjectEqualityComparer())), null, true);
             }
