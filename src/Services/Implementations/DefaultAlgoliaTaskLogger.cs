@@ -42,7 +42,7 @@ namespace Kentico.Xperience.Algolia.Services
                 try
                 {
                     var queueItem = new AlgoliaQueueItem(node, GetTaskType(node, eventName), indexName, node.ChangedColumns());
-                    AlgoliaQueueWorker.EnqueueAlgoliaQueueItem(queueItem);
+                    AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(queueItem);
                 }
                 catch (InvalidOperationException ex)
                 {

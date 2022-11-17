@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net48;net6.0</TargetFrameworks>
     <RootNamespace>Kentico.Xperience.Algolia.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
 	<LangVersion>latest</LangVersion>

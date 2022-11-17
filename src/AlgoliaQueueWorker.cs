@@ -38,7 +38,7 @@ namespace Kentico.Xperience.Algolia
         /// </summary>
         /// <param name="queueItem">The item to be added to the queue.</param>
         /// <exception cref="InvalidOperationException" />
-        public static void EnqueueAlgoliaQueueItem(AlgoliaQueueItem queueItem)
+        public void EnqueueAlgoliaQueueItem(AlgoliaQueueItem queueItem)
         {
             if (queueItem == null || queueItem.Node == null || String.IsNullOrEmpty(queueItem.IndexName))
             {

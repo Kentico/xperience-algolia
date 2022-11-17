@@ -50,16 +50,6 @@ namespace Kentico.Xperience.Algolia.Models
 
 
         /// <summary>
-        /// An arbitrary ID used to identify the Algolia index in the admin UI.
-        /// </summary>
-        internal int Identifier
-        {
-            get;
-            set;
-        }
-
-
-        /// <summary>
         /// The <see cref="IncludedPathAttribute"/>s which are defined in the search model.
         /// </summary>
         internal IEnumerable<IncludedPathAttribute> IncludedPaths

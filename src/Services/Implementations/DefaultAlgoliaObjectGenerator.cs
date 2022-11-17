@@ -213,7 +213,7 @@ namespace Kentico.Xperience.Algolia.Services
             {
                 columnsToUpdate.AddRange(indexedColumns);
             }
-            else if (queueItem.TaskType == AlgoliaTaskType.UPDATE)
+            else if (queueItem.TaskType == AlgoliaTaskType.UPDATE && queueItem.ChangedColumns != null)
             {
                 columnsToUpdate.AddRange(queueItem.ChangedColumns.Intersect(indexedColumns));
             }

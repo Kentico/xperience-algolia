@@ -51,7 +51,6 @@ namespace Kentico.Xperience.Algolia
             }
 
             index.IncludedPaths = index.Type.GetCustomAttributes<IncludedPathAttribute>(false);
-            index.Identifier = registeredIndexes.Count + 1;
             registeredIndexes.Add(index);
 
             return this;
@@ -88,12 +87,6 @@ namespace Kentico.Xperience.Algolia
         internal void Clear()
         {
             registeredIndexes.Clear();
-        }
-
-
-        internal AlgoliaIndex Get(int id)
-        {
-            return registeredIndexes.FirstOrDefault(i => i.Identifier == id);
         }
     }
 }
