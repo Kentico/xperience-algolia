@@ -1,10 +1,10 @@
-﻿using Algolia.Search.Clients;
+﻿using System;
 
-using Kentico.Xperience.AlgoliaSearch.Models.Facets;
+using Algolia.Search.Clients;
 
-using System;
+using Kentico.Xperience.Algolia.Models;
 
-namespace Kentico.Xperience.AlgoliaSearch.Attributes
+namespace Kentico.Xperience.Algolia.Attributes
 {
     /// <summary>
     /// A property attribute to indicate a search model property is facetable within Algolia.
@@ -45,14 +45,6 @@ namespace Kentico.Xperience.AlgoliaSearch.Attributes
         {
             get;
             set;
-        }
-
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FacetableAttribute"/> class.
-        /// </summary>
-        public FacetableAttribute()
-        {
         }
      }
 }

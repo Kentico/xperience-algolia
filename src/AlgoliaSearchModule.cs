@@ -1,41 +1,36 @@
-﻿using Algolia.Search.Clients;
+using System.Configuration;
 
-using CMS;
+using Algolia.Search.Clients;
+
 using CMS.Base;
 using CMS.Core;
+using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.Helpers;
 
-using Kentico.Xperience.AlgoliaSearch;
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.Extensions;
+using Kentico.Xperience.Algolia.Services;
 
-using System;
-using System.Configuration;
-using System.Runtime.CompilerServices;
-
-[assembly: AssemblyDiscoverable]
-[assembly: InternalsVisibleTo("Kentico.Xperience.AlgoliaSearch.Tests")]
-[assembly: RegisterModule(typeof(AlgoliaSearchModule))]
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.Algolia
 {
     /// <summary>
-    /// Initializes the Algolia integration by scanning assemblies for custom models containing the
-    /// <see cref="RegisterAlgoliaIndexAttribute"/> and stores them in <see cref="IAlgoliaRegistrationService.RegisteredIndexes"/>.
-    /// Also registers event handlers required for indexing content.
+    /// Initializes page event handlers, and ensures the thread queue worker for processing Algolia tasks.
     /// </summary>
-    public class AlgoliaSearchModule : CMS.DataEngine.Module
+    internal class AlgoliaSearchModule : Module
     {
-        private IAlgoliaIndexingService algoliaIndexingService;
-        private IAlgoliaRegistrationService algoliaRegistrationService;
-        private IAlgoliaSearchService algoliaSearchService;
+        private IAlgoliaTaskLogger algoliaTaskLogger;
+        private IAppSettingsService appSettingsService;
+        private IConversionService conversionService;
+        private const string APP_SETTINGS_KEY_INDEXING_DISABLED = "AlgoliaSearchDisableIndexing";
 
 
+        /// <inheritdoc/>
         public AlgoliaSearchModule() : base(nameof(AlgoliaSearchModule))
         {
         }
 
 
+        /// <inheritdoc/>
         protected override void OnPreInit()
         {
             base.OnPreInit();
@@ -43,97 +38,71 @@ namespace Kentico.Xperience.AlgoliaSearch
             // Register ISearchClient for CMS application
             if (SystemContext.IsCMSRunningAsMainApplication)
             {
-                var applicationId = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApplicationId"], String.Empty);
-                var apiKey = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApiKey"], String.Empty);
-                if (String.IsNullOrEmpty(applicationId) || String.IsNullOrEmpty(apiKey))
-                {
-                    // Algolia configuration is not valid, but IEventLogService can't be resolved during OnPreInit.
-                    // Set dummy values so that DI is not broken, but errors are still logged later in the initialization
-                    applicationId = "NO_APP";
-                    apiKey = "NO_KEY";
-                }
+                var applicationId = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApplicationId"], "NO_APP");
+                var apiKey = ValidationHelper.GetString(ConfigurationManager.AppSettings["AlgoliaApiKey"], "NO_KEY");
+                var configuration = new SearchConfig(applicationId, apiKey);
+                configuration.DefaultHeaders["User-Agent"] = "Kentico Xperience for Algolia (4.0.0)";
 
-                var client = new SearchClient(applicationId, apiKey);
+                var client = new SearchClient(configuration);
                 Service.Use<ISearchClient>(client);
             }
         }
 
 
-        /// <summary>
-        /// Registers all Algolia indexes, initializes page event handlers, and ensures the thread
-        /// queue worker for processing Algolia tasks.
-        /// </summary>
+        /// <inheritdoc/>
         protected override void OnInit()
         {
             base.OnInit();
 
-            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
-            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
-            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
-            algoliaRegistrationService.RegisterAlgoliaIndexes();
+            algoliaTaskLogger = Service.Resolve<IAlgoliaTaskLogger>();
+            appSettingsService = Service.Resolve<IAppSettingsService>();
+            conversionService = Service.Resolve<IConversionService>();
 
-            DocumentEvents.Update.Before += LogTreeNodeUpdate;
-            DocumentEvents.Insert.After += LogTreeNodeInsert;
-            DocumentEvents.Delete.After += LogTreeNodeDelete;
+            DocumentEvents.Delete.Before += HandleDocumentEvent;
+            DocumentEvents.Update.Before += HandleDocumentEvent;
+            DocumentEvents.Insert.After += HandleDocumentEvent;
+            WorkflowEvents.Publish.After += HandleWorkflowEvent;
+            WorkflowEvents.Archive.After += HandleWorkflowEvent;
             RequestEvents.RunEndRequestTasks.Execute += (sender, eventArgs) => AlgoliaQueueWorker.Current.EnsureRunningThread();
         }
 
 
         /// <summary>
-        /// Called after a page is deleted. Logs an Algolia task to be processed later.
+        /// Returns <c>true</c> if the event event handler should continue processing and log
+        /// an Algolia task.
         /// </summary>
-        private void LogTreeNodeDelete(object sender, DocumentEventArgs e)
+        private bool EventShouldContinue(TreeNode node)
         {
-            if (EventShouldCancel(e.Node, true))
-            {
-                return;
-            }
-
-            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, true, false);
+            return !conversionService.GetBoolean(appSettingsService[APP_SETTINGS_KEY_INDEXING_DISABLED], false) &&
+                node.IsAlgoliaIndexed();
         }
 
 
         /// <summary>
-        /// Called after a page is created. Logs an Algolia task to be processed later.
+        /// Called when a page is published or archived. Logs an Algolia task to be processed later.
         /// </summary>
-        private void LogTreeNodeInsert(object sender, DocumentEventArgs e)
+        private void HandleWorkflowEvent(object sender, WorkflowEventArgs e)
         {
-            if (EventShouldCancel(e.Node, false))
+            if (!EventShouldContinue(e.Document))
             {
                 return;
             }
 
-            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, false, true);
+            algoliaTaskLogger.HandleEvent(e.Document, e.CurrentHandler.Name);
         }
 
 
         /// <summary>
-        /// Called before a page is updated. Logs an Algolia task to be processed later.
+        /// Called when a page is inserted, updated, or deleted. Logs an Algolia task to be processed later.
         /// </summary>
-        private void LogTreeNodeUpdate(object sender, DocumentEventArgs e)
+        private void HandleDocumentEvent(object sender, DocumentEventArgs e)
         {
-            if (EventShouldCancel(e.Node, false))
+            if (!EventShouldContinue(e.Node))
             {
                 return;
             }
 
-            algoliaIndexingService.EnqueueAlgoliaItems(e.Node, false, false);
-        }
-
-
-        /// <summary>
-        /// Returns true if the page event event handler should stop processing. Checks
-        /// if the page is indexed by any Algolia index, and for new/updated pages, the
-        /// page must be published.
-        /// </summary>
-        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
-        /// <param name="wasDeleted">True if the <paramref name="node"/> was deleted.</param>
-        /// <returns></returns>
-        private bool EventShouldCancel(TreeNode node, bool wasDeleted)
-        {
-            return !algoliaSearchService.IsIndexingEnabled() ||
-                !algoliaRegistrationService.IsNodeAlgoliaIndexed(node) ||
-                (!wasDeleted && !node.PublishedVersionExists);
+            algoliaTaskLogger.HandleEvent(e.Node, e.CurrentHandler.Name);
         }
     }
 }

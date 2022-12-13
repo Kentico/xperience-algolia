@@ -1,146 +1,63 @@
-﻿using CMS.DocumentEngine;
+﻿using Kentico.Xperience.Algolia.Attributes;
 
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Test;
-
-using static Kentico.Xperience.AlgoliaSearch.Test.TestSearchModels;
-
-[assembly: RegisterAlgoliaIndex(typeof(Model1), Model1.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model2), Model2.IndexName, SiteNames = new string[] { AlgoliaTests.DEFAULT_SITE })]
-[assembly: RegisterAlgoliaIndex(typeof(Model3), Model3.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model4), Model4.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model5), Model5.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model6), Model6.IndexName)]
-[assembly: RegisterAlgoliaIndex(typeof(Model7), Model7.IndexName)]
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.Tests
 {
-    public class TestSearchModels
+    internal class TestSearchModels
     {
-        [IncludedPath("/Articles/%")]
-        public class Model1 : AlgoliaSearchModel
+        [IncludedPath("/Articles/%", PageTypes = new string[] { FakeNodes.DOCTYPE_ARTICLE }, Cultures = new string[] { "en-US" })]
+        public class ArticleEnSearchModel : BaseSearchModel
         {
-            public const string IndexName = "Model1";
-
-
-            [Searchable]
-            [Facetable]
-            [Retrievable]
-            public string DocumentCreatedWhen { get; set; }
-        }
-
-
-        [IncludedPath("/%", PageTypes = new string[] { "Test.Article" })]
-        public class Model2 : AlgoliaSearchModel
-        {
-            public const string IndexName = "Model2";
-
-
-            [Facetable(FilterOnly = true)]
-            [Searchable(Unordered = true)]
-            [Source(new string[] { "Column1", "Column2" })]
-            public string Prop1 { get; set; }
+            public string DocumentName { get; set; }
 
 
             [Facetable(Searchable = true)]
-            [Searchable]
-            public string Prop2 { get; set; }
-        }
-
-
-        [IncludedPath("/%", PageTypes = new string[] { "Test.Article" }, Cultures = new string[] { "en-US" })]
-        public class Model3 : AlgoliaSearchModel
-        {
-            public const string IndexName = "Model3";
-
-
-            [Searchable]
-            public string Prop1 { get; set; }
-
-
-            [Retrievable]
-            [Searchable(Order = 0)]
-            public string Prop2 { get; set; }
-
-
-            [Retrievable]
-            [Searchable(Order = 0)]
-            public string Prop3 { get; set; }
-        }
-
-
-        [IncludedPath("/Store/Products/%")]
-        public class Model4 : AlgoliaSearchModel
-        {
-            public const string IndexName = "Model4";
-
-
-            [Source(new string[] { nameof(TreeNode.NodeAliasPath) })]
-            public string Prop1 { get; set; }
-        }
-
-
-        public class Model5 : AlgoliaSearchModel
-        {
-            public const string IndexName = "Model5";
+            public string FacetableProperty { get; set; }
 
 
             [Searchable(Unordered = true)]
-            public string Prop6 { get; set; }
+            public string UnorderedProperty { get; set; }
+        }
 
 
-            [Searchable(Order = 4)]
-            public string Prop5 { get; set; }
-
-
+        [IncludedPath("/Products/%", PageTypes = new string[] { FakeNodes.DOCTYPE_PRODUCT })]
+        public class ProductsSearchModel : BaseSearchModel
+        {
             [Retrievable]
-            [Searchable(Order = 1)]
-            public string Prop1 { get; set; }
+            public string RetrievableProperty { get; set; }
 
 
-            [Retrievable]
             [Searchable(Order = 1)]
-            public string Prop2 { get; set; }
+            public string Order1Property1 { get; set; }
+
+
+            [Searchable(Order = 1)]
+            public string Order1Property2 { get; set; }
 
 
             [Searchable(Order = 2)]
-            public string Prop3 { get; set; }
-
-
-            [Searchable(Order = 3, Unordered = true)]
-            public string Prop4 { get; set; }
-        }
-
-
-        public class Model6 : AlgoliaSearchModel
-        {
-            public const string IndexName = "Model6";
-
-
-            [Facetable(FilterOnly = true, Searchable = true)]
-            [Searchable]
-            public string Prop1 { get; set; }
-        }
-
-
-        public class Model7 : ModelBaseClass
-        {
-            public const string IndexName = "Model7";
-
-
-            [Searchable]
-            public string NodeAliasPath { get; set; }
+            public string Order2Property { get; set; }
         }
 
 
         [IncludedPath("/Articles/%")]
-        public class Model8 : AlgoliaSearchModel
+        [IncludedPath("/Products/%")]
+        public class SplittingModel : BaseSearchModel
         {
-            public const string IndexName = "Model8";
-
-
             [Searchable]
-            public string DocumentCreatedWhen { get; set; }
+            public string AttributeForDistinct { get; set; }
+        }
+
+
+        public class InvalidFacetableModel : BaseSearchModel
+        {
+            [Facetable(FilterOnly = true, Searchable = true)]
+            public string FacetableProperty { get; set; }
+        }
+
+
+        [IncludedPath("/Articles/%")]
+        public class OtherSiteModel : BaseSearchModel
+        {
         }
     }
 }

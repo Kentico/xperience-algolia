@@ -1,14 +1,14 @@
-﻿using CMS.Helpers;
-
-using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Models;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
-namespace Kentico.Xperience.AlgoliaSearch.Pages
+using CMS.Helpers;
+
+using Kentico.Xperience.Algolia.Attributes;
+using Kentico.Xperience.Algolia.Models;
+
+namespace Kentico.Xperience.Algolia.Pages
 {
     public partial class AlgoliaSearch_IndexedContent : AlgoliaUIPage
     {
@@ -27,7 +27,7 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
                 return;
             }
 
-            var foundIndex = algoliaRegistrationService.RegisteredIndexes.FirstOrDefault(i => i.IndexName == indexName);
+            var foundIndex = IndexStore.Instance.Get(indexName);
             if (foundIndex == null)
             {
                 ShowError($"Error loading registered Algolia index '{indexName}.'");
@@ -77,9 +77,8 @@ namespace Kentico.Xperience.AlgoliaSearch.Pages
             foreach (var includedPathAttribute in includedPathAttributes)
             {
                 var includedPath = includedPathAttribute as IncludedPathAttribute;
-                var pageTypes = (includedPath.PageTypes.Length == 0) ? "(all)" : String.Join(", ", includedPath.PageTypes);
-                var cultures = (includedPath.Cultures.Length == 0) ? "(all)" : String.Join(", ", includedPath.Cultures);
-
+                var pageTypes = includedPath.PageTypes.Any() ? String.Join(", ", includedPath.PageTypes) : "(all)";
+                var cultures = includedPath.Cultures.Any() ? String.Join(", ", includedPath.Cultures) : "(all)";
                 includedContent.Add(new IncludedContent
                 {
                     Path = includedPath.AliasPath,

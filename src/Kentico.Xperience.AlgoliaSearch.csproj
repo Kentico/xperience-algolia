@@ -2,14 +2,14 @@
 
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<RootNamespace>Kentico.Xperience.AlgoliaSearch</RootNamespace>
+		<RootNamespace>Kentico.Xperience.Algolia</RootNamespace>
 		<LangVersion>Latest</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup>
 		<Title>Xperience Algolia Search</Title>
 		<PackageId>Kentico.Xperience.Algolia.KX13</PackageId>
-		<Version>3.1.0</Version>
+		<Version>4.0.0</Version>
 		<Authors>Kentico Software</Authors>
 		<Company>Kentico Software</Company>
 		<PackageIcon>icon.png</PackageIcon>
@@ -21,7 +21,7 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<NoWarn>1591</NoWarn>
-		<LangVersion>7.3</LangVersion>
+		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" $(Configuration) == 'Release' ">
@@ -37,7 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Algolia.Search" Version="6.11.0" />
+		<PackageReference Include="Algolia.Search" Version="6.13.0" />
 		<PackageReference Include="Kentico.Xperience.Libraries" Version="13.0.73" />
 		<PackageReference Include="Microsoft.AspNetCore.Html.Abstractions" Version="2.2.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />

@@ -1,46 +1,112 @@
-﻿using CMS.DataEngine;
+﻿using System;
+
+using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.SiteProvider;
 
-using System;
-using System.Collections.Generic;
-
-namespace Kentico.Xperience.AlgoliaSearch.Test
+namespace Kentico.Xperience.Algolia.Tests
 {
-    internal class FakeNodes
+    internal static class FakeNodes
     {
-        private static readonly Dictionary<string, TreeNode> nodes = new Dictionary<string, TreeNode>();
+        public const string DEFAULT_SITE = "TestSite";
+        public const string FAKE_SITE = "FAKE_SITE";
+        public const string DOCTYPE_ARTICLE = "Test.Article";
+        public const string DOCTYPE_PRODUCT = "Test.Product";
 
 
-        public static string DOCTYPE_ARTICLE = "Test.Article";
-        public static string DOCTYPE_PRODUCT = "Test.Product";
+        private static int nodeCount = 0;
+        private static TreeNode mArticleEn;
+        private static TreeNode mArticleCz;
+        private static TreeNode mOtherSite;
+        private static TreeNode mProductEn;
+        private static TreeNode mUnindexed;
 
 
-        public static void MakeNode(string nodeAliasPath, string pageType, string culture = "en-US")
+        public static TreeNode ArticleEn
         {
-            var site = SiteInfo.Provider.Get(AlgoliaTests.DEFAULT_SITE);
+            get
+            {
+                if (mArticleEn == null)
+                {
+                    mArticleEn = CreateNode("/Articles/1");
+                }
+
+                return mArticleEn;
+            }
+        }
+
+
+        public static TreeNode ArticleCz
+        {
+            get
+            {
+                if (mArticleCz == null)
+                {
+                    mArticleCz = CreateNode("/Articles/2", culture: "cs-CZ");
+                }
+
+                return mArticleCz;
+            }
+        }
+
+
+        public static TreeNode ProductEn
+        {
+            get
+            {
+                if (mProductEn == null)
+                {
+                    mProductEn = CreateNode("/Products/1", DOCTYPE_PRODUCT);
+                }
+
+                return mProductEn;
+            }
+        }
+
+
+        public static TreeNode ArticleOtherSite
+        {
+            get
+            {
+                if (mOtherSite == null)
+                {
+                    mOtherSite = CreateNode("/Articles/1", site: FAKE_SITE);
+                }
+
+                return mOtherSite;
+            }
+        }
+
+
+        public static TreeNode Unindexed
+        {
+            get
+            {
+                if (mUnindexed == null)
+                {
+                    mUnindexed = CreateNode("/Unindexed/1");
+                }
+
+                return mUnindexed;
+            }
+        }
+
+
+        private static TreeNode CreateNode(string nodeAliasPath, string pageType = DOCTYPE_ARTICLE, string culture = "en-US", string site = DEFAULT_SITE)
+        {
+            nodeCount++;
+            var nodeSite = SiteInfo.Provider.Get(site);
             var node = TreeNode.New(pageType).With(p =>
             {
                 p.DocumentCulture = culture;
-                p.SetValue("NodeSiteID", site.SiteID);
-                p.SetValue("DocumentName", "name");
-                p.SetValue("DocumentCreatedWhen", new DateTime(2022, 1, 1));
-                p.SetValue("NodeAliasPath", nodeAliasPath);
+                p.SetValue(nameof(TreeNode.DocumentID), nodeCount);
+                p.SetValue(nameof(TreeNode.NodeSiteID), nodeSite.SiteID);
+                p.SetValue(nameof(TreeNode.DocumentName), Guid.NewGuid().ToString());
+                p.SetValue(nameof(TreeNode.DocumentCreatedWhen), new DateTime(2022, 1, 1));
+                p.SetValue(nameof(TreeNode.NodeAliasPath), nodeAliasPath);
             });
 
-            nodes.Add(nodeAliasPath, node);
-        }
-
-
-        public static TreeNode GetNode(string nodeAliasPath)
-        {
-            return nodes[nodeAliasPath];
-        }
-
-
-        public static void ClearNodes()
-        {
-            nodes.Clear();
+            return node;
         }
     }
 }

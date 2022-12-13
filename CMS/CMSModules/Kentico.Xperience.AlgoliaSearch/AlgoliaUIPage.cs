@@ -1,32 +1,18 @@
-﻿using Kentico.Xperience.AlgoliaSearch.Attributes;
-using Kentico.Xperience.AlgoliaSearch.Services;
-
-using CMS.Core;
-using CMS.UIControls;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 
-namespace Kentico.Xperience.AlgoliaSearch
+using Kentico.Xperience.Algolia.Attributes;
+
+using CMS.UIControls;
+
+namespace Kentico.Xperience.Algolia
 {
     /// <summary>
     /// Base class for Algolia custom module pages.
     /// </summary>
     public class AlgoliaUIPage : CMSPage
     {
-        protected IAlgoliaRegistrationService algoliaRegistrationService;
-        protected IAlgoliaSearchService algoliaSearchService;
-
-
-        protected override void OnInit(EventArgs e)
-        {
-            base.OnInit(e);
-            algoliaRegistrationService = Service.Resolve<IAlgoliaRegistrationService>();
-            algoliaSearchService = Service.Resolve<IAlgoliaSearchService>();
-        }
-
-
         /// <summary>
         /// Converts a collection of objects into a <see cref="DataSet"/>.
         /// </summary>

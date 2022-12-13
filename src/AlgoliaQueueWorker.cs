@@ -1,24 +1,24 @@
-﻿using CMS.Base;
+﻿using System;
+using System.Collections.Generic;
+
+using CMS.Base;
 using CMS.Core;
 
-using Kentico.Xperience.AlgoliaSearch.Models;
-using Kentico.Xperience.AlgoliaSearch.Services;
+using Kentico.Xperience.Algolia.Models;
+using Kentico.Xperience.Algolia.Services;
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-
-namespace Kentico.Xperience.AlgoliaSearch
+namespace Kentico.Xperience.Algolia
 {
     /// <summary>
-    /// Thread worker which enqueues recently created, updated, or deleted nodes
-    /// indexed by Algolia and updates the Algolia indexes in the background thread.
+    /// Thread worker which enqueues recently updated or deleted nodes indexed
+    /// by Algolia and processes the tasks in the background thread.
     /// </summary>
     public class AlgoliaQueueWorker : ThreadQueueWorker<AlgoliaQueueItem, AlgoliaQueueWorker>
     {
-        private IAlgoliaIndexingService algoliaIndexingService;
+        private readonly IAlgoliaClient algoliaClient;
 
 
+        /// <inheritdoc />
         protected override int DefaultInterval => 10000;
 
 
@@ -29,7 +29,7 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// </summary>
         public AlgoliaQueueWorker()
         {
-            algoliaIndexingService = Service.Resolve<IAlgoliaIndexingService>();
+            algoliaClient = Service.Resolve<IAlgoliaClient>();
         }
 
 
@@ -37,46 +37,45 @@ namespace Kentico.Xperience.AlgoliaSearch
         /// Adds an <see cref="AlgoliaQueueItem"/> to the worker queue to be processed.
         /// </summary>
         /// <param name="queueItem">The item to be added to the queue.</param>
-        public static void EnqueueAlgoliaQueueItem(AlgoliaQueueItem queueItem)
+        /// <exception cref="InvalidOperationException" />
+        public void EnqueueAlgoliaQueueItem(AlgoliaQueueItem queueItem)
         {
             if (queueItem == null || queueItem.Node == null || String.IsNullOrEmpty(queueItem.IndexName))
             {
                 return;
             }
 
+            if (queueItem.TaskType == AlgoliaTaskType.UNKNOWN)
+            {
+                return;
+            }
+
+            if (IndexStore.Instance.Get(queueItem.IndexName) == null)
+            {
+                throw new InvalidOperationException($"Attempted to log task for Algolia index '{queueItem.IndexName},' but it is not registered.");
+            }
+
             Current.Enqueue(queueItem, false);
         }
 
 
-        /// <summary>
-        /// Adds mulitple <see cref="AlgoliaQueueItem"/>s to the worker queue to be processed.
-        /// </summary>
-        /// <param name="queueItems"></param>
-        public static void EnqueueAlgoliaQueueItems(IEnumerable<AlgoliaQueueItem> queueItems)
-        {
-            foreach(var queueItem in queueItems)
-            {
-                EnqueueAlgoliaQueueItem(queueItem);
-            }
-        }
-
-
+        /// <inheritdoc />
         protected override void Finish()
         {
             RunProcess();
         }
 
 
+        /// <inheritdoc />
         protected override int ProcessItems(IEnumerable<AlgoliaQueueItem> items)
         {
-            algoliaIndexingService.ProcessAlgoliaTasks(items);
-            return items.Count();
+            return algoliaClient.ProcessAlgoliaTasks(items);
         }
 
 
+        /// <inheritdoc/>
         protected override void ProcessItem(AlgoliaQueueItem item)
         {
-            ProcessItems(new AlgoliaQueueItem[] { item });
         }
     }
 }
