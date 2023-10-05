@@ -51,11 +51,10 @@ namespace Kentico.Xperience.Algolia.Services
             }
         }
 
-
         private AlgoliaTaskType GetTaskType(TreeNode node, string eventName)
         {
             if (eventName.Equals(DocumentEvents.Insert.Name, StringComparison.OrdinalIgnoreCase) ||
-                (eventName.Equals(WorkflowEvents.Publish.Name, StringComparison.OrdinalIgnoreCase) && node.WorkflowHistory.Count == 0))
+                (eventName.Equals(WorkflowEvents.Publish.Name, StringComparison.OrdinalIgnoreCase) && (node.WorkflowHistory == null || node.WorkflowHistory.Count == 0)))
             {
                 return AlgoliaTaskType.CREATE;
             }

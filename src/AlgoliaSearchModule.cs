@@ -1,5 +1,5 @@
 using System.Configuration;
-
+using System.Linq;
 using Algolia.Search.Clients;
 
 using CMS.Base;
@@ -60,6 +60,7 @@ namespace Kentico.Xperience.Algolia
 
             DocumentEvents.Delete.Before += HandleDocumentEvent;
             DocumentEvents.Update.Before += HandleDocumentEvent;
+            DocumentEvents.Update.Before += ForceMoveUpdate;
             DocumentEvents.Insert.After += HandleDocumentEvent;
             WorkflowEvents.Publish.After += HandleWorkflowEvent;
             WorkflowEvents.Archive.After += HandleWorkflowEvent;
@@ -103,6 +104,20 @@ namespace Kentico.Xperience.Algolia
             }
 
             algoliaTaskLogger.HandleEvent(e.Node, e.CurrentHandler.Name);
+        }
+
+        private void ForceMoveUpdate(object sender, DocumentEventArgs e)
+        {
+            var columns = e.Node.ChangedColumns();
+            if (columns.Any(col => col.Equals(nameof(TreeNode.NodeParentID), System.StringComparison.OrdinalIgnoreCase)))
+            {
+                algoliaTaskLogger.HandleEvent(e.Node, WorkflowEvents.Publish.Name);
+
+                foreach (var child in e.Node.AllChildren)
+                {
+                    algoliaTaskLogger.HandleEvent(child, WorkflowEvents.Publish.Name);
+                }
+            }
         }
     }
 }
