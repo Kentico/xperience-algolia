@@ -17,5 +17,6 @@ namespace Kentico.Xperience.Algolia.Services
         /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
         /// <param name="eventName">The name of the Xperience event that was triggered.</param>
         void HandleEvent(TreeNode node, string eventName);
+        void HandleEventAfter(TreeNode node, string eventName);
     }
 }

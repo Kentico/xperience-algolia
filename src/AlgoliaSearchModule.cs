@@ -7,7 +7,7 @@ using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.Helpers;
-
+using DocumentFormat.OpenXml.Wordprocessing;
 using Kentico.Xperience.Algolia.Extensions;
 using Kentico.Xperience.Algolia.Services;
 
@@ -60,7 +60,8 @@ namespace Kentico.Xperience.Algolia
 
             DocumentEvents.Delete.Before += HandleDocumentEvent;
             DocumentEvents.Update.Before += HandleDocumentEvent;
-            DocumentEvents.Update.Before += ForceMoveUpdate;
+            DocumentEvents.Update.After += ForceMoveUpdate;
+            DocumentEvents.Delete.After += ForceMoveUpdate;
             DocumentEvents.Insert.After += HandleDocumentEvent;
             WorkflowEvents.Publish.After += HandleWorkflowEvent;
             WorkflowEvents.Archive.After += HandleWorkflowEvent;
@@ -108,15 +109,15 @@ namespace Kentico.Xperience.Algolia
 
         private void ForceMoveUpdate(object sender, DocumentEventArgs e)
         {
-            var columns = e.Node.ChangedColumns();
-            if (columns.Any(col => col.Equals(nameof(TreeNode.NodeParentID), System.StringComparison.OrdinalIgnoreCase)))
+            if (!EventShouldContinue(e.Node))
             {
-                algoliaTaskLogger.HandleEvent(e.Node, WorkflowEvents.Publish.Name);
+                return;
+            }
 
-                foreach (var child in e.Node.AllChildren)
-                {
-                    algoliaTaskLogger.HandleEvent(child, WorkflowEvents.Publish.Name);
-                }
+            var columns = e.Node.ChangedColumns();
+            if (columns.Any(x => x.Equals(nameof(TreeNode.NodeParentID), System.StringComparison.OrdinalIgnoreCase)))
+            {
+                algoliaTaskLogger.HandleEventAfter(e.Node, e.CurrentHandler.Name);
             }
         }
     }

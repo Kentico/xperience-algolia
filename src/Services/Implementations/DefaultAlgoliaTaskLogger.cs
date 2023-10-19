@@ -51,6 +51,27 @@ namespace Kentico.Xperience.Algolia.Services
             }
         }
 
+        public void HandleEventAfter(TreeNode node, string eventName)
+        {
+            foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
+            {
+                if (!node.IsIndexedByIndex(indexName))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    var queueItem = new AlgoliaQueueItem(node, GetTaskType(node, eventName), indexName, node.ChangedColumns());
+                    AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(queueItem);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(HandleEvent), ex);
+                }
+            }
+        }
+
         private AlgoliaTaskType GetTaskType(TreeNode node, string eventName)
         {
             if (eventName.Equals(DocumentEvents.Insert.Name, StringComparison.OrdinalIgnoreCase) ||
