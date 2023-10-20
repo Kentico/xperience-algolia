@@ -16,7 +16,6 @@ namespace Kentico.Xperience.Algolia.Services
     {
         private readonly IEventLogService eventLogService;
 
-
         public DefaultAlgoliaTaskLogger(IEventLogService eventLogService) {
             this.eventLogService = eventLogService;
         }
@@ -53,6 +52,12 @@ namespace Kentico.Xperience.Algolia.Services
 
         public void HandleEventAfter(TreeNode node, string eventName)
         {
+            var treeProvider = new TreeProvider();
+            if (eventName != DocumentEvents.Delete.Name)
+            {
+                node = treeProvider.SelectSingleDocument(node.DocumentID, coupledData: true);
+            }
+            
             foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
             {
                 if (!node.IsIndexedByIndex(indexName))

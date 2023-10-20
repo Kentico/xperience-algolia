@@ -60,8 +60,8 @@ namespace Kentico.Xperience.Algolia
 
             DocumentEvents.Delete.Before += HandleDocumentEvent;
             DocumentEvents.Update.Before += HandleDocumentEvent;
-            DocumentEvents.Update.After += ForceMoveUpdate;
-            DocumentEvents.Delete.After += ForceMoveUpdate;
+            DocumentEvents.Update.Before += ForceMoveUpdate;
+            DocumentEvents.Delete.Before += ForceDelete;
             DocumentEvents.Insert.After += HandleDocumentEvent;
             WorkflowEvents.Publish.After += HandleWorkflowEvent;
             WorkflowEvents.Archive.After += HandleWorkflowEvent;
@@ -119,6 +119,15 @@ namespace Kentico.Xperience.Algolia
             {
                 algoliaTaskLogger.HandleEventAfter(e.Node, e.CurrentHandler.Name);
             }
+        }
+
+        private void ForceDelete(object sender, DocumentEventArgs e)
+        {
+            if (!EventShouldContinue(e.Node))
+            {
+                return;
+            }
+            algoliaTaskLogger.HandleEventAfter(e.Node, e.CurrentHandler.Name);
         }
     }
 }
