@@ -31,33 +31,22 @@ namespace Kentico.Xperience.Algolia.Services
                 return;
             }
 
-            foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
-            {
-                if (!node.IsIndexedByIndex(indexName))
-                {
-                    continue;
-                }
-
-                try
-                {
-                    var queueItem = new AlgoliaQueueItem(node, GetTaskType(node, eventName), indexName, node.ChangedColumns());
-                    AlgoliaQueueWorker.Current.EnqueueAlgoliaQueueItem(queueItem);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(HandleEvent), ex);
-                }
-            }
+            LogAlgoliaTask(node, eventName);
         }
 
-        public void HandleEventAfter(TreeNode node, string eventName)
+        /// <summary>
+        /// Loops through all registered Algolia indexes and logs a task if the passed
+        /// <paramref name="node"/> is indexed. Does not check for worklfow of the node and indexes the node even if under a workflow.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
+        /// <param name="eventName">The name of the Xperience event that was triggered.</param>
+        public void ForceHandleEvent(TreeNode node, string eventName)
         {
-            var treeProvider = new TreeProvider();
-            if (eventName != DocumentEvents.Delete.Name)
-            {
-                node = treeProvider.SelectSingleDocument(node.DocumentID, coupledData: true);
-            }
-            
+            LogAlgoliaTask(node, eventName);
+        }
+        
+        private void LogAlgoliaTask(TreeNode node, string eventName)
+        {
             foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
             {
                 if (!node.IsIndexedByIndex(indexName))
@@ -72,7 +61,7 @@ namespace Kentico.Xperience.Algolia.Services
                 }
                 catch (InvalidOperationException ex)
                 {
-                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(HandleEvent), ex);
+                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(ForceHandleEvent), ex);
                 }
             }
         }
