@@ -31,7 +31,7 @@ namespace Kentico.Xperience.Algolia.Services
                 return;
             }
 
-            LogAlgoliaTask(node, eventName);
+            LogAlgoliaTask(node, eventName, nameof(HandleEvent));
         }
 
         /// <summary>
@@ -42,10 +42,10 @@ namespace Kentico.Xperience.Algolia.Services
         /// <param name="eventName">The name of the Xperience event that was triggered.</param>
         public void ForceHandleEvent(TreeNode node, string eventName)
         {
-            LogAlgoliaTask(node, eventName);
+            LogAlgoliaTask(node, eventName, nameof(ForceHandleEvent));
         }
         
-        private void LogAlgoliaTask(TreeNode node, string eventName)
+        private void LogAlgoliaTask(TreeNode node, string eventName, string exceptionLogEventCode)
         {
             foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
             {
@@ -61,7 +61,7 @@ namespace Kentico.Xperience.Algolia.Services
                 }
                 catch (InvalidOperationException ex)
                 {
-                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(ForceHandleEvent), ex);
+                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), exceptionLogEventCode, ex);
                 }
             }
         }
