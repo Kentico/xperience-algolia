@@ -30,7 +30,7 @@ stages:
           clean: resources
 
         variables:
-          - group: 14.0 Authenticode signature parameters
+          - group: Code Sign KV Auth
 
           - name: Configuration
             value: Release
@@ -46,6 +46,14 @@ stages:
               version: ${{ variables.DotNetSdkVersion }}
 
           - task: DotNetCoreCLI@2
+            displayName: Restore dotnet tools
+            inputs:
+              command: custom
+              custom: tool
+              arguments: restore
+              workingDirectory: $(System.DefaultWorkingDirectory)
+
+          - task: DotNetCoreCLI@2
             displayName: Restore dependencies
             inputs:
               command: restore
@@ -59,6 +67,7 @@ stages:
                       <PropertyGroup>
                           <XmlSerializersTargetPath>`$(TargetDir)`$(TargetName).XmlSerializers.dll</XmlSerializersTargetPath>
                           <RazorViewsTargetPath>`$(TargetDir)`$(TargetName).Views.dll</RazorViewsTargetPath>
+                          <TimestampServerUrl>http://timestamp.digicert.com</TimestampServerUrl>
                       </PropertyGroup>
 
                       <ItemGroup>
@@ -67,7 +76,7 @@ stages:
                           <AssemblyToSign Include="`$(RazorViewsTargetPath)" Condition="Exists('`$(RazorViewsTargetPath)')" />
                       </ItemGroup>
 
-                      <SignFile CertificateThumbprint="`$(AuthenticodeCertificateThumbprint)" TimestampUrl="http://time.certum.pl" SigningTarget="%(AssemblyToSign.Identity)" />
+                      <Exec Command="AzureSignTool sign --azure-key-vault-url $(AuthenticodeKeyVaultUrl) --azure-key-vault-tenant-id $(AuthenticodeTenantId) --azure-key-vault-client-id $(AuthenticodeClientId) --azure-key-vault-client-secret $(AuthenticodeClientSecret) --azure-key-vault-certificate $(AuthenticodeCertificateName) --timestamp-rfc3161 $(TimestampServerUrl) --skip-signed %(AssemblyToSign.Identity)" />
                   </Target>
               </Project>
               "@
@@ -81,6 +90,8 @@ stages:
               command: build
               projects: '**/*.csproj'
               arguments: --no-restore --configuration ${{ variables.Configuration }}
+            env:
+              AuthenticodeClientSecret: $(AuthenticodeClientSecret)
 
           - task: DotNetCoreCLI@2
             displayName: Test
