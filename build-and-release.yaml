@@ -21,7 +21,7 @@ resources:
 
   containers:
     - container: Windows
-      image: base/mcr-dotnet-sdk-8.0-servercore-ltsc2022:release
+      image: base/mcr-dotnet-sdk-6.0-servercore-ltsc2022:release
       endpoint: xperienceagentshub.azurecr.io
 
 stages:
@@ -105,9 +105,6 @@ stages:
               command: test
               projects: '**/*.Tests.csproj'
               arguments: --no-build --configuration ${{ variables.Configuration }}
-            env:
-              # Roll-forward behavior set for AzureSignTool dotnet tool (see .config\dotnet-tools.json) which requires .Net 6.0 runtime
-              DOTNET_ROLL_FORWARD: Major
 
           - task: DotNetCoreCLI@2
             displayName: Create NuGet package
