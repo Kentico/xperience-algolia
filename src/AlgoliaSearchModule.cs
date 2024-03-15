@@ -1,5 +1,5 @@
 using System.Configuration;
-
+using System.Linq;
 using Algolia.Search.Clients;
 
 using CMS.Base;
@@ -7,7 +7,6 @@ using CMS.Core;
 using CMS.DataEngine;
 using CMS.DocumentEngine;
 using CMS.Helpers;
-
 using Kentico.Xperience.Algolia.Extensions;
 using Kentico.Xperience.Algolia.Services;
 
@@ -59,7 +58,7 @@ namespace Kentico.Xperience.Algolia
             conversionService = Service.Resolve<IConversionService>();
 
             DocumentEvents.Delete.Before += HandleDocumentEvent;
-            DocumentEvents.Update.Before += HandleDocumentEvent;
+            DocumentEvents.Update.Before += HandleDocumentUpdate;
             DocumentEvents.Insert.After += HandleDocumentEvent;
             WorkflowEvents.Publish.After += HandleWorkflowEvent;
             WorkflowEvents.Archive.After += HandleWorkflowEvent;
@@ -103,6 +102,24 @@ namespace Kentico.Xperience.Algolia
             }
 
             algoliaTaskLogger.HandleEvent(e.Node, e.CurrentHandler.Name);
+        }
+
+        private void HandleDocumentUpdate(object sender, DocumentEventArgs e)
+        {
+            if (!EventShouldContinue(e.Node))
+            {
+                return;
+            }
+
+            algoliaTaskLogger.HandleEvent(e.Node, e.CurrentHandler.Name);
+
+            var columns = e.Node.ChangedColumns();
+            if (columns.Any(x => x.Equals(nameof(TreeNode.NodeParentID), System.StringComparison.OrdinalIgnoreCase)))
+            {
+                var treeProvider = new TreeProvider();
+                var node = treeProvider.SelectSingleDocument(e.Node.DocumentID, coupledData: true);
+                algoliaTaskLogger.ForceHandleEvent(node, e.CurrentHandler.Name);
+            }
         }
     }
 }

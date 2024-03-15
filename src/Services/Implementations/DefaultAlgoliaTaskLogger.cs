@@ -16,7 +16,6 @@ namespace Kentico.Xperience.Algolia.Services
     {
         private readonly IEventLogService eventLogService;
 
-
         public DefaultAlgoliaTaskLogger(IEventLogService eventLogService) {
             this.eventLogService = eventLogService;
         }
@@ -32,6 +31,22 @@ namespace Kentico.Xperience.Algolia.Services
                 return;
             }
 
+            LogAlgoliaTask(node, eventName, nameof(HandleEvent));
+        }
+
+        /// <summary>
+        /// Loops through all registered Algolia indexes and logs a task if the passed
+        /// <paramref name="node"/> is indexed. Does not check for worklfow of the node and indexes the node even if under a workflow.
+        /// </summary>
+        /// <param name="node">The <see cref="TreeNode"/> that triggered the event.</param>
+        /// <param name="eventName">The name of the Xperience event that was triggered.</param>
+        public void ForceHandleEvent(TreeNode node, string eventName)
+        {
+            LogAlgoliaTask(node, eventName, nameof(ForceHandleEvent));
+        }
+        
+        private void LogAlgoliaTask(TreeNode node, string eventName, string exceptionLogEventCode)
+        {
             foreach (var indexName in IndexStore.Instance.GetAll().Select(index => index.IndexName))
             {
                 if (!node.IsIndexedByIndex(indexName))
@@ -46,16 +61,15 @@ namespace Kentico.Xperience.Algolia.Services
                 }
                 catch (InvalidOperationException ex)
                 {
-                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), nameof(HandleEvent), ex);
+                    eventLogService.LogException(nameof(DefaultAlgoliaTaskLogger), exceptionLogEventCode, ex);
                 }
             }
         }
 
-
         private AlgoliaTaskType GetTaskType(TreeNode node, string eventName)
         {
             if (eventName.Equals(DocumentEvents.Insert.Name, StringComparison.OrdinalIgnoreCase) ||
-                (eventName.Equals(WorkflowEvents.Publish.Name, StringComparison.OrdinalIgnoreCase) && node.WorkflowHistory.Count == 0))
+                (eventName.Equals(WorkflowEvents.Publish.Name, StringComparison.OrdinalIgnoreCase) && (node.WorkflowHistory == null || node.WorkflowHistory.Count == 0)))
             {
                 return AlgoliaTaskType.CREATE;
             }
