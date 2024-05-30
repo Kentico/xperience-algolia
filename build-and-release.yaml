@@ -7,12 +7,22 @@ parameters:
   - name: AgentPoolName
     displayName: Agent pool name
     type: string
-    default: Default
+    default: ADO Windows Server 2022
 
   - name: AgentName
     displayName: Agent name - single char for any
     type: string
     default: ' '
+
+resources:
+  repositories:
+    - repository: self
+      type: git
+
+  containers:
+    - container: Windows
+      image: base/mcr-dotnet-sdk-6.0-servercore-ltsc2022:release
+      endpoint: xperienceagentshub.azurecr.io
 
 stages:
   - stage: Build
@@ -25,12 +35,13 @@ stages:
           ${{ if ne(length(parameters.AgentName), 1) }}:
             demands:
               - Agent.Name -equals ${{ parameters.AgentName }}
+        container: Windows
 
         workspace:
           clean: resources
 
         variables:
-          - group: 14.0 Authenticode signature parameters
+          - group: Code Sign KV Auth
 
           - name: Configuration
             value: Release
@@ -39,11 +50,13 @@ stages:
             value: 5.0.x
 
         steps:
-          - task: UseDotNet@2
-            displayName: Select dotnet version
+          - task: DotNetCoreCLI@2
+            displayName: Restore dotnet tools
             inputs:
-              packageType: sdk
-              version: ${{ variables.DotNetSdkVersion }}
+              command: custom
+              custom: tool
+              arguments: restore
+              workingDirectory: $(System.DefaultWorkingDirectory)
 
           - task: DotNetCoreCLI@2
             displayName: Restore dependencies
@@ -67,7 +80,7 @@ stages:
                           <AssemblyToSign Include="`$(RazorViewsTargetPath)" Condition="Exists('`$(RazorViewsTargetPath)')" />
                       </ItemGroup>
 
-                      <SignFile CertificateThumbprint="`$(AuthenticodeCertificateThumbprint)" TimestampUrl="http://time.certum.pl" SigningTarget="%(AssemblyToSign.Identity)" />
+                      <Exec Command="dotnet AzureSignTool sign --azure-key-vault-url $(AuthenticodeKeyVaultUrl) --azure-key-vault-tenant-id $(AuthenticodeTenantId) --azure-key-vault-client-id $(AuthenticodeClientId) --azure-key-vault-client-secret $(AuthenticodeClientSecret) --azure-key-vault-certificate $(AuthenticodeCertificateName) --timestamp-rfc3161 http://timestamp.digicert.com --skip-signed %(AssemblyToSign.Identity)" />
                   </Target>
               </Project>
               "@
@@ -81,6 +94,10 @@ stages:
               command: build
               projects: '**/*.csproj'
               arguments: --no-restore --configuration ${{ variables.Configuration }}
+            env:
+              AuthenticodeClientSecret: $(AuthenticodeClientSecret)
+              # Roll-forward behavior set for AzureSignTool dotnet tool (see .config\dotnet-tools.json) which requires .Net 6.0 runtime
+              DOTNET_ROLL_FORWARD: Major
 
           - task: DotNetCoreCLI@2
             displayName: Test
@@ -119,6 +136,7 @@ stages:
               ${{ if ne(length(parameters.AgentName), 1) }}:
                 demands:
                   - Agent.Name -equals ${{ parameters.AgentName }}
+            container: Windows
 
             workspace:
               clean: resources
