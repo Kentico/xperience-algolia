@@ -181,7 +181,8 @@ namespace Kentico.Xperience.Algolia.Services
             var dataToUpsert = new List<JObject>();
             indexedNodes.ForEach(node => dataToUpsert.AddRange(GetDataToUpsert(new AlgoliaQueueItem(node, AlgoliaTaskType.CREATE, algoliaIndex.IndexName))));
             var searchIndex = algoliaIndexService.InitializeIndex(algoliaIndex.IndexName);
-            searchIndex.ReplaceAllObjects(dataToUpsert);
+            searchIndex.ClearObjects();
+            searchIndex.SaveObjects(dataToUpsert);
         }
 
 
