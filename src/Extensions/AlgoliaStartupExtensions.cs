@@ -39,7 +39,7 @@ namespace Kentico.Xperience.Algolia.Extensions
                 {
                     var options = s.GetRequiredService<IOptions<AlgoliaOptions>>();
                     var configuration = new SearchConfig(options.Value.ApplicationId, options.Value.ApiKey);
-                    configuration.DefaultHeaders["User-Agent"] = "Kentico Xperience for Algolia (4.0.0)";
+                    configuration.DefaultHeaders["User-Agent"] = "Kentico Xperience for Algolia (5.0.0)";
 
                     return new SearchClient(configuration);
                 });
