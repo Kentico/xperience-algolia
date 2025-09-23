@@ -11,6 +11,11 @@ resources:
     - repository: self
       type: git
 
+containers:
+  - container: Windows
+    image: base/mcr-dotnet-sdk-6.0-servercore-ltsc2022:release
+    endpoint: xperienceagentshub.azurecr.io
+
 stages:
   - stage: Build
     jobs:
@@ -28,6 +33,8 @@ stages:
 
           - name: DotNetSdkVersion
             value: 5.0.x
+
+        container: Windows
 
         steps:
           - task: DotNetCoreCLI@2
@@ -111,6 +118,8 @@ stages:
           - deployment: PublishNuGetPackages
             displayName: Publish NuGet packages
 
+            container: Windows
+            
             workspace:
               clean: resources
 
