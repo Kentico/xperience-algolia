@@ -17,20 +17,15 @@ stages:
       - job: Build
         displayName: Build, Sign, Test & Pack
 
-        workspace:
-          clean: resources
-
         variables:
           - group: Code Sign KV Auth
 
           - name: Configuration
             value: Release
 
-          - name: DotNetSdkVersion
-            value: 5.0.x
-
         steps:
           - task: UseDotNet@2
+            displayName: Download .NET 6
             inputs:
               version: 6.x
         
@@ -114,9 +109,6 @@ stages:
         jobs:
           - deployment: PublishNuGetPackages
             displayName: Publish NuGet packages
-
-            workspace:
-              clean: resources
 
             environment: integrations-release-nuget
             strategy:
