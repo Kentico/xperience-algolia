@@ -11,10 +11,10 @@ resources:
     - repository: self
       type: git
 
-containers:
-  - container: Windows
-    image: base/mcr-dotnet-sdk-6.0-servercore-ltsc2022:release
-    endpoint: xperienceagentshub.azurecr.io
+  containers:
+    - container: Windows
+      image: base/mcr-dotnet-sdk-6.0-servercore-ltsc2022:release
+      endpoint: xperienceagentshub.azurecr.io
 
 stages:
   - stage: Build
