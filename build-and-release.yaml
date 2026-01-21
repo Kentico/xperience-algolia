@@ -45,6 +45,7 @@ stages:
               feedsToUse: select
 
           - pwsh: |
+              $SecretMacro = '$(AuthenticodeAccessToken)'
               $DirectoryBuildTargetsContent = @"
               <Project>
                   <Target Name="SignAssemblyWithAuthenticodeSignature" AfterTargets="AfterBuild" Condition="'`$(MSBuildProjectFullPath.Contains(&quot;node_modules&quot;))' == 'false'">
@@ -59,13 +60,20 @@ stages:
                           <AssemblyToSign Include="`$(RazorViewsTargetPath)" Condition="Exists('`$(RazorViewsTargetPath)')" />
                       </ItemGroup>
 
-                      <Exec Command="dotnet AzureSignTool sign --azure-key-vault-url $(AuthenticodeKeyVaultUrl) --azure-key-vault-tenant-id $(AuthenticodeTenantId) --azure-key-vault-client-id $(AuthenticodeClientId) --azure-key-vault-client-secret $(AuthenticodeClientSecret) --azure-key-vault-certificate $(AuthenticodeCertificateName) --timestamp-rfc3161 http://timestamp.digicert.com --skip-signed %(AssemblyToSign.Identity)" />
+                      <Exec Command="dotnet AzureSignTool sign --azure-key-vault-url $(AuthenticodeKeyVaultUrl) --azure-key-vault-accesstoken $SecretMacro --azure-key-vault-certificate $(AuthenticodeCertificateName) --timestamp-rfc3161 $(TimestampServerUrl) --skip-signed %(AssemblyToSign.Identity)" />
                   </Target>
               </Project>
               "@
 
               Set-Content -Value $DirectoryBuildTargetsContent -Path "$(System.DefaultWorkingDirectory)/Directory.Build.targets"
             displayName: Create Directory.Build.targets to sign DLLs
+
+          - task: GetAzureAuthToken@5
+            name: KeyVaultToken
+            displayName: Get token to code signing certificate
+            inputs:
+              ServiceConnection: Code signer
+              AccessScopes: https://vault.azure.net/.default
 
           - task: DotNetCoreCLI@2
             displayName: Build
@@ -74,7 +82,7 @@ stages:
               projects: '**/*.csproj'
               arguments: --no-restore --configuration ${{ variables.Configuration }}
             env:
-              AuthenticodeClientSecret: $(AuthenticodeClientSecret)
+              AuthenticodeAccessToken: $(KeyVaultToken.AuthToken)
               # Roll-forward behavior set for AzureSignTool dotnet tool (see .config\dotnet-tools.json) which requires .Net 6.0 runtime
               DOTNET_ROLL_FORWARD: Major
 
